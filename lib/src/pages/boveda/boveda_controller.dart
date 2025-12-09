@@ -1,4 +1,3 @@
-
 import 'dart:io';
 
 import 'package:asistencia_vial_app/src/models/boveda.dart';
@@ -30,11 +29,10 @@ import '../../provider/usuario_provider.dart';
 import '../supervisor/canje_fortius/canje_fortius.dart';
 import '../supervisor/retiro_fortius/retiro_fortius.dart';
 
-class BovedaController extends GetxController{
-
-  Usuario usuarioSessio = Usuario.fromJson(GetStorage().read('usuario')??{});
-  PeajeProvider peajeProvider=PeajeProvider();
-  MovimientoProvider movimientoProvider=MovimientoProvider();
+class BovedaController extends GetxController {
+  Usuario usuarioSessio = Usuario.fromJson(GetStorage().read('usuario') ?? {});
+  PeajeProvider peajeProvider = PeajeProvider();
+  MovimientoProvider movimientoProvider = MovimientoProvider();
   BovedaProviderOffline bovedaOffline = BovedaProviderOffline();
   late String idPeajeSeleccionado;
 
@@ -43,7 +41,6 @@ class BovedaController extends GetxController{
   int? retiro;
 
   void signOut() async {
-
     try {
       // 1. Borrar GetStorage
       await GetStorage().erase();
@@ -81,7 +78,7 @@ class BovedaController extends GetxController{
       }
 
       // 4. Si usas Hive, borrar todas las cajas
-       //await Hive.deleteFromDisk();
+      //await Hive.deleteFromDisk();
 
       // 5. Si usas sqflite, borrar la base de datos
       // await deleteDatabase('mi_base_de_datos.db');
@@ -96,7 +93,7 @@ class BovedaController extends GetxController{
       // Forzar la pantalla de login
       GetStorage().remove('usuario');
       // Limpiar completamente GetStorage, no solo el usuario
-      Get.offNamedUntil('/',(route)=>false);
+      Get.offNamedUntil('/', (route) => false);
     } catch (e) {
       print('Error en borrado de emergencia: $e');
       Get.snackbar(
@@ -106,165 +103,166 @@ class BovedaController extends GetxController{
         colorText: Colors.white,
       );
     }
-
-
-
-
   }
 
-
-
-
-  void getBoveda(String idpeaje) async{
-    if(await isConnectedToServer()){
-      if(usuarioSessio.roles?.first.id =='4'){
-        var result= await bovedaProvider.getSecreBoveda(idpeaje);
-        await bovedaOffline.saveBoveda(result!);
-        boveda.value = result;
-      }else {
-        var result = await bovedaProvider.getAll(idpeaje);
-        await bovedaOffline.saveBoveda(result!);
-        boveda.value = result;
+  void getBoveda(String idpeaje) async {
+    try {
+      if (await isConnectedToServer()) {
+        if (usuarioSessio.roles?.first.id == '4') {
+          var result = await bovedaProvider.getSecreBoveda(idpeaje);
+          if (result != null) {
+            await bovedaOffline.saveBoveda(result);
+            boveda.value = result;
+          }
+        } else {
+          var result = await bovedaProvider.getAll(idpeaje);
+          if (result != null) {
+            await bovedaOffline.saveBoveda(result);
+            boveda.value = result;
+          }
+        }
+      } else {
+        Get.snackbar('Modo Offline', 'No se ha podido conectar con el servidor',
+            backgroundColor: Colors.orange,
+            colorText: Colors.white,
+            isDismissible: true,
+            duration: const Duration(seconds: 5));
+        var result = await bovedaOffline.getAll(idpeaje);
+        if (result != null) {
+          boveda.value = result;
+        } else {
+          // No hay datos offline disponibles
+          Get.snackbar(
+            'Sin Datos Offline',
+            'No hay información de bóveda disponible. Conéctese a internet para sincronizar.',
+            backgroundColor: Colors.orange[800],
+            colorText: Colors.white,
+            duration: Duration(seconds: 5),
+          );
+        }
       }
-    }else{
-      /*
+    } catch (e) {
+      print('Error en getBoveda: $e');
       Get.snackbar(
-          'Modo Offline',
-          'No se ha podido conectar con el servidor',
-          backgroundColor: Colors.orange,
-          colorText: Colors.white,
-          isDismissible: true,
-          duration: const Duration(seconds: 60)
-      );*/
-      boveda.value=await bovedaOffline.getAll(idpeaje);
+        'Error',
+        'No se pudo obtener la información de la bóveda',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
     }
-
 
     update();
   }
 
   void goToRetiroFortius(Usuario usuario) {
     Get.to(
-          () => RetiroFortiusPage(usuario: usuario), // Página a la que navegas
+      () => RetiroFortiusPage(usuario: usuario), // Página a la que navegas
       arguments: usuario, // Envía el objeto Usuario como argumento
     );
   }
 
   void goToCanjeFortius(Usuario usuario) {
     Get.to(
-          () => CanjeFortiusPage(usuario: usuario), // Página a la que navegas
+      () => CanjeFortiusPage(usuario: usuario), // Página a la que navegas
       arguments: usuario, // Envía el objeto Usuario como argumento
     );
   }
 
-  void gotoProfile(){
+  void gotoProfile() {
     Get.toNamed('/profile/info');
   }
 
-
-  void goToReporteRecaudaciones(Usuario usuario) async{
-
+  void goToReporteRecaudaciones(Usuario usuario) async {
     List<Movimiento>? movimientos;
-    var result = await movimientoProvider.getMovimientosReporteRetiros(usuarioSessio.idPeaje??''); //cambiar getApertura
+    var result = await movimientoProvider.getMovimientosReporteRetiros(
+        usuarioSessio.idPeaje ?? ''); //cambiar getApertura
     movimientos = result;
     Get.to(
-          () => ReporteRecaudaciones(usuario: usuario,movimientos: movimientos),
+      () => ReporteRecaudaciones(usuario: usuario, movimientos: movimientos),
       arguments: usuario,
     );
   }
 
   void _navegarAInforme(bool esActual, Boveda boveda, int retiro) async {
     List<Boveda> bovedas = [];
-    var result4 = await bovedaProvider.getSecreBoveda(usuarioSessio.idPeaje ?? '');
+    var result4 =
+        await bovedaProvider.getSecreBoveda(usuarioSessio.idPeaje ?? '');
     bovedas.add(result4!);
     bovedas.add(boveda);
 
-    List<Movimiento>? movimientos = await movimientoProvider.getRetirosParcialesByDateActual(usuarioSessio.idPeaje ?? '');
+    List<Movimiento>? movimientos = await movimientoProvider
+        .getRetirosParcialesByDateActual(usuarioSessio.idPeaje ?? '');
 
-    var result = await movimientoProvider.getAperturasByDate(usuarioSessio.idPeaje ?? '');
+    var result = await movimientoProvider
+        .getAperturasByDate(usuarioSessio.idPeaje ?? '');
     movimientos.addAll(result);
 
-    var result2 = await movimientoProvider.getLiquidacionesByDate(usuarioSessio.idPeaje ?? '');
+    var result2 = await movimientoProvider
+        .getLiquidacionesByDate(usuarioSessio.idPeaje ?? '');
     movimientos.addAll(result2);
 
-    var result3 = await movimientoProvider.getFortiusByDateActual(usuarioSessio.idPeaje ?? '');
+    var result3 = await movimientoProvider
+        .getFortiusByDateActual(usuarioSessio.idPeaje ?? '');
     movimientos.addAll(result3);
 
     if (esActual) {
-      Get.to(() => InformeBovedaActual(bovedas: bovedas, movimientos: movimientos), arguments: boveda);
+      Get.to(
+          () => InformeBovedaActual(bovedas: bovedas, movimientos: movimientos),
+          arguments: boveda);
     } else {
-      Get.to(() => InformeBoveda(bovedas: bovedas, movimientos: movimientos), arguments: boveda);
+      Get.to(() => InformeBoveda(bovedas: bovedas, movimientos: movimientos),
+          arguments: boveda);
     }
   }
 
-  void goToInformeBoveda(Boveda boveda, int retiro) => _navegarAInforme(false, boveda, retiro);
-  void goToInformeBovedaActual(Boveda boveda, int retiro) => _navegarAInforme(true, boveda, retiro);
-
+  void goToInformeBoveda(Boveda boveda, int retiro) =>
+      _navegarAInforme(false, boveda, retiro);
+  void goToInformeBovedaActual(Boveda boveda, int retiro) =>
+      _navegarAInforme(true, boveda, retiro);
 
   void goToModificarBoveda(Boveda boveda) {
     Get.to(
-          () => ModificarBoveda(boveda: boveda), // Página a la que navegas
+      () => ModificarBoveda(boveda: boveda), // Página a la que navegas
       arguments: boveda, // Envía el objeto Usuario como argumento
     );
   }
 
+  void actualizarPeaje(BuildContext context, String idpeaje) async {
+    ProgressDialog progressDialog = ProgressDialog(context: context);
+    progressDialog.show(max: 100, msg: 'Actualizando peaje..');
 
-  void actualizarPeaje(BuildContext context,String idpeaje) async{
-
-
-      ProgressDialog progressDialog=ProgressDialog(context: context);
-      progressDialog.show(max: 100, msg: 'Actualizando peaje..');
-
-      Usuario usuario=Usuario(
+    Usuario usuario = Usuario(
         id: usuarioSessio.id,
         idPeaje: idpeaje,
         usuario: usuarioSessio.usuario,
-        sessionToken: usuarioSessio.sessionToken
+        sessionToken: usuarioSessio.sessionToken);
 
-       );
+    ResponseApi responseApi = await peajeProvider.update(usuario);
+    print('Response Api Data: ${responseApi.data}');
+    progressDialog.close();
 
-        ResponseApi responseApi = await peajeProvider.update(usuario);
-        print('Response Api Data: ${responseApi.data}');
-        progressDialog.close();
-
-        if(responseApi.success ==true){
-          GetStorage().write('usuario', responseApi.data);
-          Get.snackbar('Actualizacion Existosa', 'El usuario ha sido actualizado');
-          Get.offNamedUntil('/home', (route)=>false);
-
-        }else {
-          Get.snackbar('Registro fallido', responseApi.message ?? '');
-        }
-
-
-
+    if (responseApi.success == true) {
+      GetStorage().write('usuario', responseApi.data);
+      Get.snackbar('Actualizacion Existosa', 'El usuario ha sido actualizado');
+      Get.offNamedUntil('/home', (route) => false);
+    } else {
+      Get.snackbar('Registro fallido', responseApi.message ?? '');
+    }
   }
 
-  void depositoBoveda(BuildContext context,String idpeaje) async{
-
-
-    ProgressDialog progressDialog=ProgressDialog(context: context);
+  void depositoBoveda(BuildContext context, String idpeaje) async {
+    ProgressDialog progressDialog = ProgressDialog(context: context);
     progressDialog.show(max: 100, msg: 'Actualizando boveda..');
-
-
 
     ResponseApi responseApi = await bovedaProvider.depositoBoveda(idpeaje);
     print('Response Api Data: ${responseApi.data}');
     progressDialog.close();
 
-    if(responseApi.success ==true){
+    if (responseApi.success == true) {
       Get.snackbar('Actualizacion Existosa', 'La boveda ha sido actualizado');
-      Get.offNamedUntil('/home', (route)=>false);
-
-    }else {
+      Get.offNamedUntil('/home', (route) => false);
+    } else {
       Get.snackbar('Actualización fallido', responseApi.message ?? '');
     }
-
-
-
   }
-
-
-
-
 }

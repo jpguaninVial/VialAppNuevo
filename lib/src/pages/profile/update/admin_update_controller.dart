@@ -160,19 +160,25 @@ class AdminUpdateController extends GetxController{
         });
 
       }else if (imageFile == null && signature != null){
-        File signatureFile = await convertUint8ListToFile(signature!);
-        Stream stream = await usuarioProvider.updateWithSignature(myUser, signatureFile);
-        progressDialog.close();
 
-        stream.listen((res){
-          ResponseApi responseApi = ResponseApi.fromJson(json.decode(res));
+          File signatureFile = await convertUint8ListToFile(signature!);
 
-          if(responseApi.success==true){
-            Get.snackbar('Registro Existoso', 'El usuario ha sido registrado');
-            Get.offNamedUntil(
-                '/home', (route) => false, arguments: {'index': 3});
-          }
-        });
+          Stream stream = await usuarioProvider.updateWithSignature(
+              myUser, signatureFile);
+
+          progressDialog.close();
+
+          stream.listen((res) {
+            ResponseApi responseApi = ResponseApi.fromJson(json.decode(res));
+
+            if (responseApi.success == true) {
+              Get.snackbar(
+                  'Registro Existoso', 'El usuario ha sido registrado');
+              Get.offNamedUntil(
+                  '/home', (route) => false, arguments: {'index': 3});
+            }
+          });
+
 
       }else{
         File signatureFile = await convertUint8ListToFile(signature!);

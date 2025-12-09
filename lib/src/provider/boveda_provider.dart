@@ -7,20 +7,14 @@ import '../models/boveda.dart';
 import '../models/response_api.dart';
 import '../models/usuario.dart';
 
-class BovedaProvider extends GetConnect{
-
-
-  String url = Environment.API_URL+"api/boveda";
-  Usuario usuario = Usuario.fromJson(GetStorage().read('usuario')??{});
-
-
+class BovedaProvider extends GetConnect {
+  String url = Environment.API_URL + "api/boveda";
+  Usuario get usuario => Usuario.fromJson(GetStorage().read('usuario') ?? {});
 
   Future<Boveda?> getAll(String idpeaje) async {
     Response response = await post(
       '$url/getall',
-      {
-        'id_peaje': idpeaje
-      },
+      {'id_peaje': idpeaje},
       headers: {
         'Content-type': 'application/json',
         'Authorization': usuario.sessionToken ?? ''
@@ -49,9 +43,7 @@ class BovedaProvider extends GetConnect{
   Future<Boveda?> getSecreBoveda(String idpeaje) async {
     Response response = await post(
       '$url/getSecreBoveda',
-      {
-        'id_peaje': idpeaje
-      },
+      {'id_peaje': idpeaje},
       headers: {
         'Content-type': 'application/json',
         'Authorization': usuario.sessionToken ?? ''
@@ -74,45 +66,33 @@ class BovedaProvider extends GetConnect{
       }
     }
 
-    Get.snackbar(
-        'Modo Offline',
-        'No se ha podido conectar con el servidor',
+    Get.snackbar('Modo Offline', 'No se ha podido conectar con el servidor',
         backgroundColor: Colors.orange,
         colorText: Colors.white,
         isDismissible: true,
-        duration: const Duration(seconds: 60)
-    );
+        duration: const Duration(seconds: 60));
     return null;
   }
 
-
-
-  Future<ResponseApi> updateBoveda(Boveda boveda) async{
-
-    Response response = await post(
-        '$url/modificarBoveda',
-        boveda.toJson(),
+  Future<ResponseApi> updateBoveda(Boveda boveda) async {
+    Response response = await post('$url/modificarBoveda', boveda.toJson(),
         headers: {
           'Content-type': 'application/json',
-          'Authorization': usuario.sessionToken??''
-        }
+          'Authorization': usuario.sessionToken ?? ''
+        });
 
-    );
-
-    if(response.body==null){
-      Get.snackbar(
-          'Modo Offline',
-          'No se ha podido conectar con el servidor',
+    if (response.body == null) {
+      Get.snackbar('Modo Offline', 'No se ha podido conectar con el servidor',
           backgroundColor: Colors.orange,
           colorText: Colors.white,
           isDismissible: true,
-          duration: const Duration(seconds: 60)
-      );
+          duration: const Duration(seconds: 60));
       return ResponseApi();
     }
 
-    if(response.statusCode==401){
-      Get.snackbar('Error', 'No se esta autorizado para realizar esta peticion');
+    if (response.statusCode == 401) {
+      Get.snackbar(
+          'Error', 'No se esta autorizado para realizar esta peticion');
       return ResponseApi();
     }
 
@@ -120,41 +100,30 @@ class BovedaProvider extends GetConnect{
     return responseApi;
   }
 
+  Future<ResponseApi> depositoBoveda(String idpeaje) async {
+    Response response = await post('$url/depositoBoveda', {
+      'id_peaje': idpeaje
+    }, headers: {
+      'Content-type': 'application/json',
+      'Authorization': usuario.sessionToken ?? ''
+    });
 
-  Future<ResponseApi> depositoBoveda(String idpeaje) async{
-
-    Response response = await post(
-        '$url/depositoBoveda',
-        {
-          'id_peaje': idpeaje
-        },
-        headers: {
-          'Content-type': 'application/json',
-          'Authorization': usuario.sessionToken??''
-        }
-
-    );
-
-    if(response.body==null){
-      Get.snackbar(
-          'Modo Offline',
-          'No se ha podido conectar con el servidor',
+    if (response.body == null) {
+      Get.snackbar('Modo Offline', 'No se ha podido conectar con el servidor',
           backgroundColor: Colors.orange,
           colorText: Colors.white,
           isDismissible: true,
-          duration: const Duration(seconds: 60)
-      );
+          duration: const Duration(seconds: 60));
       return ResponseApi();
     }
 
-    if(response.statusCode==401){
-      Get.snackbar('Error', 'No se esta autorizado para realizar esta peticion');
+    if (response.statusCode == 401) {
+      Get.snackbar(
+          'Error', 'No se esta autorizado para realizar esta peticion');
       return ResponseApi();
     }
 
     ResponseApi responseApi = ResponseApi.fromJson(response.body);
     return responseApi;
   }
-
-
 }

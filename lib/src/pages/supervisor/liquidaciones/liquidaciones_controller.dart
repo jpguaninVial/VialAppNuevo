@@ -12,14 +12,17 @@ import '../../../models/usuario.dart';
 import '../../../provider/movimiento_provider.dart';
 import '../../editar_transaccion/editar_transaccion.dart';
 import '../retiros_parciales/retiro_parcial.dart';
+import '../../../controllers/loading_controller.dart';
+import '../../../controllers/improved_connection_controller.dart';
 
 class LiquidacionesController extends GetxController{
+  static const String LOADING_KEY = 'liquidaciones';
+
   Socket socket = io('${Environment.API_URL}',<String,dynamic>{
     'transports':['websocket'],
     'autoConnect':false
   });
 
-  RxBool cargando = false.obs;
 
 
   TextEditingController billetes20Controller = TextEditingController();
@@ -76,10 +79,27 @@ class LiquidacionesController extends GetxController{
 
 
 
-  void registarLiquidacion(BuildContext context, Usuario usuario, List<Movimiento> movimientos) async {
+  void registrarLiquidacion(BuildContext context, Usuario usuario, List<Movimiento> movimientos) async {
 
-    if (cargando.value) return; // Protección extra
-    cargando.value = true;
+
+  if (LoadingController.to.isLoading(LOADING_KEY)) {
+        Get.snackbar('Operación en Curso', 'Por favor espere...');
+        return;
+      }
+
+      // Verificar conexión OBLIGATORIA
+      final hasConnection = await _verifyConnection();
+      if (!hasConnection) {
+        _showNoConnectionDialog();
+        return;
+      }
+
+      // Mostrar indicador de carga
+      LoadingController.to.setLoading(
+        LOADING_KEY,
+        message: 'Procesando liquidacion...'
+      );
+    
     try {
 
       //final liquidacion = movimientos.firstWhere((m) => m.idTipoMovimiento == '4', orElse: () => Movimiento());
@@ -144,70 +164,262 @@ class LiquidacionesController extends GetxController{
 
 
       if(liquidacion.partetrabajo=='0'){
-        //SI NO SE AGREGÓ EL PARTE DE TRABAJO
-        Response response = await movimientoProvider.create(movimiento);
-        Response response2 = await turnoProvider.updateEstado(usuario.idTurno??'');
-
-        if(response.statusCode == 201){
-          socket.emit('actualizar_turno', {
-            'id_turno': usuario.idTurno
-          });
-          Get.snackbar(
-              'Transacción Exitosa',
-              'La transaccion ha sido registrado',
-              backgroundColor: Colors.green,
-              colorText: Colors.white
-          );          Get.offNamedUntil('/home', (route) => false, arguments: {'index': 2});
-        }
-
-
-        if (response.statusCode == 202) {
-          Get.snackbar(
-              'Transacción Offline',
-              'La liquidacion ha sido registrada exitosamente sin conexión',
-              icon: Icon(Icons.cloud_off_outlined,color: Colors.white,),
-              backgroundColor: Colors.orange[800],
-              colorText: Colors.white
-          );
-          Get.offNamedUntil('/home', (route) => false, arguments: {'index': 2});
-        }
-
-      }else{//SE AGREGÓ EL PARTE DE TRABAJO
-
-        Response response = await movimientoProvider.updateLiquidacionCompleta(movimiento);
-        Response response2 = await turnoProvider.updateEstado(usuario.idTurno??'');
-
-        if(response.statusCode == 201){
-          socket.emit('actualizar_turno', {
-            'id_turno': usuario.idTurno
-          });
-          Get.snackbar('Liquidación Existosa', 'La apertura ha sido retirada');
-          Get.offNamedUntil('/home', (route) => false, arguments: {'index': 2});
-        }
-
-        if (response.statusCode == 202) {
-          Get.snackbar(
-              'Transacción Offline',
-              'La liquidacion ha sido registrada exitosamente sin conexión',
-              icon: Icon(Icons.cloud_off_outlined,color: Colors.white,),
-              backgroundColor: Colors.orange[800],
-              colorText: Colors.white
-          );
-          Get.offNamedUntil('/home', (route) => false, arguments: {'index': 2});
-        }
-
+        // Enviar la petición con múltiples reintentos
+        final result = await _submitTransactionWithRetries(movimiento, true);
+        // Manejar respuesta
+        await _handleTransactionResult(result);
+  
+      }else{
+        // Enviar la petición con múltiples reintentos
+        final result = await _submitTransactionWithRetries(movimiento, false);
+        // Manejar respuesta
+        await _handleTransactionResult(result);
+  
       }
-
     } catch (e) {
       Get.snackbar('Error', 'Ocurrió un error inesperado ${e}');
     }finally{
-      cargando.value = false;
+
     }
+  }
+
+
+  Future<TransactionResult> _submitTransactionWithRetries(Movimiento movimiento, bool isNew) async {
+    int maxRetries = 3;
+    int currentRetry = 0;
+    
+    while (currentRetry < maxRetries) {
+      try {
+        LoadingController.to.setLoading(
+          LOADING_KEY,
+          message: currentRetry == 0 
+              ? 'Enviando transacción...'
+              : 'Reintentando... (${currentRetry + 1}/$maxRetries)'
+        );
+        final response = isNew ? await movimientoProvider.createOnlineOnly(movimiento).timeout(Duration(seconds: 45)) : 
+                                 await movimientoProvider.updateLiquidacionCompletaOnlineOnly(movimiento).timeout(Duration(seconds: 45));
+        final response2= await turnoProvider.updateEstado(usuario?.idTurno??'');
+
+        if (response.statusCode == 201) {
+          return TransactionResult(success: true, statusCode: 201);
+        } else if ((response.statusCode ?? 0) >= 400 && (response.statusCode ?? 0) < 500) {
+          return TransactionResult(
+            success: false,
+            statusCode: response.statusCode ?? 0,
+            error: 'Error de datos o autorización',
+          );
+        } else {
+          currentRetry++;
+          if (currentRetry < maxRetries) {
+            await Future.delayed(Duration(seconds: 2 * currentRetry));
+          } else {
+            return TransactionResult(
+              success: false,
+              statusCode: response.statusCode ?? 0,
+              error: 'Error del servidor después de $maxRetries intentos',
+            );
+          }
+        }
+      } catch (e) {
+        currentRetry++;
+        if (currentRetry >= maxRetries) {
+          return TransactionResult(
+            success: false,
+            statusCode: 0,
+            error: 'Error de conexión después de $maxRetries intentos: ${e.toString()}',
+          );
+        }
+        
+        await Future.delayed(Duration(seconds: 2 * currentRetry));
+      }
+    }
+    
+    return TransactionResult(
+      success: false,
+      statusCode: 0,
+      error: 'Máximo de reintentos alcanzado',
+    );
+  }
+
+  Future<void> _handleTransactionResult(TransactionResult result) async {
+    if (result.success) {
+      Get.snackbar(
+        'Transacción Exitosa',
+        'La liquidación ha sido registrada correctamente',
+        icon: Icon(Icons.check_circle, color: Colors.white),
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+      );
+      
+      _clearFields();
+      Get.offNamedUntil('/home', (route) => false, arguments: {'index': 2});
+      
+    } else {
+      await _showErrorDialog(result);
+    }
+  }
+
+  Future<bool> _verifyConnection() async {
+    LoadingController.to.setLoading(LOADING_KEY, message: 'Verificando conexión...');
+    
+    try {
+      final connected = await ImprovedConnectionController.to.forceConnectionCheck();
+      return connected;
+    } catch (e) {
+      return false;
+    } finally {
+      LoadingController.to.clearLoading(LOADING_KEY);
+    }
+  }
+
+  Future<void> _showErrorDialog(TransactionResult result) async {
+    await Get.dialog(
+      AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.error_outline, color: Colors.red),
+            SizedBox(width: 8),
+            Text('Error en Transacción'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('No se pudo procesar la liquidacion:'),
+            SizedBox(height: 8),
+            Text(
+              result.error ?? 'Error desconocido',
+              style: TextStyle(color: Colors.red[700]),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Get.back();
+              registrarLiquidacion(Get.context!, usuario!, movimientos!);
+            },
+            child: Text('Reintentar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showNoConnectionDialog() {
+    Get.dialog(
+      AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.wifi_off, color: Colors.red),
+            SizedBox(width: 8),
+            Text('Sin Conexión'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('No se puede procesar la transaccion sin conexión al servidor.'),
+            SizedBox(height: 16),
+            Container(
+              padding: EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue[50],
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: Colors.blue[200]!),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.info_outline, color: Colors.blue[800], size: 16),
+                      SizedBox(width: 8),
+                      Text(
+                        'Recomendaciones:',
+                        style: TextStyle(fontWeight: FontWeight.w500, color: Colors.blue[800]),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 8),
+                  Text('• Verifique su conexión a internet', style: TextStyle(fontSize: 13)),
+                  Text('• Acérquese a un punto con mejor señal', style: TextStyle(fontSize: 13)),
+                  Text('• Contacte al administrador de red', style: TextStyle(fontSize: 13)),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: Text('Entendido'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Get.back();
+              final hasConnection = await _verifyConnection();
+              if (hasConnection) {
+                registrarLiquidacion(Get.context!, usuario!,movimientos!);
+              } else {
+                Get.snackbar(
+                  'Sin Conexión',
+                  'Aún no hay conexión disponible',
+                  backgroundColor: Colors.red,
+                  colorText: Colors.white,
+                );
+              }
+            },
+            child: Text('Reintentar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _handleError(dynamic error) {
+    Get.snackbar(
+      'Error Inesperado',
+      'Ocurrió un error al procesar la liquidacion',
+      backgroundColor: Colors.red,
+      colorText: Colors.white,
+    );
+  }
+
+  void _clearFields(){
+    billetes20Controller.clear();
+    billetes10Controller.clear();
+    billetes5Controller.clear();
+    moneda1dController.clear();
+    Moneda50Controller.clear();
+    Moneda25Controller.clear();
+    Moneda10Controller.clear();
+    Moneda5Controller.clear();
   }
 
   @override
   void onClose(){
-    print('SE CERRO LA LIQUIDACION');
+    LoadingController.to.clearLoading(LOADING_KEY);
+    super.onClose();
     socket.disconnect();
   }
+
+}
+
+class TransactionResult {
+  final bool success;
+  final int statusCode;
+  final String? error;
+
+  TransactionResult({
+    required this.success,
+    required this.statusCode,
+    this.error,
+  });
 }

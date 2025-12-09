@@ -11,52 +11,25 @@ import '../models/boveda.dart';
 import '../models/response_api.dart';
 import '../models/usuario.dart';
 
+class MovimientoProvider extends GetConnect {
+  String url = Environment.API_URL + "api/movimientos";
+  Usuario get usuario => Usuario.fromJson(GetStorage().read('usuario') ?? {});
+  MovimientoProviderOffline movimientoOffline = MovimientoProviderOffline();
 
-class MovimientoProvider extends GetConnect{
-
-  String url = Environment.API_URL+"api/movimientos";
-  Usuario usuario = Usuario.fromJson(GetStorage().read('usuario')??{});
-  MovimientoProviderOffline movimientoOffline=MovimientoProviderOffline();
-
-  Future<Response> create(Movimiento movimiento) async{
-  Response response;
-    if(await isConnectedToServer()){
-       response = await post(
-          '$url/create',
-          movimiento.toJsonSinId(),
-          headers: {
-            'Content-type': 'application/json',
-            'Authorization': usuario.sessionToken??''
-          }
-      );
-    }else{
-      await movimientoOffline.saveTransaccion(movimiento);
-      // ⚠️ Simular un Response exitoso (status 202)
-        response= Response(
-        statusCode: 202,
-        body: {'message': 'Transacción guardada offline'},
-        statusText: 'Guardado en cache',
-        request: Request(
-            url: Uri.parse('$url/create'),
-            method: 'POST',
-            headers: {
-          'Content-type': 'application/json',
-          'Authorization': usuario.sessionToken??''
-        }),
-      );
-    }
-
+  Future<Response> create(Movimiento movimiento) async {
+    Response response;
+    response = await post('$url/create', movimiento.toJsonSinId(), headers: {
+      'Content-type': 'application/json',
+      'Authorization': usuario.sessionToken ?? ''
+    });
 
     return response;
   }
 
-
   Future<Movimiento?> getApertura(String idTurno) async {
     Response response = await post(
       '$url/getApertura',
-      {
-        'IdTurno': idTurno
-      },
+      {'IdTurno': idTurno},
       headers: {
         'Content-type': 'application/json',
         'Authorization': usuario.sessionToken ?? ''
@@ -85,9 +58,7 @@ class MovimientoProvider extends GetConnect{
   Future<Movimiento?> getFaltante(String idTurno) async {
     Response response = await post(
       '$url/getFaltante',
-      {
-        'IdTurno': idTurno
-      },
+      {'IdTurno': idTurno},
       headers: {
         'Content-type': 'application/json',
         'Authorization': usuario.sessionToken ?? ''
@@ -113,34 +84,81 @@ class MovimientoProvider extends GetConnect{
     return null;
   }
 
-
-
-
-  Future<Response> update(Movimiento movimiento) async{
-
+  Future<Response> update(Movimiento movimiento) async {
     Response response;
-    if(await isConnectedToServer()){
+    response = await post('$url/updateApertura', movimiento.toJson(), headers: {
+      'Content-type': 'application/json',
+      'Authorization': usuario.sessionToken ?? ''
+    });
+
+    return response;
+  }
+
+  Future<ResponseApi> updateLiquidacion(Movimiento movimiento) async {
+    Response response = await post(
+        '$url/updateLiquidacion', movimiento.toJson(), headers: {
+      'Content-type': 'application/json',
+      'Authorization': usuario.sessionToken ?? ''
+    });
+
+    if (response.body == null) {
+      Get.snackbar('Error', 'No se pudo realizar la peticion');
+      return ResponseApi();
+    }
+
+    if (response.statusCode == 401) {
+      Get.snackbar(
+          'Error', 'No se esta autorizado para realizar esta peticion');
+      return ResponseApi();
+    }
+
+    ResponseApi responseApi = ResponseApi.fromJson(response.body);
+    return responseApi;
+  }
+
+  Future<ResponseApi> updateEstadoMovimiento(Movimiento movimiento) async {
+    Response response = await post(
+        '$url/updateEstadoMovimiento', movimiento.toJson(), headers: {
+      'Content-type': 'application/json',
+      'Authorization': usuario.sessionToken ?? ''
+    });
+
+    if (response.body == null) {
+      Get.snackbar('Error', 'No se pudo realizar la peticion');
+      return ResponseApi();
+    }
+
+    if (response.statusCode == 401) {
+      Get.snackbar(
+          'Error', 'No se esta autorizado para realizar esta peticion');
+      return ResponseApi();
+    }
+
+    ResponseApi responseApi = ResponseApi.fromJson(response.body);
+    return responseApi;
+  }
+
+  Future<Response> updateLiquidacionCompleta(Movimiento movimiento) async {
+    Response response;
+    if (await isConnectedToServer()) {
       response = await post(
-          '$url/updateApertura',
-          movimiento.toJson(),
-          headers: {
-            'Content-type': 'application/json',
-            'Authorization': usuario.sessionToken??''
-          }
-      );
-    }else{
-      await movimientoOffline.updateTransaccion(movimiento);
+          '$url/updateLiquidacionCompleta', movimiento.toJson(), headers: {
+        'Content-type': 'application/json',
+        'Authorization': usuario.sessionToken ?? ''
+      });
+    } else {
+      await movimientoOffline.liquidacionTransaccion(movimiento);
       // ⚠️ Simular un Response exitoso (status 202)
-      response= Response(
+      response = Response(
         statusCode: 202,
         body: {'message': 'Transacción guardada offline'},
         statusText: 'Guardado en cache',
         request: Request(
-            url: Uri.parse('$url/updateApertura'),
+            url: Uri.parse('$url/updateLiquidacionCompleta'),
             method: 'POST',
             headers: {
               'Content-type': 'application/json',
-              'Authorization': usuario.sessionToken??''
+              'Authorization': usuario.sessionToken ?? ''
             }),
       );
     }
@@ -148,367 +166,213 @@ class MovimientoProvider extends GetConnect{
     return response;
   }
 
-
-  Future<ResponseApi> updateLiquidacion(Movimiento movimiento) async{
-
-    Response response = await post(
-        '$url/updateLiquidacion',
-        movimiento.toJson(),
-        headers: {
-          'Content-type': 'application/json',
-          'Authorization': usuario.sessionToken??''
-        }
-
-    );
-
-    if(response.body==null){
-      Get.snackbar('Error', 'No se pudo realizar la peticion');
-      return ResponseApi();
-    }
-
-    if(response.statusCode==401){
-      Get.snackbar('Error', 'No se esta autorizado para realizar esta peticion');
-      return ResponseApi();
-    }
-
-    ResponseApi responseApi = ResponseApi.fromJson(response.body);
-    return responseApi;
-  }
-
-  Future<ResponseApi> updateEstadoMovimiento(Movimiento movimiento) async{
-
-    Response response = await post(
-        '$url/updateEstadoMovimiento',
-        movimiento.toJson(),
-        headers: {
-          'Content-type': 'application/json',
-          'Authorization': usuario.sessionToken??''
-        }
-
-    );
-
-    if(response.body==null){
-      Get.snackbar('Error', 'No se pudo realizar la peticion');
-      return ResponseApi();
-    }
-
-    if(response.statusCode==401){
-      Get.snackbar('Error', 'No se esta autorizado para realizar esta peticion');
-      return ResponseApi();
-    }
-
-    ResponseApi responseApi = ResponseApi.fromJson(response.body);
-    return responseApi;
-  }
-
-  Future<Response> updateLiquidacionCompleta(Movimiento movimiento) async{
-
-    Response response = await post(
-        '$url/updateLiquidacionCompleta',
-        movimiento.toJson(),
-        headers: {
-          'Content-type': 'application/json',
-          'Authorization': usuario.sessionToken??''
-        }
-
-    );
-
-    return response;
-  }
-
-
   Future<List<Movimiento>> getTipoMovimiento() async {
-
-    Response response = await get(
-        '$url/getTipoMovimiento',
-        headers: {
-          'Content-type': 'application/json',
-          'Authorization': usuario.sessionToken??''
-        }
-    );
+    Response response = await get('$url/getTipoMovimiento', headers: {
+      'Content-type': 'application/json',
+      'Authorization': usuario.sessionToken ?? ''
+    });
 
     if (response.statusCode == 401) {
       Get.snackbar('Peticion Denegada', 'No tienes acceso a esta información');
       return [];
     }
 
-    List<Movimiento> movimientos= Movimiento.fromJsonList(response.body);
+    List<Movimiento> movimientos = Movimiento.fromJsonList(response.body);
     return movimientos;
-
   }
 
-  Future<List<Movimiento>> findByTipoMovimiento(String idTipoMovimiento, String idPeaje) async {
-
-    Response response = await post(
-        '$url/findByTipoMovimiento',
-        {
-          'id_tipomovimiento': idTipoMovimiento,
-          'id_peaje': idPeaje
-
-        },
-        headers: {
-          'Content-type': 'application/json',
-          'Authorization': usuario.sessionToken??''
-        }
-    );
+  Future<List<Movimiento>> findByTipoMovimiento(
+      String idTipoMovimiento, String idPeaje) async {
+    Response response = await post('$url/findByTipoMovimiento', {
+      'id_tipomovimiento': idTipoMovimiento,
+      'id_peaje': idPeaje
+    }, headers: {
+      'Content-type': 'application/json',
+      'Authorization': usuario.sessionToken ?? ''
+    });
 
     if (response.statusCode == 401) {
       Get.snackbar('Peticion Denegada', 'No tienes acceso a esta información');
       return [];
     }
 
-    List<Movimiento> movimientos= Movimiento.fromJsonList(response.body);
+    List<Movimiento> movimientos = Movimiento.fromJsonList(response.body);
     return movimientos;
-
   }
 
-  Future<List<Movimiento>> findByDateTipoMovimiento(String fechainicio,String fechafin,String idTipoMovimiento, String idPeaje) async {
-
-    Response response = await post(
-        '$url/findByDateTipoMovimiento',
-        {
-          'fecha_inicio': fechainicio,
-          'fecha_fin': fechafin,
-          'id_tipomovimiento': idTipoMovimiento,
-          'id_peaje': idPeaje
-
-        },
-        headers: {
-          'Content-type': 'application/json',
-          'Authorization': usuario.sessionToken??''
-        }
-    );
+  Future<List<Movimiento>> findByDateTipoMovimiento(String fechainicio,
+      String fechafin, String idTipoMovimiento, String idPeaje) async {
+    Response response = await post('$url/findByDateTipoMovimiento', {
+      'fecha_inicio': fechainicio,
+      'fecha_fin': fechafin,
+      'id_tipomovimiento': idTipoMovimiento,
+      'id_peaje': idPeaje
+    }, headers: {
+      'Content-type': 'application/json',
+      'Authorization': usuario.sessionToken ?? ''
+    });
 
     if (response.statusCode == 401) {
       Get.snackbar('Peticion Denegada', 'No tienes acceso a esta información');
       return [];
     }
 
-    List<Movimiento> movimientos= Movimiento.fromJsonList(response.body);
+    List<Movimiento> movimientos = Movimiento.fromJsonList(response.body);
     return movimientos;
-
   }
 
   Future<List<Movimiento>> getMovimientoByTurno(String idTurno) async {
-
-    Response response = await post(
-        '$url/findByTurno',
-        {
-          'IdTurno': idTurno
-
-        },
-        headers: {
-          'Content-type': 'application/json',
-          'Authorization': usuario.sessionToken??''
-        }
-    );
+    Response response = await post('$url/findByTurno', {
+      'IdTurno': idTurno
+    }, headers: {
+      'Content-type': 'application/json',
+      'Authorization': usuario.sessionToken ?? ''
+    });
 
     if (response.statusCode == 401) {
       Get.snackbar('Peticion Denegada', 'No tienes acceso a esta información');
       return [];
     }
 
-    List<Movimiento> movimientos= Movimiento.fromJsonList(response.body);
+    List<Movimiento> movimientos = Movimiento.fromJsonList(response.body);
     return movimientos;
-
   }
 
-
   Future<List<Movimiento>> getRetirosParciales(String idTurno) async {
-
-    Response response = await post(
-        '$url/getRetirosParciales',
-        {
-          'IdTurno': idTurno
-
-        },
-        headers: {
-          'Content-type': 'application/json',
-          'Authorization': usuario.sessionToken??''
-        }
-    );
+    Response response = await post('$url/getRetirosParciales', {
+      'IdTurno': idTurno
+    }, headers: {
+      'Content-type': 'application/json',
+      'Authorization': usuario.sessionToken ?? ''
+    });
 
     if (response.statusCode == 401) {
       Get.snackbar('Peticion Denegada', 'No tienes acceso a esta información');
       return [];
     }
 
-    List<Movimiento> movimientos= Movimiento.fromJsonList(response.body);
+    List<Movimiento> movimientos = Movimiento.fromJsonList(response.body);
     return movimientos;
-
   }
 
   Future<List<Movimiento>> getRetirosParcialesByDate(String idpeaje) async {
-
-    Response response = await post(
-        '$url/getRetirosParcialesByDate',
-        {
-          'id_peaje': idpeaje,
-
-
-        },
-        headers: {
-          'Content-type': 'application/json',
-          'Authorization': usuario.sessionToken??''
-        }
-    );
+    Response response = await post('$url/getRetirosParcialesByDate', {
+      'id_peaje': idpeaje,
+    }, headers: {
+      'Content-type': 'application/json',
+      'Authorization': usuario.sessionToken ?? ''
+    });
 
     if (response.statusCode == 401) {
       Get.snackbar('Peticion Denegada', 'No tienes acceso a esta información');
       return [];
     }
 
-    List<Movimiento> movimientos= Movimiento.fromJsonList(response.body);
+    List<Movimiento> movimientos = Movimiento.fromJsonList(response.body);
     return movimientos;
-
-  }
-  Future<List<Movimiento>> getRetirosParcialesByDateActual(String idpeaje) async {
-
-    Response response = await post(
-        '$url/getRetirosParcialesByDateActual',
-        {
-          'id_peaje': idpeaje,
-
-
-        },
-        headers: {
-          'Content-type': 'application/json',
-          'Authorization': usuario.sessionToken??''
-        }
-    );
-
-    if (response.statusCode == 401) {
-      Get.snackbar('Peticion Denegada', 'No tienes acceso a esta información');
-      return [];
-    }
-
-    List<Movimiento> movimientos= Movimiento.fromJsonList(response.body);
-    return movimientos;
-
   }
 
-
- Future<List<Movimiento>> getAperturasByDate(String idpeaje) async {
-
-    Response response = await post(
-        '$url/getAperturasByDate',
-        {
-          'id_peaje': idpeaje,
-
-
-        },
-        headers: {
-          'Content-type': 'application/json',
-          'Authorization': usuario.sessionToken??''
-        }
-    );
+  Future<List<Movimiento>> getRetirosParcialesByDateActual(
+      String idpeaje) async {
+    Response response = await post('$url/getRetirosParcialesByDateActual', {
+      'id_peaje': idpeaje,
+    }, headers: {
+      'Content-type': 'application/json',
+      'Authorization': usuario.sessionToken ?? ''
+    });
 
     if (response.statusCode == 401) {
       Get.snackbar('Peticion Denegada', 'No tienes acceso a esta información');
       return [];
     }
 
-    List<Movimiento> movimientos= Movimiento.fromJsonList(response.body);
+    List<Movimiento> movimientos = Movimiento.fromJsonList(response.body);
     return movimientos;
-
   }
- Future<List<Movimiento>> getLiquidacionesByDate(String idpeaje) async {
 
-    Response response = await post(
-        '$url/getLiquidacionesByDate',
-        {
-          'id_peaje': idpeaje,
-
-
-        },
-        headers: {
-          'Content-type': 'application/json',
-          'Authorization': usuario.sessionToken??''
-        }
-    );
+  Future<List<Movimiento>> getAperturasByDate(String idpeaje) async {
+    Response response = await post('$url/getAperturasByDate', {
+      'id_peaje': idpeaje,
+    }, headers: {
+      'Content-type': 'application/json',
+      'Authorization': usuario.sessionToken ?? ''
+    });
 
     if (response.statusCode == 401) {
       Get.snackbar('Peticion Denegada', 'No tienes acceso a esta información');
       return [];
     }
 
-    List<Movimiento> movimientos= Movimiento.fromJsonList(response.body);
+    List<Movimiento> movimientos = Movimiento.fromJsonList(response.body);
     return movimientos;
-
   }
- Future<List<Movimiento>> getFortiusByDate(String idpeaje) async {
 
-    Response response = await post(
-        '$url/getFortiusByDate',
-        {
-          'id_peaje': idpeaje,
-
-
-        },
-        headers: {
-          'Content-type': 'application/json',
-          'Authorization': usuario.sessionToken??''
-        }
-    );
+  Future<List<Movimiento>> getLiquidacionesByDate(String idpeaje) async {
+    Response response = await post('$url/getLiquidacionesByDate', {
+      'id_peaje': idpeaje,
+    }, headers: {
+      'Content-type': 'application/json',
+      'Authorization': usuario.sessionToken ?? ''
+    });
 
     if (response.statusCode == 401) {
       Get.snackbar('Peticion Denegada', 'No tienes acceso a esta información');
       return [];
     }
 
-    List<Movimiento> movimientos= Movimiento.fromJsonList(response.body);
+    List<Movimiento> movimientos = Movimiento.fromJsonList(response.body);
     return movimientos;
+  }
 
+  Future<List<Movimiento>> getFortiusByDate(String idpeaje) async {
+    Response response = await post('$url/getFortiusByDate', {
+      'id_peaje': idpeaje,
+    }, headers: {
+      'Content-type': 'application/json',
+      'Authorization': usuario.sessionToken ?? ''
+    });
+
+    if (response.statusCode == 401) {
+      Get.snackbar('Peticion Denegada', 'No tienes acceso a esta información');
+      return [];
+    }
+
+    List<Movimiento> movimientos = Movimiento.fromJsonList(response.body);
+    return movimientos;
   }
 
   Future<List<Movimiento>> getFortiusByDateActual(String idpeaje) async {
-
-    Response response = await post(
-        '$url/getFortiusByDateActual',
-        {
-          'id_peaje': idpeaje,
-
-
-        },
-        headers: {
-          'Content-type': 'application/json',
-          'Authorization': usuario.sessionToken??''
-        }
-    );
+    Response response = await post('$url/getFortiusByDateActual', {
+      'id_peaje': idpeaje,
+    }, headers: {
+      'Content-type': 'application/json',
+      'Authorization': usuario.sessionToken ?? ''
+    });
 
     if (response.statusCode == 401) {
       Get.snackbar('Peticion Denegada', 'No tienes acceso a esta información');
       return [];
     }
 
-    List<Movimiento> movimientos= Movimiento.fromJsonList(response.body);
+    List<Movimiento> movimientos = Movimiento.fromJsonList(response.body);
     return movimientos;
-
   }
 
-
   Future<List<Movimiento>> getMovimientosReporteRetiros(String idPeaje) async {
-
-    Response response = await post(
-        '$url/getMovimientosReporteRetiros',
-        {
-          'id_peaje': idPeaje
-
-        },
-        headers: {
-          'Content-type': 'application/json',
-          'Authorization': usuario.sessionToken??''
-        }
-    );
+    Response response = await post('$url/getMovimientosReporteRetiros', {
+      'id_peaje': idPeaje
+    }, headers: {
+      'Content-type': 'application/json',
+      'Authorization': usuario.sessionToken ?? ''
+    });
 
     if (response.statusCode == 401) {
       Get.snackbar('Peticion Denegada', 'No tienes acceso a esta información');
       return [];
     }
 
-    List<Movimiento> movimientos= Movimiento.fromJsonList(response.body);
+    List<Movimiento> movimientos = Movimiento.fromJsonList(response.body);
     return movimientos;
-
   }
 
   Future<void> sincronizarTransaccionesPendientes() async {
@@ -551,7 +415,8 @@ class MovimientoProvider extends GetConnect{
           await box.delete(key); // Eliminar si fue exitoso
           print('Transacción enviada y eliminada: $key');
         } else {
-          print('No se pudo sincronizar movmientos: $key, status: ${movimiento.id}');
+          print(
+              'No se pudo sincronizar movmientos: $key, status: ${movimiento.id}');
         }
       } catch (e) {
         print('Error al sincronizar $key: $e');
@@ -559,6 +424,46 @@ class MovimientoProvider extends GetConnect{
     }
   }
 
+  Future<void> sincronizarLiquidacionTransaccionesPendientes() async {
+    final box = await Hive.openBox<Movimiento>('liquidacionTransacciones');
 
+    final keys = box.keys.toList();
 
+    for (var key in keys) {
+      Movimiento? movimiento = box.get(key);
+
+      try {
+        // Intenta enviar al servidor
+        Response response = await updateLiquidacionCompleta(movimiento!);
+
+        if (response.statusCode == 201) {
+          await box.delete(key); // Eliminar si fue exitoso
+          print('Transacción enviada y eliminada: $key');
+        } else {
+          print(
+              'No se pudo sincronizar movmientos: $key, status: ${movimiento.id}');
+        }
+      } catch (e) {
+        print('Error al sincronizar $key: $e');
+      }
+    }
+  }
+
+  /// Método para crear transacciones solo en modo online (sin funcionalidad offline)
+  Future<Response> createOnlineOnly(Movimiento movimiento) async {
+    return await post('$url/create', movimiento.toJsonSinId(), headers: {
+      'Content-type': 'application/json',
+      'Authorization': usuario.sessionToken ?? ''
+    });
+  }
+
+  /// Método para actualizar liquidaciones solo en modo online (sin funcionalidad offline)
+  Future<Response> updateLiquidacionCompletaOnlineOnly(
+      Movimiento movimiento) async {
+    return await post('$url/updateLiquidacionCompleta', movimiento.toJson(),
+        headers: {
+          'Content-type': 'application/json',
+          'Authorization': usuario.sessionToken ?? ''
+        });
+  }
 }

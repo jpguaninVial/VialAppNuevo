@@ -3,9 +3,11 @@ import 'package:asistencia_vial_app/src/provider/turno_provider.dart';
 import 'package:get/get.dart';
 
 import '../provider/movimiento_provider.dart';
+import '../controllers/improved_connection_controller.dart';
 import 'connection_helper.dart';
 
 class ConnectionController extends GetxController {
+  // Proxy del ImprovedConnectionController
   var isOffline = false.obs;
   Timer? _timer;
   MovimientoProvider movimientoProvider=MovimientoProvider();
@@ -14,20 +16,34 @@ class ConnectionController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    checkConnection(); // Verifica una vez al iniciar
-
-    // Verifica cada 10 segundos (puedes ajustar el intervalo)
-    _timer = Timer.periodic(const Duration(seconds: 10), (_) {
-      checkConnection();
+    
+    // Sincronizar con el ImprovedConnectionController
+    _syncWithImprovedController();
+    
+    // Mantener sincronización cada segundo
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      _syncWithImprovedController();
     });
   }
 
+  void _syncWithImprovedController() {
+    try {
+      // Obtener el estado del ImprovedConnectionController
+      final improved = ImprovedConnectionController.to;
+      isOffline.value = improved.isOffline.value;
+    } catch (e) {
+      // Si no está disponible, usar verificación directa
+      checkConnection();
+    }
+  }
+
   Future<void> checkConnection() async {
-    final connected = await isConnectedToServer();
-    isOffline.value = !connected;
-    connected?movimientoProvider.sincronizarTransaccionesPendientes():'';
-    connected?movimientoProvider.sincronizarActualizacionDeTransaccionesPendientes():'';
-    connected?turnoProvider.sincronizarTurnosPendientes():'';
+    try {
+      final connected = await isConnectedToServer();
+      isOffline.value = !connected;
+    } catch (e) {
+      isOffline.value = true;
+    }
   }
 
   @override

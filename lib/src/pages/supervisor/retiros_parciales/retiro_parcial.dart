@@ -1,289 +1,450 @@
-import 'package:asistencia_vial_app/src/pages/supervisor/retiros_parciales/retiro_parcial_controller.dart';
+import 'package:asistencia_vial_app/src/pages/supervisor/retiros_parciales/improved_retiro_parcial_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
-import '../../../helper/connection_controller.dart';
-import '../../../helper/offline_banner.dart';
+import '../../../controllers/loading_controller.dart';
+import '../../../widgets/improved_offline_banner.dart';
 import '../../../models/usuario.dart';
 
-
-
 class RetiroParcialPage extends StatelessWidget {
-
-  late RetiroParcialController retiroParcialController;
-
+  late ImprovedRetiroParcialController retiroParcialController;
   Usuario? usuario;
 
-
-  RetiroParcialPage({@required this.usuario}){
-    retiroParcialController=Get.put(RetiroParcialController(usuario!));
+  RetiroParcialPage({@required this.usuario}) {
+    retiroParcialController =
+        Get.put(ImprovedRetiroParcialController(usuario!));
   }
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
+    return Scaffold(
+      backgroundColor: Colors.grey[100],
+      body: Column(
         children: [
-          Scaffold(
-            appBar: AppBar(
-              flexibleSpace:  Column(
-                children: [
-                  const OfflineBanner(),
-                  Container(
-                    margin: EdgeInsets.only(top: 15),
-                    child: Text(
-                      'Retiro Parcial - ${usuario!.nombre} ${usuario!.apellido}',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold,color: Colors.white),
-                    ),
-                  ),
-                ],
-              ),
-              backgroundColor: Color(0xFF368983),
-              elevation: 0,
-            ),
-            body: SingleChildScrollView(
-              padding: EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _sectionTitle('Recibe de Cajero'),
-                  _recibeGrid(),
-                  SizedBox(height: 10),
-
-                  Divider(thickness: 1, color: Colors.grey[300]),
-                  SizedBox(height: 20),
-                  SizedBox(height: 30),
-                  _confirmButton(context),
-                ],
+          _buildModernHeader(context),
+          ImprovedOfflineBanner(),
+          Expanded(
+            child: LoadingWrapper(
+              loadingKey: ImprovedRetiroParcialController.LOADING_KEY,
+              child: SingleChildScrollView(
+                padding: EdgeInsets.all(20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _sectionTitle('Recibe del Cajero', Icons.arrow_downward),
+                    SizedBox(height: 16),
+                    _recibeGrid(),
+                    SizedBox(height: 32),
+                    _confirmButton(context),
+                    SizedBox(height: 20),
+                  ],
+                ),
               ),
             ),
-          ),
-          // ✅ Banner flotante fijo en la parte superior de la app
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: Obx(() {
-              if (Get.find<ConnectionController>().isOffline.value) {
-                return const OfflineBanner();
-              } else {
-                return const SizedBox.shrink();
-              }
-            }),
           ),
         ],
-    );
-  }
-
-  /// **Widget: Título de Sección**
-  Widget _sectionTitle(String title) {
-    return Text(
-      title,
-      style: TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.bold,
-        color: Color(0xFF368983),
       ),
     );
   }
 
-  /// **Widget: Campo de Entrada**
+  Widget _buildModernHeader(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF368983),
+            Color(0xFF2C6E69),
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.15),
+            blurRadius: 8,
+            offset: Offset(0, 3),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding:
+              EdgeInsets.only(left: 8.0, top: 8.0, right: 20.0, bottom: 16.0),
+          child: Row(
+            children: [
+              IconButton(
+                icon: Icon(Icons.arrow_back, color: Colors.white, size: 24),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+              SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Retiro Parcial',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      '${usuario!.nombre} ${usuario!.apellido}',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.payments_outlined,
+                  color: Colors.white,
+                  size: 28,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _sectionTitle(String title, IconData icon) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Color(0xFF368983).withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Color(0xFF368983).withOpacity(0.3), width: 1),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: Color(0xFF368983), size: 24),
+          SizedBox(width: 12),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF368983),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _inputField({
     required String label,
-    IconData? icon, // Cambiado para admitir null
-    String? assetIcon, // Agregado para soportar íconos de assets
+    IconData? icon,
+    String? assetIcon,
     required TextEditingController controller,
     int? maxLength,
   }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+    return Container(
+      margin: EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 6,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
       child: TextField(
-        style: TextStyle(color: Colors.black),
+        style: TextStyle(
+            color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold),
         controller: controller,
         keyboardType: TextInputType.number,
-        maxLength: 3,
+        maxLength: maxLength ?? 3,
         decoration: InputDecoration(
+          counterText: '',
           labelText: label,
-          labelStyle: TextStyle(color: controller.text.isEmpty ? Colors.grey : Colors.black),
+          labelStyle: TextStyle(
+            color:
+                controller.text.isEmpty ? Colors.grey[600] : Color(0xFF368983),
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+          ),
           prefixIcon: assetIcon != null
               ? Padding(
-            padding: const EdgeInsets.all(10.0), // Ajuste del tamaño del ícono
-            child: Image.asset(
-              assetIcon,
-              width: 24,
-              height: 24,
-              fit: BoxFit.contain,
-            ),
-          )
-              : Icon(icon, color: Color(0xFF368983)), // Ícono estándar si no hay assetIcon
+                  padding: const EdgeInsets.all(12.0),
+                  child: Container(
+                    padding: EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Color(0xFF368983).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Image.asset(
+                      assetIcon,
+                      width: 28,
+                      height: 28,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                )
+              : Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Icon(icon, color: Color(0xFF368983), size: 28),
+                ),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(color: Color(0xFF368983)),
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide(color: Color(0xFF368983), width: 2),
           ),
+          filled: true,
+          fillColor: Colors.white,
+          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         ),
       ),
     );
   }
 
-
   Widget _recibeGrid() {
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: _inputField(
-                label: '\$ 20',
-                assetIcon: 'assets/img/billete.png',
-                controller: retiroParcialController.billetes20Controller,
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: _inputField(
+                  label: '\$ 20',
+                  assetIcon: 'assets/img/billete.png',
+                  controller: retiroParcialController.billetes20Controller,
                   maxLength: 2,
+                ),
               ),
-            ),
-            SizedBox(width: 10), // Espaciado horizontal entre columnas
-            Expanded(
-              child: _inputField(
-                label: '\$ 10',
-                assetIcon: 'assets/img/billete.png',
-                controller: retiroParcialController.billetes10RecibeController,
-                maxLength: 2,
-
+              SizedBox(width: 12),
+              Expanded(
+                child: _inputField(
+                  label: '\$ 10',
+                  assetIcon: 'assets/img/billete.png',
+                  controller:
+                      retiroParcialController.billetes10RecibeController,
+                  maxLength: 2,
+                ),
               ),
-            ),
-          ],
-        ),
-        SizedBox(height: 8), // Espaciado vertical entre filas
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: _inputField(
-                label: '\$ 5',
-                assetIcon: 'assets/img/billete.png',
-                controller: retiroParcialController.billetes5RecibeController,
-                maxLength: 2,
-
+            ],
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: _inputField(
+                  label: '\$ 5',
+                  assetIcon: 'assets/img/billete.png',
+                  controller: retiroParcialController.billetes5RecibeController,
+                  maxLength: 2,
+                ),
               ),
-            ),
-            SizedBox(width: 10), // Espaciado horizontal entre columnas
-            Expanded(
-              child: _inputField(
-                label: '\$ 1',
-                assetIcon: 'assets/img/moneda.png',
-                controller: retiroParcialController.billetes1RecibeController,
-                maxLength: 2,
-
+              SizedBox(width: 12),
+              Expanded(
+                child: _inputField(
+                  label: '\$ 1',
+                  assetIcon: 'assets/img/moneda.png',
+                  controller: retiroParcialController.billetes1RecibeController,
+                  maxLength: 2,
+                ),
               ),
-            ),
-          ],
-        ),
-      ],
+            ],
+          ),
+        ],
+      ),
     );
   }
 
-
-
-  /// **Widget: Botón de Confirmación**
   Widget _confirmButton(BuildContext context) {
-    return Center(
+    return Container(
+      width: double.infinity,
+      height: 56,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+          colors: [
+            Color(0xFF368983),
+            Color(0xFF2C6E69),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0xFF368983).withOpacity(0.3),
+            spreadRadius: 1,
+            blurRadius: 8,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
       child: ElevatedButton(
         onPressed: () {
           _confirmRetiroParcial(context);
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: Color(0xFF368983),
-          padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(16),
           ),
         ),
-        child: Text(
-          'Confirmar Retiro',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.check_circle_outline, color: Colors.white, size: 24),
+            SizedBox(width: 12),
+            Text(
+              'Confirmar Retiro',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  /// **Método: Confirmar Retiro Parcial**
   void _confirmRetiroParcial(BuildContext context) {
-    // Validar valores vacíos y asignar 0 por defecto
     final billetes20 = retiroParcialController.billetes20Controller.text.isEmpty
         ? '0'
         : retiroParcialController.billetes20Controller.text;
-    final billetes10 = retiroParcialController.billetes10RecibeController.text.isEmpty
-        ? '0'
-        : retiroParcialController.billetes10RecibeController.text;
-    final billetes5 = retiroParcialController.billetes5RecibeController.text.isEmpty
-        ? '0'
-        : retiroParcialController.billetes5RecibeController.text;
-    final billetes1 = retiroParcialController.billetes1RecibeController.text.isEmpty
-        ? '0'
-        : retiroParcialController.billetes1RecibeController.text;
+    final billetes10 =
+        retiroParcialController.billetes10RecibeController.text.isEmpty
+            ? '0'
+            : retiroParcialController.billetes10RecibeController.text;
+    final billetes5 =
+        retiroParcialController.billetes5RecibeController.text.isEmpty
+            ? '0'
+            : retiroParcialController.billetes5RecibeController.text;
+    final billetes1 =
+        retiroParcialController.billetes1RecibeController.text.isEmpty
+            ? '0'
+            : retiroParcialController.billetes1RecibeController.text;
 
-    // Cálculo del total entregado por el supervisor
-    final totalRecibe = (int.parse(billetes10) * 10) + (int.parse(billetes20) * 20)+
+    final totalRecibe = (int.parse(billetes10) * 10) +
+        (int.parse(billetes20) * 20) +
         (int.parse(billetes5) * 5) +
         (int.parse(billetes1) * 1);
 
-    // Mostrar el diálogo de confirmación
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: Row(
             children: [
-              Icon(Icons.library_add_check_outlined, color: Color(0xFF368983)),
-              SizedBox(width: 10),
-              Text("Confirmación", style: TextStyle(fontWeight: FontWeight.bold)),
+              Icon(Icons.library_add_check_outlined,
+                  color: Color(0xFF368983), size: 28),
+              SizedBox(width: 12),
+              Text("Confirmación",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
             ],
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text("¿Estás seguro de realizar este retiro?", style: TextStyle(fontSize: 16)),
-              SizedBox(height: 5),
-              Divider(color: Colors.grey[300]),
-              SizedBox(height: 5),
-              Text("Recibes:", style: TextStyle(fontWeight: FontWeight.bold)),
-              Text("- $billetes20 billetes de \$20"),
-              Text("- $billetes10 billetes de \$10"),
-              Text("- $billetes5 billetes de \$5"),
-              Text("- $billetes1 monedas de \$1"),
-              SizedBox(height: 5),
-              Text("Total Recibido: \$${totalRecibe.toStringAsFixed(2)}",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF368983))),
-            ],
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("¿Estás seguro de realizar este retiro?",
+                    style: TextStyle(fontSize: 16)),
+                SizedBox(height: 12),
+                Divider(color: Colors.grey[300]),
+                SizedBox(height: 12),
+                Text("Recibes del Cajero:",
+                    style:
+                        TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                SizedBox(height: 8),
+                Text("• $billetes20 billetes de \$20"),
+                Text("• $billetes10 billetes de \$10"),
+                Text("• $billetes5 billetes de \$5"),
+                Text("• $billetes1 monedas de \$1"),
+                SizedBox(height: 12),
+                Container(
+                  padding: EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Color(0xFF368983).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    "Total Recibido: \$${totalRecibe.toStringAsFixed(2)}",
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF368983)),
+                  ),
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); // Cierra el diálogo
+                Navigator.of(context).pop();
               },
-              child: Text("Cancelar", style: TextStyle(color: Colors.grey)),
+              child: Text("Cancelar",
+                  style: TextStyle(color: Colors.grey, fontSize: 16)),
             ),
             ElevatedButton(
-              onPressed: retiroParcialController.cargando.value
-                  ? null
-                  : () async {
-                retiroParcialController.registarRetiroParcial(context, usuario!);
+              onPressed: () {
+                Get.back();
+                retiroParcialController.registrarRetiroParcial(
+                    context, usuario!);
               },
-              child: retiroParcialController.cargando.value
-                  ? CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-              )
-                  : Text('Confirmar'),
+              child: Obx(() {
+                final isLoading = LoadingController.to
+                    .isLoading(ImprovedRetiroParcialController.LOADING_KEY);
+                return isLoading
+                    ? SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : Text('Confirmar',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold));
+              }),
               style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.symmetric(vertical: 16),
+                padding: EdgeInsets.symmetric(vertical: 14, horizontal: 24),
                 backgroundColor: Color(0xFF368983),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8)),
               ),
             ),
           ],
@@ -291,12 +452,4 @@ class RetiroParcialPage extends StatelessWidget {
       },
     );
   }
-
-
 }
-
-
-
-
-
-

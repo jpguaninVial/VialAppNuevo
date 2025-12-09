@@ -1,4 +1,7 @@
 import 'package:asistencia_vial_app/src/helper/connection_controller.dart';
+import 'package:asistencia_vial_app/src/controllers/improved_connection_controller.dart';
+import 'package:asistencia_vial_app/src/controllers/loading_controller.dart';
+import 'package:asistencia_vial_app/src/services/sync_service.dart';
 import 'package:asistencia_vial_app/src/models/boveda.dart';
 import 'package:asistencia_vial_app/src/models/estado.dart';
 import 'package:asistencia_vial_app/src/models/movimiento.dart';
@@ -51,13 +54,22 @@ void main() async{
   await Hive.openBox<Movimiento>('movimientos');
   await Hive.openBox<Movimiento>('transacciones');
   await Hive.openBox<Movimiento>('updateTransacciones');
+  await Hive.openBox<Movimiento>('liquidacionTransacciones');
   await Hive.openBox<Movimiento>('tipoMovimiento');
   await Hive.openBox<Turno>('turno');
 
 
   await GetStorage.init();
-  runApp(const MyApp());
+  
+  // Inicializar controladores ANTES de runApp
+  Get.put(LoadingController());
+  Get.put(ImprovedConnectionController());
+  Get.put(SyncService());
+  
+  // Mantener compatibilidad con ConnectionController original (como proxy)
   Get.put(ConnectionController());
+  
+  runApp(const MyApp());
 }
 
 class MyApp extends StatefulWidget {

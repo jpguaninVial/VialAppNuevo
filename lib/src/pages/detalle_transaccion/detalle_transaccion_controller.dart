@@ -12,86 +12,82 @@ import '../../provider/usuario_provider.dart';
 import '../reportes/liquidacion_cajero/reporte_liquidacion.dart';
 import '../supervisor/faltante/faltante.dart';
 
-class DetalleTransaccionController extends GetxController{
-
-  Usuario usuarioSession = Usuario.fromJson(GetStorage().read('usuario')??{});
+class DetalleTransaccionController extends GetxController {
+  Usuario usuarioSession = Usuario.fromJson(GetStorage().read('usuario') ?? {});
   List<Movimiento>? movimientos;
-  UsuarioProvider usuarioProvider=UsuarioProvider();
+  UsuarioProvider usuarioProvider = UsuarioProvider();
 
-  MovimientoProvider movimientoProvider=MovimientoProvider();
+  MovimientoProvider movimientoProvider = MovimientoProvider();
   int? bandera;
 
-
-  DetalleTransaccionController(List<Movimiento> movimientos,int bandera) {
-    this.movimientos=movimientos;
-    this.bandera=bandera;
+  DetalleTransaccionController(List<Movimiento> movimientos, int bandera) {
+    this.movimientos = movimientos;
+    this.bandera = bandera;
     print('Bandera $bandera');
-
   }
-
 
   void goToEditTransaccion(Movimiento movimiento) {
     Get.off(
-          () => EditarTransaccionPage(movimiento: movimiento), // Página a la que navegas
+      () => EditarTransaccionPage(
+          movimiento: movimiento), // Página a la que navegas
     );
-
   }
 
-  void goToFaltantes(String idturno) async{
+  void goToFaltantes(String idturno) async {
     List<Usuario> usuarios = await usuarioProvider.findByTurno(idturno);
     List<Movimiento>? movimientos;
     Movimiento liquidacion;
-    var result = await movimientoProvider.getMovimientoByTurno(idturno??''); //cambiar getApertura
+    var result = await movimientoProvider
+        .getMovimientoByTurno(idturno ?? ''); //cambiar getApertura
     movimientos = result;
-    liquidacion = movimientos.firstWhere((m)=> m.idTipoMovimiento =='4');
-    if(usuarioSession.roles?.first.id=='6'&& liquidacion.estado=='0'){
-      liquidacion.idSupervisor=usuarioSession.id;
-      liquidacion.estado='1';
-      ResponseApi response2 = await movimientoProvider.updateEstadoMovimiento(liquidacion);
+    liquidacion = movimientos.firstWhere((m) => m.idTipoMovimiento == '4');
+    if (usuarioSession.roles?.first.id == '6' && liquidacion.estado == '0') {
+      liquidacion.idSupervisor = usuarioSession.id;
+      liquidacion.estado = '1';
+      ResponseApi response2 =
+          await movimientoProvider.updateEstadoMovimiento(liquidacion);
     }
-    Usuario usuario = usuarios.firstWhere((m)=> m.id=='${liquidacion.idCajero}');
+    Usuario usuario =
+        usuarios.firstWhere((m) => m.id == '${liquidacion.idCajero}');
     Get.to(
-          () => FaltantesPage(movimientos: movimientos, bandera: bandera),
-      arguments: usuario,// Página a la que navegas
+      () => FaltantesPage(movimientos: movimientos, bandera: 1),
+      arguments: usuario, // Página a la que navegas
     );
-
-
   }
 
-  void goToReportes(String idturno) async{
+  void goToReportes(String idturno) async {
     List<Movimiento>? movimientos;
     Movimiento liquidacion;
 
-    var result = await movimientoProvider.getMovimientoByTurno(idturno); //cambiar getApertura
+    var result = await movimientoProvider
+        .getMovimientoByTurno(idturno); //cambiar getApertura
     movimientos = result;
 
-    liquidacion = movimientos.firstWhere((m)=> m.idTipoMovimiento =='4');
-    if(usuarioSession.roles?.first.id=='6'&& liquidacion.estado=='0'){
-      liquidacion.idSupervisor=usuarioSession.id;
-      liquidacion.estado='1';
+    liquidacion = movimientos.firstWhere((m) => m.idTipoMovimiento == '4');
+    if (usuarioSession.roles?.first.id == '6' && liquidacion.estado == '0') {
+      liquidacion.idSupervisor = usuarioSession.id;
+      liquidacion.estado = '1';
       await movimientoProvider.updateEstadoMovimiento(liquidacion);
     }
 
     Get.to(
-          () => ReporteLiquidacion(movimientos: movimientos), // Página a la que navegas
+      () => ReporteLiquidacion(
+          movimientos: movimientos), // Página a la que navegas
       arguments: usuarioSession, // Envía el objeto Usuario como argumento
     );
-
   }
 
-  void goToReporteCaneje(String idturno) async{
+  void goToReporteCaneje(String idturno) async {
     List<Movimiento>? movimientos;
 
-    var result = await movimientoProvider.getMovimientoByTurno(idturno); //cambiar getApertura
+    var result = await movimientoProvider
+        .getMovimientoByTurno(idturno); //cambiar getApertura
     movimientos = result;
     Get.to(
-          () => ReporteCanje(usuario: usuarioSession,movimientos: movimientos), // Página a la que navegas
+      () => ReporteCanje(
+          usuario: usuarioSession,
+          movimientos: movimientos), // Página a la que navegas
       arguments: usuarioSession, // Envía el objeto Usuario como argumento
     );
-
   }
-
-
-
-
 }

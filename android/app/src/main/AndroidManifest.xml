@@ -1,4 +1,4 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="vial25.com.ec.asistencia_vial_app">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.ec.vial_app">
 
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
@@ -9,7 +9,7 @@
 
     <application
         android:enableOnBackInvokedCallback="true"
-        android:label="VialApp"
+        android:label="VialAppDEV"
         android:name="${applicationName}"
         android:icon="@mipmap/vialapp_logo"
         android:usesCleartextTraffic="true"

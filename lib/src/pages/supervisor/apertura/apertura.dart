@@ -1,19 +1,21 @@
-import 'package:asistencia_vial_app/src/pages/supervisor/apertura/apertura_controller.dart';
+import 'package:asistencia_vial_app/src/pages/supervisor/apertura/improved_apertura_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../helper/connection_controller.dart';
 import '../../../helper/offline_banner.dart';
 import '../../../models/usuario.dart';
+import '../../../controllers/loading_controller.dart';
+import '../../../widgets/improved_offline_banner.dart';
 
 class AperturaPage extends StatelessWidget {
 
-  late AperturaController aperturaController;
+  late ImprovedAperturaController aperturaController;
 
   Usuario? usuario;
 
   AperturaPage({@required this.usuario}){
-    aperturaController=Get.put(AperturaController(usuario!));
+    aperturaController=Get.put(ImprovedAperturaController(usuario!));
   }
 
   @override
@@ -33,52 +35,48 @@ class AperturaPage extends StatelessWidget {
             backgroundColor: Color(0xFF368983),
             elevation: 0,
           ),
-          body: SingleChildScrollView(
-            padding: EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _sectionTitle('Recibe de Cajero'),
-                _recibeGrid(),
-                SizedBox(height: 10),
-                if (usuario!.idRol != '4') ...[
-                  _confirmVia(context, usuario!.idTurno ?? ''),
-                  SizedBox(height: 10),
-                ],
-                Center(
-                  child: Text(
-                    aperturaController.asignacion.value == 'null'
-                        ? ''
-                        : 'Via Asignada ${aperturaController.asignacion.value}',
-                    style: TextStyle(
-                      color: aperturaController.asignacion.value == 'null'
-                          ? Colors.redAccent
-                          : Colors.green,
-                      fontSize: 16,
+          body: Column(
+            children: [
+              ImprovedOfflineBanner(),
+              Expanded(
+                child: LoadingWrapper(
+                  loadingKey: ImprovedAperturaController.LOADING_KEY,
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _sectionTitle('Recibe de Cajero'),
+                        _recibeGrid(),
+                        SizedBox(height: 10),
+                        if (usuario!.idRol != '4') ...[
+                          _confirmVia(context, usuario!.idTurno ?? ''),
+                          SizedBox(height: 10),
+                        ],
+                        Center(
+                          child: Text(
+                            aperturaController.asignacion.value == 'null'
+                                ? ''
+                                : 'Via Asignada ${aperturaController.asignacion.value}',
+                            style: TextStyle(
+                              color: aperturaController.asignacion.value == 'null'
+                                  ? Colors.redAccent
+                                  : Colors.green,
+                              fontSize: 16,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                        Divider(thickness: 1, color: Colors.grey[300]),
+                        SizedBox(height: 20),
+                        _confirmButton(context),
+                      ],
                     ),
-                    textAlign: TextAlign.center,
                   ),
                 ),
-                Divider(thickness: 1, color: Colors.grey[300]),
-                SizedBox(height: 20),
-                _confirmButton(context),
-              ],
-            ),
+              ),
+            ],
           ),
-        ),
-
-        // ✅ Banner flotante fijo en la parte superior de la app
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          child: Obx(() {
-            if (Get.find<ConnectionController>().isOffline.value) {
-              return const OfflineBanner();
-            } else {
-              return const SizedBox.shrink();
-            }
-          }),
         ),
       ],
     ));
@@ -414,7 +412,7 @@ class AperturaPage extends StatelessWidget {
             ElevatedButton(
               onPressed: () {
                 Navigator.of(context).pop(); // Cierra el diálogo
-                aperturaController.registarApertura(context, usuario!);
+                aperturaController.registrarApertura(context, usuario!);
               },
               style: ElevatedButton.styleFrom(backgroundColor: Color(0xFF368983)),
               child: Text("Confirmar"),

@@ -20,6 +20,7 @@ class CanjeFortiusController extends GetxController{
 
    TextEditingController billetes5RecibeController = TextEditingController();
    TextEditingController billetes1RecibeController = TextEditingController();
+   TextEditingController billetes10RecibeController = TextEditingController();
    TextEditingController billetes10EntregaController = TextEditingController();
    TextEditingController billetes20EntregaController = TextEditingController();
 
@@ -39,6 +40,7 @@ class CanjeFortiusController extends GetxController{
          // Validar valores: si están vacíos, asignar '0'
          String recibe1D = billetes1RecibeController.text.isEmpty ? '0' : billetes1RecibeController.text;
          String recibe5D = billetes5RecibeController.text.isEmpty ? '0' : billetes5RecibeController.text;
+         String recibe10D = billetes10RecibeController.text.isEmpty ? '0' : billetes10RecibeController.text;
 
 
 
@@ -63,7 +65,7 @@ class CanjeFortiusController extends GetxController{
             recibe1D: recibe1D,
             recibe1DB: '0',
             recibe5D: recibe5D,
-            recibe10D: '0',
+            recibe10D: recibe10D,
             recibe20D: '0',
             entrega1C: '0',
             entrega5C: '0',

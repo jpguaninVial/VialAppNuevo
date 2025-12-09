@@ -1,6 +1,4 @@
 import 'package:asistencia_vial_app/src/pages/reportes/liquidacion_cajero/reporte_liquidacion.dart';
-import 'package:asistencia_vial_app/src/pages/supervisor/faltante/faltante.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -11,356 +9,502 @@ import '../../../models/response_api.dart';
 import '../../../models/usuario.dart';
 import '../../../provider/movimiento_provider.dart';
 
-class FaltanteController extends GetxController{
+class FaltanteController extends GetxController {
+  // Constants
+  static const String _TIPO_APERTURA = '1';
+  static const String _TIPO_LIQUIDACION = '4';
+  static const String _TIPO_FALTANTE = '6';
 
-  MovimientoProvider movimientoProvider=MovimientoProvider();
+  // Dependencies
+  final MovimientoProvider _movimientoProvider = MovimientoProvider();
+  final Usuario _usuarioSession =
+      Usuario.fromJson(GetStorage().read('usuario') ?? {});
 
+  // Properties
+  late final Usuario usuario;
+  late final List<Movimiento> movimientos;
+  late final int bandera;
+  late final String parteTrabajo;
+  late final String idMovimientoFaltante;
 
-  Usuario usuarioSession = Usuario.fromJson(GetStorage().read('usuario')??{});
+  // Form Controllers - Liquidación
+  final simulacionesCantidadController = TextEditingController();
+  final simulacionesValorController = TextEditingController();
+  final anulacionesCantidadController = TextEditingController();
+  final anulacionesValorController = TextEditingController();
+  final sobrantesController = TextEditingController();
+  final parteTrabajoController = TextEditingController();
 
-  Usuario? usuario;
-  List<Movimiento>? movimientos;
-  int? bandera;
-  String? pdt;
+  // Form Controllers - Entrega
+  final billetes20ControllerE = TextEditingController();
+  final billetes10ControllerE = TextEditingController();
+  final billetes5ControllerE = TextEditingController();
+  final billetes1ControllerE = TextEditingController();
+  final moneda50ControllerE = TextEditingController();
+  final moneda25ControllerE = TextEditingController();
+  final moneda10ControllerE = TextEditingController();
+  final moneda5ControllerE = TextEditingController();
 
-  TextEditingController simulacionesCantidadController = TextEditingController();
-  TextEditingController simulacionesValorController = TextEditingController();
-  TextEditingController anulacionesCantidadController = TextEditingController();
-  TextEditingController anulacionesValorController = TextEditingController();
-  TextEditingController sobrantesController = TextEditingController();
-  final TextEditingController parteTrabajoController = TextEditingController();
+  // Form Controllers - Recibe
+  final billetes20ControllerR = TextEditingController();
+  final billetes10ControllerR = TextEditingController();
+  final billetes5ControllerR = TextEditingController();
+  final billetes1ControllerR = TextEditingController();
+  final moneda50ControllerR = TextEditingController();
+  final moneda25ControllerR = TextEditingController();
+  final moneda10ControllerR = TextEditingController();
+  final moneda5ControllerR = TextEditingController();
 
-  RxBool isFaltanteVisible = false.obs;
-  //ENTRGA
-  TextEditingController billetes20ControllerE = TextEditingController();
-  TextEditingController billetes10ControllerE = TextEditingController();
-  TextEditingController billetes5ControllerE = TextEditingController();
-  TextEditingController billetes1ControllerE = TextEditingController();
-  TextEditingController Moneda50ControllerE = TextEditingController();
-  TextEditingController Moneda25ControllerE = TextEditingController();
-  TextEditingController Moneda10ControllerE = TextEditingController();
-  TextEditingController Moneda5ControllerE = TextEditingController();
+  // Observable
+  final isFaltanteVisible = false.obs;
 
-  //RECIBE
-  TextEditingController billetes20ControllerR = TextEditingController();
-  TextEditingController billetes10ControllerR = TextEditingController();
-  TextEditingController billetes5ControllerR= TextEditingController();
-  TextEditingController billetes1ControllerR = TextEditingController();
-  TextEditingController Moneda50ControllerR = TextEditingController();
-  TextEditingController Moneda25ControllerR = TextEditingController();
-  TextEditingController Moneda10ControllerR = TextEditingController();
-  TextEditingController Moneda5ControllerR = TextEditingController();
-  late String idmovimiento;
-
-
-  FaltanteController(Usuario usuario, List<Movimiento> movimientos,int bandera) {
-    this.usuario=usuario;
-    this.movimientos=movimientos;
-    this.bandera=bandera;
-
-    final liquidacion1 = movimientos.firstWhere((m) => m.idTipoMovimiento == '4', orElse: () => Movimiento());
-    final faltante =  movimientos.firstWhere((m) => m.idTipoMovimiento == '6', orElse: () => Movimiento());
-    final apertura= movimientos.firstWhere((m)=> m.idTipoMovimiento=='1', orElse: () => Movimiento());
-
-    DateTime fechaApertura = DateTime.parse(apertura.fecha??'');
-    if(fechaApertura.hour == 23 ){
-       fechaApertura=fechaApertura.add(Duration(days: 1));
-    }
-
-    String formattedFechaHoy = DateFormat('ddMMyyyy').format(fechaApertura);
-    pdt='${usuario.via??'0'}$formattedFechaHoy';
-    
-    print('parte de trabajo: $pdt');
-
-
-
-    parteTrabajoController.text = liquidacion1.partetrabajo?.toString() ?? pdt??'';
-    simulacionesCantidadController.text = liquidacion1.simulaciones?.toString() ?? '';
-    simulacionesValorController.text = liquidacion1.valorsimulaciones?.toString() ?? '';
-    anulacionesCantidadController.text = liquidacion1.anulaciones?.toString() ?? '';
-    anulacionesValorController.text = liquidacion1.valoranulaciones?.toString() ?? '';
-    sobrantesController.text = liquidacion1.sobrante?.toString() ?? '';
-
-    faltante.entrega20D=='0'?faltante.entrega20D='':billetes20ControllerE.text = faltante.entrega20D??'';
-    faltante.entrega10D=='0'?faltante.entrega10D='':billetes10ControllerE.text = faltante.entrega10D??'';
-    faltante.entrega5D=='0'?faltante.entrega5D='':billetes5ControllerE.text = faltante.entrega5D??'';
-    faltante.entrega1D=='0'?faltante.entrega1D='':billetes1ControllerE.text = faltante.entrega1D??'';
-    faltante.entrega50C=='0'?faltante.entrega50C='':Moneda50ControllerE.text = faltante.entrega50C??'';
-    faltante.entrega25C=='0'?faltante.entrega25C='':Moneda25ControllerE.text = faltante.entrega25C??'';
-    faltante.entrega10C=='0'?faltante.entrega10C='':Moneda10ControllerE.text = faltante.entrega10C??'';
-    faltante.entrega5C=='0'?faltante.entrega5C='':Moneda5ControllerE.text = faltante.entrega5C??'';
-
-    faltante.recibe20D=='0'?faltante.recibe20D='':billetes20ControllerR.text = faltante.recibe20D??'';
-    faltante.recibe10D=='0'?faltante.recibe10D='':billetes10ControllerR.text = faltante.recibe10D??'';
-    faltante.recibe5D=='0'?faltante.recibe5D='':billetes5ControllerR.text = faltante.recibe5D??'';
-    faltante.recibe1D=='0'?faltante.recibe1D='':billetes1ControllerR.text = faltante.recibe1D??'';
-    faltante.recibe50C=='0'?faltante.recibe50C='':Moneda50ControllerE.text = faltante.recibe50C??'';
-    faltante.recibe25C=='0'?faltante.recibe25C='':Moneda25ControllerE.text = faltante.recibe25C??'';
-    faltante.recibe10C=='0'?faltante.recibe10C='':Moneda10ControllerE.text = faltante.recibe10C??'';
-    faltante.recibe5C=='0'?faltante.recibe5C='':Moneda5ControllerE.text = faltante.recibe5C??'';
-
-    idmovimiento=faltante.id?.toString()??'0';
-
+  FaltanteController(this.usuario, this.movimientos, this.bandera) {
+    _initializeController();
   }
 
+  void _initializeController() {
+    final liquidacion = _findMovimientoByTipo(_TIPO_LIQUIDACION);
+    final faltante = _findMovimientoByTipo(_TIPO_FALTANTE);
+    final apertura = _findMovimientoByTipo(_TIPO_APERTURA);
 
+    parteTrabajo = _generateParteTrabajo(apertura);
+    idMovimientoFaltante = faltante.id?.toString() ?? '0';
 
-  void actualizarLiquidacion(BuildContext context,List<Movimiento> movimientos) async {
+    _initializeLiquidacionFields(liquidacion);
+    _initializeFaltanteFields(faltante);
+  }
 
-    final liquidacion = movimientos.firstWhere((m) => m.idTipoMovimiento == '4', orElse: () => Movimiento());
-    final primerMovimiento= movimientos.firstWhere((m)=> m.idTipoMovimiento=='1', orElse: () => Movimiento());
+  Movimiento _findMovimientoByTipo(String tipo) {
+    return movimientos.firstWhere(
+      (m) => m.idTipoMovimiento == tipo,
+      orElse: () => Movimiento(),
+    );
+  }
 
+  String _generateParteTrabajo(Movimiento apertura) {
+    DateTime fechaApertura = DateTime.parse(apertura.fecha ?? '');
+    if (fechaApertura.hour == 23) {
+      fechaApertura = fechaApertura.add(const Duration(days: 1));
+    }
+    String formattedFecha = DateFormat('ddMMyyyy').format(fechaApertura);
+    return '${usuario.via ?? '0'}$formattedFecha';
+  }
+
+  void _initializeLiquidacionFields(Movimiento liquidacion) {
+    parteTrabajoController.text =
+        liquidacion.partetrabajo?.toString() ?? parteTrabajo;
+    simulacionesCantidadController.text =
+        liquidacion.simulaciones?.toString() ?? '';
+    simulacionesValorController.text =
+        liquidacion.valorsimulaciones?.toString() ?? '';
+    anulacionesCantidadController.text =
+        liquidacion.anulaciones?.toString() ?? '';
+    anulacionesValorController.text =
+        liquidacion.valoranulaciones?.toString() ?? '';
+    sobrantesController.text = liquidacion.sobrante?.toString() ?? '';
+  }
+
+  void _initializeFaltanteFields(Movimiento faltante) {
+    // Entrega
+    _setControllerValue(billetes20ControllerE, faltante.entrega20D);
+    _setControllerValue(billetes10ControllerE, faltante.entrega10D);
+    _setControllerValue(billetes5ControllerE, faltante.entrega5D);
+    _setControllerValue(billetes1ControllerE, faltante.entrega1D);
+    _setControllerValue(moneda50ControllerE, faltante.entrega50C);
+    _setControllerValue(moneda25ControllerE, faltante.entrega25C);
+    _setControllerValue(moneda10ControllerE, faltante.entrega10C);
+    _setControllerValue(moneda5ControllerE, faltante.entrega5C);
+
+    // Recibe
+    _setControllerValue(billetes20ControllerR, faltante.recibe20D);
+    _setControllerValue(billetes10ControllerR, faltante.recibe10D);
+    _setControllerValue(billetes5ControllerR, faltante.recibe5D);
+    _setControllerValue(billetes1ControllerR, faltante.recibe1D);
+    _setControllerValue(moneda50ControllerR, faltante.recibe50C);
+    _setControllerValue(moneda25ControllerR, faltante.recibe25C);
+    _setControllerValue(moneda10ControllerR, faltante.recibe10C);
+    _setControllerValue(moneda5ControllerR, faltante.recibe5C);
+  }
+
+  void _setControllerValue(TextEditingController controller, String? value) {
+    if (value != null && value != '0') {
+      controller.text = value;
+    }
+  }
+
+  // ...existing code...
+  // ...existing code...
+  Future<void> actualizarLiquidacion(BuildContext context) async {
     try {
+      final formData = _extractFormData();
+      final totalRecibido = _calculateTotalRecibido(formData);
 
-      String recibe5C = Moneda5ControllerR.text.isEmpty ? '0' : Moneda5ControllerR.text;
-      String recibe10C = Moneda10ControllerR.text.isEmpty ? '0' : Moneda10ControllerR.text;
-      String recibe25C = Moneda25ControllerR.text.isEmpty ? '0' : Moneda25ControllerR.text;
-      String recibe50C= Moneda50ControllerR.text.isEmpty ? '0' : Moneda50ControllerR.text;
-      String recibe1D = billetes1ControllerR.text.isEmpty ? '0' : billetes1ControllerR.text;
-      String recibe5D = billetes5ControllerR.text.isEmpty ? '0' : billetes5ControllerR.text;
-      String recibe10D = billetes10ControllerR.text.isEmpty ? '0' : billetes10ControllerR.text;
-      String recibe20D = billetes20ControllerR.text.isEmpty ? '0' : billetes20ControllerR.text;
-
-      String entrega5C = Moneda5ControllerE.text.isEmpty ? '0' : Moneda5ControllerE.text;
-      String entrega10C = Moneda10ControllerE.text.isEmpty ? '0' : Moneda10ControllerE.text;
-      String entrega25C = Moneda25ControllerE.text.isEmpty ? '0' : Moneda25ControllerE.text;
-      String entrega50C= Moneda50ControllerE.text.isEmpty ? '0' : Moneda50ControllerE.text;
-      String entrega1D = billetes1ControllerE.text.isEmpty ? '0' : billetes1ControllerE.text;
-      String entrega5D = billetes5ControllerE.text.isEmpty ? '0' : billetes5ControllerE.text;
-      String entrega10D = billetes10ControllerE.text.isEmpty ? '0' : billetes10ControllerE.text;
-      String entrega20D = billetes20ControllerE.text.isEmpty ? '0' : billetes20ControllerE.text;
-
-
-      String anulaciones = anulacionesCantidadController.text.isEmpty?'':anulacionesCantidadController.text;
-      String valoranulaciones = anulacionesValorController.text.isEmpty?'':anulacionesValorController.text;
-      String simulaciones = simulacionesCantidadController.text.isEmpty?'':simulacionesCantidadController.text;
-      String valorsimulaciones = simulacionesValorController.text.isEmpty?'':simulacionesValorController.text;
-      String sobrante = sobrantesController.text.isEmpty?'':sobrantesController.text;
-      String partetrabajo = parteTrabajoController.text.isEmpty?'$pdt':parteTrabajoController.text;
-
-      // Calcular la suma total de "Recibido"
-      double totalRecibido = (double.parse(recibe5C) * 0.05) +
-          (double.parse(recibe10C) * 0.10) +
-          (double.parse(recibe25C) * 0.25) +
-          (double.parse(recibe50C) * 0.50) +
-          double.parse(recibe1D) +
-          (double.parse(recibe5D) * 5) +
-          (double.parse(recibe10D) * 10) +
-          (double.parse(recibe20D) * 20);
-
-      // Crear el objeto Movimiento
-      Movimiento movimiento = Movimiento(
-          turno: usuario?.turno,
-          idturno: usuario?.idTurno,
-          idSupervisor: usuarioSession.id,
-          idCajero: usuario?.id,
-          idTipoMovimiento: '6',
-          via: usuario?.via,
-          idPeaje: usuarioSession.idPeaje,
-          recibe1C: '0',
-          partetrabajo: '0',
-          recibe5C: recibe5C,
-          recibe10C: recibe10C,
-          recibe25C: recibe25C,
-          recibe50C: recibe50C,
-          recibe1DB: '0',
-          recibe1D: recibe1D,
-          recibe2D: '0',
-          recibe5D: recibe5D,
-          recibe10D: recibe10D,
-          recibe20D: recibe20D,
-          entrega1C: '0',
-          entrega5C: entrega5C,
-          entrega10C: entrega10C,
-          entrega25C: entrega25C,
-          entrega50C: entrega50C,
-          entrega1DB: '0',
-          entrega1D: entrega1D,
-          entrega5D: entrega5D,
-          entrega10D: entrega10D,
-          entrega20D: entrega20D
-      );
-
-      Movimiento movimiento2 = Movimiento(
-          id: liquidacion.id,
-          idSupervisor: usuarioSession.id,
-          partetrabajo: partetrabajo,
-          anulaciones: anulaciones,
-          valoranulaciones: valoranulaciones,
-          simulaciones: simulaciones,
-          valorsimulaciones: valorsimulaciones,
-          sobrante: sobrante
-
-      );
-
-      Movimiento movimiento3 = Movimiento(
-          turno: usuario?.turno,
-          idturno: usuario?.idTurno,
-          idSupervisor: usuarioSession.id,
-          idCajero: usuario?.id,
-          idTipoMovimiento: '4',
-          via: usuario?.via,
-          idPeaje: usuarioSession.idPeaje,
-          partetrabajo: partetrabajo,
-          recibe1C: '0',
-          recibe5C: recibe5C,
-          recibe10C: recibe10C,
-          recibe25C: recibe25C,
-          recibe50C: recibe50C,
-          recibe1DB: '0',
-          recibe1D: recibe1D,
-          recibe2D: '0',
-          recibe5D: recibe5D,
-          recibe10D: recibe10D,
-          recibe20D: recibe20D,
-          entrega1C: '0',
-          entrega5C: entrega5C,
-          entrega10C: entrega10C,
-          entrega25C: entrega25C,
-          entrega50C: entrega50C,
-          entrega1DB: '0',
-          entrega1D: entrega1D,
-          entrega5D: entrega5D,
-          entrega10D: entrega10D,
-          entrega20D: entrega20D,
-          sobrante: '0'
-      );
-
-      Movimiento movimiento4 = Movimiento(
-          id:idmovimiento,
-          turno: usuario?.turno,
-          idturno: usuario?.idTurno,
-          idSupervisor: usuarioSession.id,
-          idCajero: usuario?.id,
-          idTipoMovimiento: '6',
-          via: usuario?.via,
-          idPeaje: usuarioSession.idPeaje,
-          recibe1C: '0',
-          partetrabajo: '0',
-          recibe5C: recibe5C,
-          recibe10C: recibe10C,
-          recibe25C: recibe25C,
-          recibe50C: recibe50C,
-          recibe1DB: '0',
-          recibe1D: recibe1D,
-          recibe2D: '0',
-          recibe5D: recibe5D,
-          recibe10D: recibe10D,
-          recibe20D: recibe20D,
-          entrega1C: '0',
-          entrega5C: entrega5C,
-          entrega10C: entrega10C,
-          entrega25C: entrega25C,
-          entrega50C: entrega50C,
-          entrega1DB: '0',
-          entrega1D: entrega1D,
-          entrega5D: entrega5D,
-          entrega10D: entrega10D,
-          entrega20D: entrega20D,
-          sobrante: '0'
-      );
-
-
-      if(bandera==1){//GUARDA EL PARTE DE TRABAJO
-        Response response = await movimientoProvider.create(movimiento3);
-
-        if (response.statusCode == 201) {
-          Get.snackbar(
-              'Guardado',
-              'El parte de trabajo se ha registrado',
-              backgroundColor: Colors.green,
-              colorText: Colors.white
-          );
-          Get.offNamedUntil('/home', (route) => false, arguments: {'index': 2});
+      if (bandera == 1) {
+        if (totalRecibido > 0) {
+          await _crearNuevoFaltante(formData); // Crea movimiento tipo 6
         }
-
-        if (response.statusCode == 202) {
-          Get.snackbar(
-              'Transacción Offline',
-              'El parte de trabajo se ha registrado',
-              icon: Icon(Icons.cloud_off_outlined,color: Colors.white,),
-              backgroundColor: Colors.orange[800],
-              colorText: Colors.white
-          );
-          Get.offNamedUntil('/home', (route) => false, arguments: {'index': 2});
-        }
-
-
-      }else{ //
-      if (totalRecibido > 0) {
-
-        final yaExisteFaltante = movimientos.any((m) => m.idTipoMovimiento == '6');
-
-        if(yaExisteFaltante){//SI SE MODIFICA EL FALTANTE
-
-          ResponseApi responseApi = await movimientoProvider.updateLiquidacion(movimiento2);
-          Response response = await movimientoProvider.update(movimiento4);
-
-          if(responseApi.success==true && response.statusCode== 201){
-
-            Get.snackbar('Liquidacion existosa', 'La liquidacion ha sido modificada');
-            var result = await movimientoProvider.getMovimientoByTurno(primerMovimiento.idturno??''); //cambiar getApertura
-            movimientos = result;
-            Get.offNamedUntil('/home', (route) => false, arguments: {'index': 2});
-          }else{
-            Get.snackbar('ERROR ', responseApi.message??'');
-          }
-        }else{ //SI SE CREA UN NUEVO FALTANTE
-
-          Response response = await movimientoProvider.create(movimiento);
-          ResponseApi responseApi = await movimientoProvider.updateLiquidacion(movimiento2);
-
-          if(responseApi.success==true && response.statusCode == 201){
-
-            Get.snackbar('Liquidacion existosa', 'La liquidacion ha sido actualizada se añadio el faltante');
-            var result = await movimientoProvider.getMovimientoByTurno(primerMovimiento.idturno??''); //cambiar getApertura
-            movimientos = result;
-            Get.offAll(
-                  () => ReporteLiquidacion(movimientos: movimientos), // Página a la que navegas
-              arguments: usuario,
-            );
-          }else{
-            Get.snackbar('ERROR', responseApi.message??'');
-          }
-
-        }
-
-
-      }else{ //SI EL PARTE DE TRABAJO SE HA GUARDADO Y SE VA AGREGAR ANULACIONES Y SIMULACIONES...
-
-
-
-        ResponseApi responseApi = await movimientoProvider.updateLiquidacion(movimiento2);
-
-        if(responseApi.success==true){
-
-
-          Get.snackbar('Liquidacion existosa', 'La liquidacion ha sido actualizada');
-          var result = await movimientoProvider.getMovimientoByTurno(primerMovimiento.idturno??''); //cambiar getApertura
-          movimientos = result;
-          Get.off(
-                () => ReporteLiquidacion(movimientos: movimientos), // Página a la que navegas
-            arguments: usuario, // Envía el objeto Usuario como argumento
-          );
-
-        }else{
-          Get.snackbar('ERROR ', responseApi.message??'');
-
-        }
+        await _actualizarSoloLiquidacion(formData); // Actualiza tipo 4
+      } else if (bandera == 2) {
+        await _procesarLiquidacion(formData);
       }
-      }
-
-
     } catch (e) {
-      print('Error: $e'); // Depuración
-      Get.snackbar('Error', 'Ocurrió un error inesperado');
+      _showErrorSnackbar('Ocurrió un error inesperado: ${e.toString()}');
+    }
+  }
+  // ...existing code...
+  // ...existing code...
+
+  Map<String, String> _extractFormData() {
+    return {
+      // Recibe
+      'recibe5C': _getControllerValue(moneda5ControllerR),
+      'recibe10C': _getControllerValue(moneda10ControllerR),
+      'recibe25C': _getControllerValue(moneda25ControllerR),
+      'recibe50C': _getControllerValue(moneda50ControllerR),
+      'recibe1D': _getControllerValue(billetes1ControllerR),
+      'recibe5D': _getControllerValue(billetes5ControllerR),
+      'recibe10D': _getControllerValue(billetes10ControllerR),
+      'recibe20D': _getControllerValue(billetes20ControllerR),
+
+      // Entrega
+      'entrega5C': _getControllerValue(moneda5ControllerE),
+      'entrega10C': _getControllerValue(moneda10ControllerE),
+      'entrega25C': _getControllerValue(moneda25ControllerE),
+      'entrega50C': _getControllerValue(moneda50ControllerE),
+      'entrega1D': _getControllerValue(billetes1ControllerE),
+      'entrega5D': _getControllerValue(billetes5ControllerE),
+      'entrega10D': _getControllerValue(billetes10ControllerE),
+      'entrega20D': _getControllerValue(billetes20ControllerE),
+
+      // Liquidación
+      'anulaciones': anulacionesCantidadController.text.trim(),
+      'valoranulaciones': anulacionesValorController.text.trim(),
+      'simulaciones': simulacionesCantidadController.text.trim(),
+      'valorsimulaciones': simulacionesValorController.text.trim(),
+      'sobrante': sobrantesController.text.trim(),
+      'partetrabajo': parteTrabajoController.text.isEmpty
+          ? parteTrabajo
+          : parteTrabajoController.text.trim(),
+    };
+  }
+
+  String _getControllerValue(TextEditingController controller) {
+    return controller.text.isEmpty ? '0' : controller.text.trim();
+  }
+
+  double _calculateTotalRecibido(Map<String, String> data) {
+    return (double.parse(data['recibe5C']!) * 0.05) +
+        (double.parse(data['recibe10C']!) * 0.10) +
+        (double.parse(data['recibe25C']!) * 0.25) +
+        (double.parse(data['recibe50C']!) * 0.50) +
+        double.parse(data['recibe1D']!) +
+        (double.parse(data['recibe5D']!) * 5) +
+        (double.parse(data['recibe10D']!) * 10) +
+        (double.parse(data['recibe20D']!) * 20);
+  }
+
+  Future<void> _guardarParteTrabajo(Map<String, String> data) async {
+    final movimiento = _createParteTrabajo(data);
+    final response = await _movimientoProvider.create(movimiento);
+
+    if (response.statusCode == 201) {
+      _showSuccessSnackbar('El parte de trabajo se ha registrado');
+      _navigateToHome();
+    } else if (response.statusCode == 202) {
+      _showOfflineSnackbar('El parte de trabajo se ha registrado');
+      _navigateToHome();
     }
   }
 
+  Future<void> _procesarLiquidacion(Map<String, String> data) async {
+    final totalRecibido = _calculateTotalRecibido(data);
 
+    if (totalRecibido > 0) {
+      final yaExisteFaltante =
+          movimientos.any((m) => m.idTipoMovimiento == _TIPO_FALTANTE);
 
+      if (yaExisteFaltante) {
+        await _modificarFaltante(data);
+      } else {
+        await _crearNuevoFaltante(data);
+      }
+    } else {
+      await _actualizarSoloLiquidacion(data);
+    }
+  }
 
+  Future<void> _crearNuevoFaltante(Map<String, String> data) async {
+    final liquidacion = _findMovimientoByTipo(_TIPO_LIQUIDACION);
+    final movimientoFaltante = _createFaltante(data);
+    final movimientoLiquidacion = _createLiquidacionUpdate(liquidacion, data);
 
+    print('Intentando crear faltante: ${movimientoFaltante.toJson()}');
+    final response = await _movimientoProvider.create(movimientoFaltante);
+    print(
+        'Respuesta backend faltante: status=${response.statusCode}, body=${response.body}');
 
+    final responseApi =
+        await _movimientoProvider.updateLiquidacion(movimientoLiquidacion);
+    print(
+        'Intentando actualizar liquidacion: ${movimientoLiquidacion.toJson()}');
+    print(
+        'Respuesta backend liquidacion: success=${responseApi.success}, message=${responseApi.message}');
 
+    if (responseApi.success == true && response.statusCode == 201) {
+      _showSuccessSnackbar(
+          'La liquidación ha sido actualizada - se añadió el faltante');
+      await _refreshMovimientos();
+      _navigateToReporte();
+    } else {
+      _showErrorSnackbar(responseApi.message ?? 'Error al crear el faltante');
+    }
+  }
+
+  Future<void> _modificarFaltante(Map<String, String> data) async {
+    final liquidacion = _findMovimientoByTipo(_TIPO_LIQUIDACION);
+    final movimientoLiquidacion = _createLiquidacionUpdate(liquidacion, data);
+    final movimientoFaltante = _createFaltanteUpdate(data);
+
+    print('Intentando modificar faltante: ${movimientoFaltante.toJson()}');
+    final responseApi =
+        await _movimientoProvider.updateLiquidacion(movimientoLiquidacion);
+    print(
+        'Intentando actualizar liquidacion: ${movimientoLiquidacion.toJson()}');
+    print(
+        'Respuesta backend liquidacion: success=${responseApi.success}, message=${responseApi.message}');
+    final response = await _movimientoProvider.update(movimientoFaltante);
+    print(
+        'Respuesta backend faltante: status=${response.statusCode}, body=${response.body}');
+
+    if (responseApi.success == true && response.statusCode == 201) {
+      _showSuccessSnackbar('La liquidación ha sido modificada');
+      await _refreshMovimientos();
+      _navigateToHome();
+    } else {
+      _showErrorSnackbar(
+          responseApi.message ?? 'Error al modificar la liquidación');
+    }
+  }
+
+  Future<void> _actualizarSoloLiquidacion(Map<String, String> data) async {
+    final liquidacion = _findMovimientoByTipo(_TIPO_LIQUIDACION);
+    final movimientoLiquidacion = _createLiquidacionUpdate(liquidacion, data);
+
+    print(
+        'Intentando actualizar solo liquidacion: ${movimientoLiquidacion.toJson()}');
+    final responseApi =
+        await _movimientoProvider.updateLiquidacion(movimientoLiquidacion);
+    print(
+        'Respuesta backend liquidacion: success=${responseApi.success}, message=${responseApi.message}');
+
+    if (responseApi.success == true) {
+      _showSuccessSnackbar('La liquidación ha sido actualizada');
+      await _refreshMovimientos();
+      _navigateToReporte();
+    } else {
+      _showErrorSnackbar(
+          responseApi.message ?? 'Error al actualizar la liquidación');
+    }
+  }
+
+  // Movement creation methods
+  Movimiento _createParteTrabajo(Map<String, String> data) {
+    return Movimiento(
+      turno: usuario.turno,
+      idturno: usuario.idTurno,
+      idSupervisor: _usuarioSession.id,
+      idCajero: usuario.id,
+      idTipoMovimiento: _TIPO_LIQUIDACION,
+      via: usuario.via,
+      idPeaje: _usuarioSession.idPeaje,
+      partetrabajo: data['partetrabajo'],
+      recibe1C: '0',
+      recibe5C: data['recibe5C'],
+      recibe10C: data['recibe10C'],
+      recibe25C: data['recibe25C'],
+      recibe50C: data['recibe50C'],
+      recibe1DB: '0',
+      recibe1D: data['recibe1D'],
+      recibe2D: '0',
+      recibe5D: data['recibe5D'],
+      recibe10D: data['recibe10D'],
+      recibe20D: data['recibe20D'],
+      entrega1C: '0',
+      entrega5C: data['entrega5C'],
+      entrega10C: data['entrega10C'],
+      entrega25C: data['entrega25C'],
+      entrega50C: data['entrega50C'],
+      entrega1DB: '0',
+      entrega1D: data['entrega1D'],
+      entrega5D: data['entrega5D'],
+      entrega10D: data['entrega10D'],
+      entrega20D: data['entrega20D'],
+      sobrante: '0',
+    );
+  }
+
+  Movimiento _createFaltante(Map<String, String> data) {
+    return Movimiento(
+      turno: usuario.turno,
+      idturno: usuario.idTurno,
+      idSupervisor: _usuarioSession.id,
+      idCajero: usuario.id,
+      idTipoMovimiento: _TIPO_FALTANTE,
+      via: usuario.via,
+      idPeaje: _usuarioSession.idPeaje,
+      recibe1C: '0',
+      partetrabajo: '0',
+      recibe5C: data['recibe5C'],
+      recibe10C: data['recibe10C'],
+      recibe25C: data['recibe25C'],
+      recibe50C: data['recibe50C'],
+      recibe1DB: '0',
+      recibe1D: data['recibe1D'],
+      recibe2D: '0',
+      recibe5D: data['recibe5D'],
+      recibe10D: data['recibe10D'],
+      recibe20D: data['recibe20D'],
+      entrega1C: '0',
+      entrega5C: data['entrega5C'],
+      entrega10C: data['entrega10C'],
+      entrega25C: data['entrega25C'],
+      entrega50C: data['entrega50C'],
+      entrega1DB: '0',
+      entrega1D: data['entrega1D'],
+      entrega5D: data['entrega5D'],
+      entrega10D: data['entrega10D'],
+      entrega20D: data['entrega20D'],
+    );
+  }
+
+  Movimiento _createFaltanteUpdate(Map<String, String> data) {
+    return Movimiento(
+      id: idMovimientoFaltante,
+      turno: usuario.turno,
+      idturno: usuario.idTurno,
+      idSupervisor: _usuarioSession.id,
+      idCajero: usuario.id,
+      idTipoMovimiento: _TIPO_FALTANTE,
+      via: usuario.via,
+      idPeaje: _usuarioSession.idPeaje,
+      recibe1C: '0',
+      partetrabajo: '0',
+      recibe5C: data['recibe5C'],
+      recibe10C: data['recibe10C'],
+      recibe25C: data['recibe25C'],
+      recibe50C: data['recibe50C'],
+      recibe1DB: '0',
+      recibe1D: data['recibe1D'],
+      recibe2D: '0',
+      recibe5D: data['recibe5D'],
+      recibe10D: data['recibe10D'],
+      recibe20D: data['recibe20D'],
+      entrega1C: '0',
+      entrega5C: data['entrega5C'],
+      entrega10C: data['entrega10C'],
+      entrega25C: data['entrega25C'],
+      entrega50C: data['entrega50C'],
+      entrega1DB: '0',
+      entrega1D: data['entrega1D'],
+      entrega5D: data['entrega5D'],
+      entrega10D: data['entrega10D'],
+      entrega20D: data['entrega20D'],
+      sobrante: '0',
+    );
+  }
+
+  Movimiento _createLiquidacionUpdate(
+      Movimiento liquidacion, Map<String, String> data) {
+    return Movimiento(
+      id: liquidacion.id,
+      idSupervisor: _usuarioSession.id,
+      partetrabajo: data['partetrabajo'],
+      anulaciones: data['anulaciones'],
+      valoranulaciones: data['valoranulaciones'],
+      simulaciones: data['simulaciones'],
+      valorsimulaciones: data['valorsimulaciones'],
+      sobrante: data['sobrante'],
+    );
+  }
+
+  // Navigation methods
+  void _navigateToHome() {
+    Get.offNamedUntil('/home', (route) => false, arguments: {'index': 2});
+  }
+
+  void _navigateToReporte() {
+    Get.off(
+      () => ReporteLiquidacion(movimientos: movimientos),
+      arguments: usuario,
+    );
+  }
+
+  // Utility methods
+  Future<void> _refreshMovimientos() async {
+    final apertura = _findMovimientoByTipo(_TIPO_APERTURA);
+    final result =
+        await _movimientoProvider.getMovimientoByTurno(apertura.idturno ?? '');
+    movimientos.clear();
+    movimientos.addAll(result);
+  }
+
+  // Snackbar methods
+  void _showSuccessSnackbar(String message) {
+    Get.snackbar(
+      'Operación Exitosa',
+      message,
+      backgroundColor: Colors.green,
+      colorText: Colors.white,
+    );
+  }
+
+  void _showOfflineSnackbar(String message) {
+    Get.snackbar(
+      'Transacción Offline',
+      message,
+      icon: const Icon(Icons.cloud_off_outlined, color: Colors.white),
+      backgroundColor: Colors.orange[800],
+      colorText: Colors.white,
+    );
+  }
+
+  void _showErrorSnackbar(String message) {
+    Get.snackbar(
+      'Error',
+      message,
+      backgroundColor: Colors.red,
+      colorText: Colors.white,
+    );
+  }
+
+  @override
+  void onClose() {
+    // Dispose controllers
+    simulacionesCantidadController.dispose();
+    simulacionesValorController.dispose();
+    anulacionesCantidadController.dispose();
+    anulacionesValorController.dispose();
+    sobrantesController.dispose();
+    parteTrabajoController.dispose();
+
+    billetes20ControllerE.dispose();
+    billetes10ControllerE.dispose();
+    billetes5ControllerE.dispose();
+    billetes1ControllerE.dispose();
+    moneda50ControllerE.dispose();
+    moneda25ControllerE.dispose();
+    moneda10ControllerE.dispose();
+    moneda5ControllerE.dispose();
+
+    billetes20ControllerR.dispose();
+    billetes10ControllerR.dispose();
+    billetes5ControllerR.dispose();
+    billetes1ControllerR.dispose();
+    moneda50ControllerR.dispose();
+    moneda25ControllerR.dispose();
+    moneda10ControllerR.dispose();
+    moneda5ControllerR.dispose();
+
+    super.onClose();
+  }
 }

@@ -9,8 +9,18 @@ class BovedaProviderOffline {
     await box.clear();
   }
 
-  Future<Boveda> getAll(String idPeaje)async {
-    return _box.values.firstWhere((b) => b.idpeaje == idPeaje);
+  Future<Boveda?> getAll(String idPeaje) async {
+    try {
+      // Buscar la bóveda con el idPeaje especificado
+      return _box.values.firstWhere(
+        (b) => b.idpeaje == idPeaje,
+        orElse: () => throw StateError('No boveda found'), // Esto permitirá que el catch maneje el error
+      );
+    } catch (e) {
+      // Si no encuentra la bóveda, retornar null
+      print('No se encontró bóveda para el peaje: $idPeaje');
+      return null;
+    }
   }
 
   Future<void> saveBoveda(Boveda boveda) async{

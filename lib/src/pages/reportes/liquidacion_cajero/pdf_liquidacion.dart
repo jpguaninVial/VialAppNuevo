@@ -188,12 +188,9 @@ Future<Uint8List> pdfLiquidacion(List<Movimiento> movimientos) async {
                           padding: pw.EdgeInsets.all(3),
                           child: pw.Align(
                               alignment: pw.Alignment.center,
-
                               child: pw.Text("RECAUDACIONES PARCIALES", style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold))
                           ),
-
                         ),
-
                       ],
                     ),
                   ],

@@ -1,183 +1,257 @@
 import 'package:asistencia_vial_app/src/models/movimiento.dart';
-import 'package:asistencia_vial_app/src/pages/supervisor/retiro_apertura/retiro_apertura_controller.dart';
+import 'package:asistencia_vial_app/src/pages/supervisor/retiro_apertura/improved_retiro_apertura_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../../helper/connection_controller.dart';
-import '../../../helper/offline_banner.dart';
+import '../../../controllers/loading_controller.dart';
+import '../../../widgets/improved_offline_banner.dart';
 import '../../../models/usuario.dart';
 
-
-
 class RetiroAperturaPage extends StatelessWidget {
-
-  late RetiroAperturaController retiroAperturaController;
+  late ImprovedRetiroAperturaController retiroAperturaController;
 
   Usuario? usuario;
   Movimiento? movimiento;
 
-
   RetiroAperturaPage({@required this.usuario, @required this.movimiento}) {
     retiroAperturaController =
-        Get.put(RetiroAperturaController(usuario!, movimiento!));
+        Get.put(ImprovedRetiroAperturaController(usuario!, movimiento!));
     retiroAperturaController.verificarApertura();
   }
 
-
   @override
   Widget build(BuildContext context) {
-    return Stack(
+    return Scaffold(
+      backgroundColor: Colors.grey[100],
+      body: Column(
         children: [
-          Scaffold(
-            appBar: AppBar(
-              title: Text(
-                'Retiro de Apertura - ${usuario!.nombre} ${usuario!.apellido}',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+          _buildModernHeader(context),
+          ImprovedOfflineBanner(),
+          Expanded(
+            child: LoadingWrapper(
+              loadingKey: ImprovedRetiroAperturaController.LOADING_KEY,
+              child: SingleChildScrollView(
+                padding: EdgeInsets.all(20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _sectionTitle('Recibe de Cajero', Icons.arrow_downward),
+                    SizedBox(height: 16),
+                    _recibeGrid(
+                        !retiroAperturaController.enProgresoApertura.value &&
+                            retiroAperturaController.aperturaCompleta.value),
+                    SizedBox(height: 24),
+                    _sectionTitle('Entregó Supervisor', Icons.arrow_upward),
+                    SizedBox(height: 10),
+                    _entregaGrid(),
+                    SizedBox(height: 32),
+                    if (!retiroAperturaController.aperturaCompleta.value)
+                      _confirmButton(context),
+                    SizedBox(height: 20),
+                  ],
                 ),
               ),
-              backgroundColor: Color(0xFF368983),
-              elevation: 0,
             ),
-            body: SingleChildScrollView(
-              padding: EdgeInsets.all(16.0),
-              child: Obx(
-                  () =>
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _sectionTitle('Recibe de Cajero'),
-                      _recibeGrid(!retiroAperturaController.enProgresoApertura.value &&
-                          retiroAperturaController.aperturaCompleta.value),
-                      SizedBox(height: 10),
-                      Divider(thickness: 1, color: Colors.grey[300]),
-                      _sectionTitle('Entregó Supervisor'),
-                      SizedBox(height: 10),
-                      _entregaGrid(),
-                      SizedBox(height: 10),
-                      _statusMessage(),
-                      SizedBox(height: 20),
-                      if (!retiroAperturaController.aperturaCompleta.value)
-                        _confirmButton(context),
-                    ],
-                  ),
-               ),
-          ),
-        ),
-          // ✅ Banner flotante fijo en la parte superior de la app
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: Obx(() {
-              if (Get.find<ConnectionController>().isOffline.value) {
-                return const OfflineBanner();
-              } else {
-                return const SizedBox.shrink();
-              }
-            }),
           ),
         ],
+      ),
+    );
+  }
+
+  /// **Header moderno sin curvas**
+  Widget _buildModernHeader(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF368983),
+            Color(0xFF2C6E69),
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.15),
+            blurRadius: 8,
+            offset: Offset(0, 3),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding:
+              EdgeInsets.only(left: 8.0, top: 8.0, right: 20.0, bottom: 16.0),
+          child: Row(
+            children: [
+              IconButton(
+                icon: Icon(Icons.arrow_back, color: Colors.white, size: 24),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+              SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Retiro de Apertura',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      '${usuario!.nombre} ${usuario!.apellido}',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.account_balance_wallet_outlined,
+                  color: Colors.white,
+                  size: 28,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
   /// **Widget: Título de Sección**
-  Widget _sectionTitle(String title) {
-    return Text(
-      title,
-      style: TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.bold,
-        color: Color(0xFF368983),
+  Widget _sectionTitle(String title, IconData icon) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Color(0xFF368983).withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Color(0xFF368983).withOpacity(0.3), width: 1),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: Color(0xFF368983), size: 24),
+          SizedBox(width: 12),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF368983),
+            ),
+          ),
+        ],
       ),
     );
   }
 
+  /// **Widget: Campo de Entrada Mejorado**
   Widget _inputField({
     required String label,
     String? assetIcon,
     required TextEditingController controller,
-    bool readOnly = false,
     int? maxLength,
+    bool readOnly = false,
   }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+    return Container(
+      margin: EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 6,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
       child: TextField(
-        style: TextStyle(color: Colors.black),
-        controller: controller,
+        style: TextStyle(
+            color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold),
         readOnly: readOnly,
-        maxLength: label=='\$ 1'?3:2,
+        controller: controller,
+        maxLength: maxLength ?? (label == '\$ 1' ? 3 : 2),
         keyboardType: TextInputType.number,
         decoration: InputDecoration(
+          counterText: '',
           labelText: label,
+          labelStyle: TextStyle(
+            color:
+                controller.text.isEmpty ? Colors.grey[600] : Color(0xFF368983),
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+          ),
           prefixIcon: assetIcon != null
               ? Padding(
-            padding: const EdgeInsets.all(10.0),
-            child: Image.asset(
-              assetIcon,
-              width: 24,
-              height: 24,
-              fit: BoxFit.contain,
-            ),
-          )
-              : null,
+                  padding: const EdgeInsets.all(12.0),
+                  child: Container(
+                    padding: EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Color(0xFF368983).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Image.asset(
+                      assetIcon,
+                      width: 28,
+                      height: 28,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                )
+              : null, // No icon if assetIcon is null
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
           ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Color(0xFF368983), width: 2),
+          ),
+          filled: true,
+          fillColor: Colors.white,
+          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         ),
-
       ),
     );
   }
-
-  Widget _inputField2({
-    required String label,
-    String? assetIcon,
-    required TextEditingController controller,
-    bool readOnly = false,
-    int? maxLength,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: TextField(
-        style: TextStyle(color: Colors.black),
-        controller: controller,
-        readOnly: readOnly,
-        keyboardType: TextInputType.number,
-        decoration: InputDecoration(
-          labelText: label,
-          prefixIcon: assetIcon != null
-              ? Padding(
-            padding: const EdgeInsets.all(10.0),
-            child: Image.asset(
-              assetIcon,
-              width: 24,
-              height: 24,
-              fit: BoxFit.contain,
-            ),
-          )
-              : null,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
-
-      ),
-    );
-  }
-
 
   Widget _recibeGrid(bool aperturaCompleta) {
     bool mostrarTodasDenominaciones = usuario!.idRol == '4';
 
-    return Column(
-      children: [
-        // Fila de $20 y $10 (Siempre se muestra)
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Fila de $20 y $10 (Siempre se muestra)
+          Row(
+            children: [
               Expanded(
                 child: _inputField(
                   label: '\$ 20',
@@ -186,259 +260,289 @@ class RetiroAperturaPage extends StatelessWidget {
                   readOnly: aperturaCompleta,
                 ),
               ),
-           SizedBox(width: 5),
-            Expanded(
-              child: _inputField(
-                label: '\$ 10',
-                assetIcon: 'assets/img/billete.png',
-                controller: retiroAperturaController.billetes10RecibeController,
-                readOnly: aperturaCompleta,
+              SizedBox(width: 12),
+              Expanded(
+                child: _inputField(
+                  label: '\$ 10',
+                  assetIcon: 'assets/img/billete.png',
+                  controller:
+                      retiroAperturaController.billetes10RecibeController,
+                  readOnly: aperturaCompleta,
+                ),
               ),
-            ),
-          ],
-        ),        // Fila de $5 y $1 (Siempre se muestra)
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: _inputField(
-                label: '\$ 5',
-                assetIcon: 'assets/img/billete.png',
-                controller: retiroAperturaController.billetes5RecibeController,
-                readOnly: aperturaCompleta,
+            ],
+          ), // Fila de $5 y $1 (Siempre se muestra)
+          Row(
+            children: [
+              Expanded(
+                child: _inputField(
+                  label: '\$ 5',
+                  assetIcon: 'assets/img/billete.png',
+                  controller:
+                      retiroAperturaController.billetes5RecibeController,
+                  readOnly: aperturaCompleta,
+                ),
               ),
-            ),
-            SizedBox(width: 10),
-            Expanded(
-              child: _inputField(
-                label: '\$ 1',
-                assetIcon: 'assets/img/moneda.png',
-                controller: retiroAperturaController.billetes1RecibeController,
-                readOnly: aperturaCompleta,
+              SizedBox(width: 12),
+              Expanded(
+                child: _inputField(
+                  label: '\$ 1',
+                  assetIcon: 'assets/img/moneda.png',
+                  controller:
+                      retiroAperturaController.billetes1RecibeController,
+                  readOnly: aperturaCompleta,
+                ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
 
-        // Otras denominaciones (Solo si el rol es 3)
-        if (mostrarTodasDenominaciones) ...[
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: _inputField(
-                  label: '50c',
-                  assetIcon: 'assets/img/moneda.png',
-                  controller: retiroAperturaController.Moneda50RecibeController,
-                  readOnly: aperturaCompleta,
+          // Otras denominaciones (Solo si el rol es 3)
+          if (mostrarTodasDenominaciones) ...[
+            Row(
+              children: [
+                Expanded(
+                  child: _inputField(
+                    label: '50c',
+                    assetIcon: 'assets/img/moneda.png',
+                    controller:
+                        retiroAperturaController.Moneda50RecibeController,
+                    readOnly: aperturaCompleta,
+                  ),
                 ),
-              ),
-              SizedBox(width: 10),
-              Expanded(
-                child: _inputField(
-                  label: '25c',
-                  assetIcon: 'assets/img/moneda.png',
-                  controller: retiroAperturaController.Moneda25RecibeController,
-                  readOnly: aperturaCompleta,
+                SizedBox(width: 12),
+                Expanded(
+                  child: _inputField(
+                    label: '25c',
+                    assetIcon: 'assets/img/moneda.png',
+                    controller:
+                        retiroAperturaController.Moneda25RecibeController,
+                    readOnly: aperturaCompleta,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: _inputField(
-                  label: '10c',
-                  assetIcon: 'assets/img/moneda.png',
-                  controller: retiroAperturaController.Moneda10RecibeController,
-                  readOnly: aperturaCompleta,
+              ],
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: _inputField(
+                    label: '10c',
+                    assetIcon: 'assets/img/moneda.png',
+                    controller:
+                        retiroAperturaController.Moneda10RecibeController,
+                    readOnly: aperturaCompleta,
+                  ),
                 ),
-              ),
-              SizedBox(width: 10),
-              Expanded(
-                child: _inputField(
-                  label: '5c',
-                  assetIcon: 'assets/img/moneda.png',
-                  controller: retiroAperturaController.Moneda5RecibeController,
-                  readOnly: aperturaCompleta,
+                SizedBox(width: 12),
+                Expanded(
+                  child: _inputField(
+                    label: '5c',
+                    assetIcon: 'assets/img/moneda.png',
+                    controller:
+                        retiroAperturaController.Moneda5RecibeController,
+                    readOnly: aperturaCompleta,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          Row(
-            children: [
-              Expanded(
-                child: _inputField(
-                  label: '1c',
-                  assetIcon: 'assets/img/moneda.png',
-                  controller: retiroAperturaController.Moneda1RecibeController,
-                  readOnly: aperturaCompleta,
+              ],
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: _inputField(
+                    label: '1c',
+                    assetIcon: 'assets/img/moneda.png',
+                    controller:
+                        retiroAperturaController.Moneda1RecibeController,
+                    readOnly: aperturaCompleta,
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
+          ],
         ],
-      ],
+      ),
     );
   }
 
   Widget _entregaGrid() {
     bool mostrarTodasDenominaciones = usuario!.idRol == '4';
 
-    return Column(
-      children: [
-        // Fila de $20 y $10 (Siempre se muestra si idRol = 3)
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Fila de $10 y $5
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
-                child: _inputField2(
+                child: _inputField(
                   label: '\$ 10',
                   assetIcon: 'assets/img/billete.png',
-                  controller: retiroAperturaController.billetes10EntregaController,
+                  controller:
+                      retiroAperturaController.billetes10EntregaController,
                   readOnly: true,
                 ),
-              ),SizedBox(width: 10),
+              ),
+              SizedBox(width: 12),
               Expanded(
-                child: _inputField2(
+                child: _inputField(
                   label: '\$ 5',
                   assetIcon: 'assets/img/billete.png',
-                  controller: retiroAperturaController.billetes5EntregaController,
+                  controller:
+                      retiroAperturaController.billetes5EntregaController,
                   readOnly: true,
                 ),
               ),
             ],
           ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: _inputField2(
-                label: '\$ 1',
-                assetIcon: 'assets/img/moneda.png',
-                controller: retiroAperturaController.billetes1EntregaController,
-                readOnly: true,
-              ),
-            ),SizedBox(width: 10),
-            if (mostrarTodasDenominaciones)...[
+          Row(
+            children: [
               Expanded(
-              child: _inputField2(
-                label: '50c',
-                assetIcon: 'assets/img/moneda.png',
-                controller: retiroAperturaController.Moneda50EntregaController,
-                readOnly: true,
+                child: _inputField(
+                  label: '\$ 1',
+                  assetIcon: 'assets/img/moneda.png',
+                  controller:
+                      retiroAperturaController.billetes1EntregaController,
+                  readOnly: true,
+                ),
               ),
+              SizedBox(width: 12),
+              if (mostrarTodasDenominaciones) ...[
+                Expanded(
+                  child: _inputField(
+                    label: '50c',
+                    assetIcon: 'assets/img/moneda.png',
+                    controller:
+                        retiroAperturaController.Moneda50EntregaController,
+                    readOnly: true,
+                  ),
+                ),
+              ] else
+                Expanded(child: Container()),
+            ],
+          ),
+          if (mostrarTodasDenominaciones) ...[
+            Row(
+              children: [
+                Expanded(
+                  child: _inputField(
+                    label: '25c',
+                    assetIcon: 'assets/img/moneda.png',
+                    controller:
+                        retiroAperturaController.Moneda25EntregaController,
+                    readOnly: true,
+                  ),
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: _inputField(
+                    label: '10c',
+                    assetIcon: 'assets/img/moneda.png',
+                    controller:
+                        retiroAperturaController.Moneda10EntregaController,
+                    readOnly: true,
+                  ),
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: _inputField(
+                    label: '5c',
+                    assetIcon: 'assets/img/moneda.png',
+                    controller:
+                        retiroAperturaController.Moneda5EntregaController,
+                    readOnly: true,
+                  ),
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: _inputField(
+                    label: '1c',
+                    assetIcon: 'assets/img/moneda.png',
+                    controller:
+                        retiroAperturaController.Moneda1EntregaController,
+                    readOnly: true,
+                  ),
+                ),
+              ],
             ),
           ],
-          ],
-        ),
-        if (mostrarTodasDenominaciones)...[
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: _inputField2(
-                  label: '25c',
-                  assetIcon: 'assets/img/moneda.png',
-                  controller: retiroAperturaController.Moneda25EntregaController,
-                  readOnly: true,
-                ),
-              ),
-              SizedBox(width: 10),
-              Expanded(
-                child: _inputField2(
-                  label: '10c',
-                  assetIcon: 'assets/img/moneda.png',
-                  controller: retiroAperturaController.Moneda10EntregaController,
-                  readOnly: true,
-                ),
-              ),
-            ],
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: _inputField2(
-                  label: '5c',
-                  assetIcon: 'assets/img/moneda.png',
-                  controller: retiroAperturaController.Moneda5EntregaController,
-                  readOnly: true,
-                ),
-              ),SizedBox(width: 10),
-              Expanded(
-                child: _inputField2(
-                  label: '1c',
-                  assetIcon: 'assets/img/moneda.png',
-                  controller: retiroAperturaController.Moneda1EntregaController,
-                  readOnly: true,
-                ),
-              ),
-            ],
-          ),
-         ],
-      ],
+        ],
+      ),
     );
   }
 
-
-  Widget _statusMessage() {
-    final totalEntregado = retiroAperturaController.Entregado.value;
-    final totalRecibido = retiroAperturaController.Recibido.value;
-    final diferencia = totalEntregado - totalRecibido;
-
-    if (diferencia == 0) {
-      return Text(
-        "La apertura está completa.",
-        style: TextStyle(
-          color: Colors.green,
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-        ),
-      );
-    } else {
-      return Text(
-        "La apertura está incompleta. Falta: \$${diferencia.abs()
-            .toStringAsFixed(2)}",
-        style: TextStyle(
-          color: Colors.red,
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-        ),
-      );
-    }
-  }
-
-
-  /// **Widget: Botón de Confirmación**
+  /// **Widget: Botón de Confirmación Mejorado**
   Widget _confirmButton(BuildContext context) {
-    return Center(
+    return Container(
+      width: double.infinity,
+      height: 56,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+          colors: [
+            Color(0xFF368983),
+            Color(0xFF2C6E69),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0xFF368983).withOpacity(0.3),
+            spreadRadius: 1,
+            blurRadius: 8,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
       child: ElevatedButton(
         onPressed: () {
           _confirmRetiroApertura(context);
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: Color(0xFF368983),
-          padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(16),
           ),
         ),
-        child: Text(
-          'Retirar Apertura',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        child: Obx(() {
+          final isLoading = LoadingController.to
+              .isLoading(ImprovedRetiroAperturaController.LOADING_KEY);
+          return isLoading
+              ? CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  strokeWidth: 3,
+                )
+              : Text(
+                  'Retirar Apertura',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                );
+        }),
       ),
     );
   }
+
   /// **Método: Confirmar Retiro de Apertura**
   void _confirmRetiroApertura(BuildContext context) {
-
     bool mostrarTodasDenominaciones = usuario!.idRol == '4';
 
     // Validar valores vacíos y asignar 0 por defecto
@@ -446,26 +550,52 @@ class RetiroAperturaPage extends StatelessWidget {
         controller.text.isEmpty ? '0' : controller.text;
 
     final billetes20 = getValue(retiroAperturaController.billetes20Controller);
-    final billetes10Recibe = getValue(retiroAperturaController.billetes10RecibeController);
-    final billetes5Recibe = getValue(retiroAperturaController.billetes5RecibeController);
-    final billetes1Recibe = getValue(retiroAperturaController.billetes1RecibeController);
+    final billetes10Recibe =
+        getValue(retiroAperturaController.billetes10RecibeController);
+    final billetes5Recibe =
+        getValue(retiroAperturaController.billetes5RecibeController);
+    final billetes1Recibe =
+        getValue(retiroAperturaController.billetes1RecibeController);
 
-    final billetes10Entrega = getValue(retiroAperturaController.billetes10EntregaController);
-    final billetes5Entrega = getValue(retiroAperturaController.billetes5EntregaController);
-    final billetes1Entrega = getValue(retiroAperturaController.billetes1EntregaController);
+    final billetes10Entrega =
+        getValue(retiroAperturaController.billetes10EntregaController);
+    final billetes5Entrega =
+        getValue(retiroAperturaController.billetes5EntregaController);
+    final billetes1Entrega =
+        getValue(retiroAperturaController.billetes1EntregaController);
 
     // Si el usuario es idRol = 3, también incluir denominaciones pequeñas
-    final moneda50Recibe = mostrarTodasDenominaciones ? getValue(retiroAperturaController.Moneda50RecibeController) : '0';
-    final moneda25Recibe = mostrarTodasDenominaciones ? getValue(retiroAperturaController.Moneda25RecibeController) : '0';
-    final moneda10Recibe = mostrarTodasDenominaciones ? getValue(retiroAperturaController.Moneda10RecibeController) : '0';
-    final moneda5Recibe = mostrarTodasDenominaciones ? getValue(retiroAperturaController.Moneda5RecibeController) : '0';
-    final moneda1Recibe = mostrarTodasDenominaciones ? getValue(retiroAperturaController.Moneda1RecibeController) : '0';
+    final moneda50Recibe = mostrarTodasDenominaciones
+        ? getValue(retiroAperturaController.Moneda50RecibeController)
+        : '0';
+    final moneda25Recibe = mostrarTodasDenominaciones
+        ? getValue(retiroAperturaController.Moneda25RecibeController)
+        : '0';
+    final moneda10Recibe = mostrarTodasDenominaciones
+        ? getValue(retiroAperturaController.Moneda10RecibeController)
+        : '0';
+    final moneda5Recibe = mostrarTodasDenominaciones
+        ? getValue(retiroAperturaController.Moneda5RecibeController)
+        : '0';
+    final moneda1Recibe = mostrarTodasDenominaciones
+        ? getValue(retiroAperturaController.Moneda1RecibeController)
+        : '0';
 
-    final moneda50Entrega = mostrarTodasDenominaciones ? getValue(retiroAperturaController.Moneda50EntregaController) : '0';
-    final moneda25Entrega = mostrarTodasDenominaciones ? getValue(retiroAperturaController.Moneda25EntregaController) : '0';
-    final moneda10Entrega = mostrarTodasDenominaciones ? getValue(retiroAperturaController.Moneda10EntregaController) : '0';
-    final moneda5Entrega = mostrarTodasDenominaciones ? getValue(retiroAperturaController.Moneda5EntregaController) : '0';
-    final moneda1Entrega = mostrarTodasDenominaciones ? getValue(retiroAperturaController.Moneda1EntregaController) : '0';
+    final moneda50Entrega = mostrarTodasDenominaciones
+        ? getValue(retiroAperturaController.Moneda50EntregaController)
+        : '0';
+    final moneda25Entrega = mostrarTodasDenominaciones
+        ? getValue(retiroAperturaController.Moneda25EntregaController)
+        : '0';
+    final moneda10Entrega = mostrarTodasDenominaciones
+        ? getValue(retiroAperturaController.Moneda10EntregaController)
+        : '0';
+    final moneda5Entrega = mostrarTodasDenominaciones
+        ? getValue(retiroAperturaController.Moneda5EntregaController)
+        : '0';
+    final moneda1Entrega = mostrarTodasDenominaciones
+        ? getValue(retiroAperturaController.Moneda1EntregaController)
+        : '0';
 
     // Cálculo del total entregado por el supervisor
     final totalEntrega = (int.parse(billetes10Entrega) * 10) +
@@ -498,19 +628,22 @@ class RetiroAperturaPage extends StatelessWidget {
               children: [
                 Icon(Icons.error_outline, color: Colors.red),
                 SizedBox(width: 10),
-                Expanded( // Evita desbordamiento
+                Expanded(
+                  // Evita desbordamiento
                   child: Text(
                     "Error en los valores",
                     style: TextStyle(fontWeight: FontWeight.bold),
-                    overflow: TextOverflow.ellipsis, // Corta el texto si es muy largo
+                    overflow:
+                        TextOverflow.ellipsis, // Corta el texto si es muy largo
                   ),
                 ),
               ],
             ),
-            content: SingleChildScrollView( // ⬅ Agregado para evitar overflow
+            content: SingleChildScrollView(
+              // ⬅ Agregado para evitar overflow
               child: Text(
                 "Los valores entregados (\$$totalEntrega) no coinciden con los recibidos (\$$totalRecibe).\n\n"
-                    "Por favor, revisa las denominaciones antes de continuar.",
+                "Por favor, revisa las denominaciones antes de continuar.",
                 style: TextStyle(fontSize: 16),
               ),
             ),
@@ -537,21 +670,24 @@ class RetiroAperturaPage extends StatelessWidget {
           child: AlertDialog(
             title: Row(
               children: [
-                Icon(Icons.library_add_check_outlined, color: Color(0xFF368983)),
+                Icon(Icons.library_add_check_outlined,
+                    color: Color(0xFF368983)),
                 SizedBox(width: 10),
-                Text("Confirmación", style: TextStyle(fontWeight: FontWeight.bold)),
+                Text("Confirmación",
+                    style: TextStyle(fontWeight: FontWeight.bold)),
               ],
             ),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("¿Estás seguro de retirar esta apertura?", style: TextStyle(fontSize: 16)),
+                Text("¿Estás seguro de retirar esta apertura?",
+                    style: TextStyle(fontSize: 16)),
                 SizedBox(height: 5),
                 Divider(color: Colors.grey[300]),
                 SizedBox(height: 5),
-
-                Text("Recibe de Cajero:", style: TextStyle(fontWeight: FontWeight.bold)),
+                Text("Recibe de Cajero:",
+                    style: TextStyle(fontWeight: FontWeight.bold)),
                 Text("- $billetes20 billetes de \$20"),
                 Text("- $billetes10Recibe billetes de \$10"),
                 Text("- $billetes5Recibe billetes de \$5"),
@@ -564,10 +700,13 @@ class RetiroAperturaPage extends StatelessWidget {
                   Text("- $moneda1Recibe monedas de 1c"),
                 ],
                 SizedBox(height: 5),
-
-                Text("Total Recibido: \$${totalRecibe.toStringAsFixed(2)}", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF368983))),
-
-                Text("Entregó Supervisor:", style: TextStyle(fontWeight: FontWeight.bold)),
+                Text("Total Recibido: \$${totalRecibe.toStringAsFixed(2)}",
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF368983))),
+                Text("Entregó Supervisor:",
+                    style: TextStyle(fontWeight: FontWeight.bold)),
                 Text("- $billetes10Entrega billetes de \$10"),
                 Text("- $billetes5Entrega billetes de \$5"),
                 Text("- $billetes1Entrega monedas de \$1"),
@@ -579,8 +718,11 @@ class RetiroAperturaPage extends StatelessWidget {
                   Text("- $moneda1Entrega monedas de 1c"),
                 ],
                 SizedBox(height: 5),
-
-                Text("Total Entregado: \$${totalEntrega.toStringAsFixed(2)}", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF368983))),
+                Text("Total Entregado: \$${totalEntrega.toStringAsFixed(2)}",
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF368983))),
               ],
             ),
             actions: [
@@ -591,19 +733,30 @@ class RetiroAperturaPage extends StatelessWidget {
                 child: Text("Cancelar", style: TextStyle(color: Colors.grey)),
               ),
               ElevatedButton(
-                onPressed: retiroAperturaController.cargando.value
-                    ? null
-                    : () async {
-                  retiroAperturaController.registarRetiroApertura(context, usuario!, movimiento!);
+                onPressed: () {
+                  Get.back();
+                  retiroAperturaController.registrarRetiroApertura(
+                      context, usuario!);
                 },
-                child: retiroAperturaController.cargando.value
-                    ? CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                )
-                    : Text('Confirmar'),
+                child: Obx(() {
+                  final isLoading = LoadingController.to
+                      .isLoading(ImprovedRetiroAperturaController.LOADING_KEY);
+                  return isLoading
+                      ? SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : Text('Confirmar');
+                }),
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(vertical: 16),
                   backgroundColor: Color(0xFF368983),
+                  foregroundColor: Colors.white,
                 ),
               ),
             ],
@@ -612,10 +765,4 @@ class RetiroAperturaPage extends StatelessWidget {
       },
     );
   }
-
 }
-
-
-
-
-

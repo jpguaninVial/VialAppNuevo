@@ -155,7 +155,6 @@ class TurnoProvider extends GetConnect{
 
     Response response;
 
-    if(await isConnectedToServer() ){
       response = await post(
         '$url/updateEstado',
         {
@@ -166,21 +165,6 @@ class TurnoProvider extends GetConnect{
           'Authorization': usuario.sessionToken ?? ''
         },
       );
-    }else{
-      await turnoOffline.saveTurno(Turno(id:idTurno,idSupervisor: '0',idCajero: '0',via: '0'));
-      response= Response(
-        statusCode: 202,
-        body: {'message': 'Transacción guardada offline'},
-        statusText: 'Guardado en cache',
-        request: Request(
-            url: Uri.parse('$url/updateEstado'),
-            method: 'POST',
-            headers: {
-              'Content-type': 'application/json',
-              'Authorization': usuario.sessionToken??''
-            }),
-      );
-    }
     return response;
 
   }

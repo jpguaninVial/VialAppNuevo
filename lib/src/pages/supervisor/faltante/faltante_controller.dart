@@ -8,6 +8,7 @@ import '../../../models/movimiento.dart';
 import '../../../models/response_api.dart';
 import '../../../models/usuario.dart';
 import '../../../provider/movimiento_provider.dart';
+import '../../../provider/turno_provider.dart';
 
 class FaltanteController extends GetxController {
   // Constants
@@ -17,6 +18,7 @@ class FaltanteController extends GetxController {
 
   // Dependencies
   final MovimientoProvider _movimientoProvider = MovimientoProvider();
+  final TurnoProvider _turnoProvider = TurnoProvider();
   final Usuario _usuarioSession =
       Usuario.fromJson(GetStorage().read('usuario') ?? {});
 
@@ -236,27 +238,62 @@ class FaltanteController extends GetxController {
   Future<void> _crearNuevoFaltante(Map<String, String> data) async {
     final liquidacion = _findMovimientoByTipo(_TIPO_LIQUIDACION);
     final movimientoFaltante = _createFaltante(data);
-    final movimientoLiquidacion = _createLiquidacionUpdate(liquidacion, data);
+
+    // Verificar si ya existe una liquidación (tiene id válido)
+    final bool liquidacionExiste = liquidacion.id != null &&
+        liquidacion.id!.isNotEmpty &&
+        liquidacion.id != '0';
 
     print('Intentando crear faltante: ${movimientoFaltante.toJson()}');
     final response = await _movimientoProvider.create(movimientoFaltante);
     print(
         'Respuesta backend faltante: status=${response.statusCode}, body=${response.body}');
 
-    final responseApi =
-        await _movimientoProvider.updateLiquidacion(movimientoLiquidacion);
-    print(
-        'Intentando actualizar liquidacion: ${movimientoLiquidacion.toJson()}');
-    print(
-        'Respuesta backend liquidacion: success=${responseApi.success}, message=${responseApi.message}');
+    bool liquidacionOk = false;
 
-    if (responseApi.success == true && response.statusCode == 201) {
+    if (!liquidacionExiste) {
+      // No existe liquidación, crear nueva
+      final movimientoNuevo = _createLiquidacionCompleta(data);
+      print(
+          'Intentando crear liquidacion (no existía): ${movimientoNuevo.toJson()}');
+      final responseLiq = await _movimientoProvider.create(movimientoNuevo);
+      print(
+          'Respuesta backend crear liquidacion: status=${responseLiq.statusCode}');
+
+      if (responseLiq.statusCode == 201 || responseLiq.statusCode == 202) {
+        // Actualizar estado del turno
+        await _turnoProvider.updateEstado(usuario.idTurno ?? '');
+        liquidacionOk = true;
+      }
+    } else {
+      // Ya existe liquidación, actualizar
+      final movimientoLiquidacion = _createLiquidacionUpdate(liquidacion, data);
+      print(
+          'Intentando actualizar liquidacion: ${movimientoLiquidacion.toJson()}');
+      final responseApi =
+          await _movimientoProvider.updateLiquidacion(movimientoLiquidacion);
+      print(
+          'Respuesta backend liquidacion: success=${responseApi.success}, message=${responseApi.message}');
+
+      if (responseApi.success == true) {
+        // También actualizar el estado del movimiento para marcarlo como liquidado
+        if (liquidacion.estado != '1') {
+          liquidacion.idSupervisor = _usuarioSession.id;
+          liquidacion.estado = '1';
+          await _movimientoProvider.updateEstadoMovimiento(liquidacion);
+          print('Estado del movimiento actualizado a liquidado');
+        }
+        liquidacionOk = true;
+      }
+    }
+
+    if (liquidacionOk && response.statusCode == 201) {
       _showSuccessSnackbar(
-          'La liquidación ha sido actualizada - se añadió el faltante');
+          'La liquidación ha sido procesada - se añadió el faltante');
       await _refreshMovimientos();
       _navigateToReporte();
     } else {
-      _showErrorSnackbar(responseApi.message ?? 'Error al crear el faltante');
+      _showErrorSnackbar('Error al procesar la liquidación o el faltante');
     }
   }
 
@@ -288,23 +325,98 @@ class FaltanteController extends GetxController {
 
   Future<void> _actualizarSoloLiquidacion(Map<String, String> data) async {
     final liquidacion = _findMovimientoByTipo(_TIPO_LIQUIDACION);
-    final movimientoLiquidacion = _createLiquidacionUpdate(liquidacion, data);
 
-    print(
-        'Intentando actualizar solo liquidacion: ${movimientoLiquidacion.toJson()}');
-    final responseApi =
-        await _movimientoProvider.updateLiquidacion(movimientoLiquidacion);
-    print(
-        'Respuesta backend liquidacion: success=${responseApi.success}, message=${responseApi.message}');
+    // Verificar si ya existe una liquidación (tiene id válido)
+    final bool liquidacionExiste = liquidacion.id != null &&
+        liquidacion.id!.isNotEmpty &&
+        liquidacion.id != '0';
 
-    if (responseApi.success == true) {
-      _showSuccessSnackbar('La liquidación ha sido actualizada');
-      await _refreshMovimientos();
-      _navigateToReporte();
+    if (!liquidacionExiste) {
+      // No existe liquidación, crear nueva con todos los datos
+      final movimientoNuevo = _createLiquidacionCompleta(data);
+
+      print('Intentando crear liquidacion: ${movimientoNuevo.toJson()}');
+      final response = await _movimientoProvider.create(movimientoNuevo);
+      print(
+          'Respuesta backend crear liquidacion: status=${response.statusCode}');
+
+      if (response.statusCode == 201 || response.statusCode == 202) {
+        // Actualizar estado del turno
+        await _turnoProvider.updateEstado(usuario.idTurno ?? '');
+        _showSuccessSnackbar('La liquidación ha sido creada correctamente');
+        await _refreshMovimientos();
+        _navigateToReporte();
+      } else {
+        _showErrorSnackbar('Error al crear la liquidación');
+      }
     } else {
-      _showErrorSnackbar(
-          responseApi.message ?? 'Error al actualizar la liquidación');
+      // Ya existe liquidación, actualizar
+      final movimientoLiquidacion = _createLiquidacionUpdate(liquidacion, data);
+
+      print(
+          'Intentando actualizar solo liquidacion: ${movimientoLiquidacion.toJson()}');
+      final responseApi =
+          await _movimientoProvider.updateLiquidacion(movimientoLiquidacion);
+      print(
+          'Respuesta backend liquidacion: success=${responseApi.success}, message=${responseApi.message}');
+
+      if (responseApi.success == true) {
+        // También actualizar el estado del movimiento para marcarlo como liquidado
+        if (liquidacion.estado != '1') {
+          liquidacion.idSupervisor = _usuarioSession.id;
+          liquidacion.estado = '1';
+          await _movimientoProvider.updateEstadoMovimiento(liquidacion);
+          print('Estado del movimiento actualizado a liquidado');
+        }
+        _showSuccessSnackbar('La liquidación ha sido actualizada');
+        await _refreshMovimientos();
+        _navigateToReporte();
+      } else {
+        _showErrorSnackbar(
+            responseApi.message ?? 'Error al actualizar la liquidación');
+      }
     }
+  }
+
+  /// Crea una liquidación completa con todos los campos necesarios
+  Movimiento _createLiquidacionCompleta(Map<String, String> data) {
+    return Movimiento(
+      turno: usuario.turno,
+      idturno: usuario.idTurno,
+      idSupervisor: _usuarioSession.id,
+      idCajero: usuario.id,
+      idTipoMovimiento: _TIPO_LIQUIDACION,
+      via: usuario.via,
+      idPeaje: _usuarioSession.idPeaje,
+      partetrabajo: data['partetrabajo'],
+      recibe1C: '0',
+      recibe5C: '0',
+      recibe10C: '0',
+      recibe25C: '0',
+      recibe50C: '0',
+      recibe1DB: '0',
+      recibe1D: '0',
+      recibe2D: '0',
+      recibe5D: '0',
+      recibe10D: '0',
+      recibe20D: '0',
+      entrega1C: '0',
+      entrega5C: '0',
+      entrega10C: '0',
+      entrega25C: '0',
+      entrega50C: '0',
+      entrega1DB: '0',
+      entrega1D: '0',
+      entrega5D: '0',
+      entrega10D: '0',
+      entrega20D: '0',
+      anulaciones: data['anulaciones'] ?? '0',
+      valoranulaciones: data['valoranulaciones'] ?? '0',
+      simulaciones: data['simulaciones'] ?? '0',
+      valorsimulaciones: data['valorsimulaciones'] ?? '0',
+      sobrante: data['sobrante'] ?? '0',
+      estado: '1', // Marcar como liquidado
+    );
   }
 
   // Movement creation methods
@@ -424,6 +536,7 @@ class FaltanteController extends GetxController {
       simulaciones: data['simulaciones'],
       valorsimulaciones: data['valorsimulaciones'],
       sobrante: data['sobrante'],
+      estado: '1', // Marcar como liquidado
     );
   }
 

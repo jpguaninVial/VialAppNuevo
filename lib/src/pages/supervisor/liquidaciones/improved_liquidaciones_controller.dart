@@ -16,10 +16,11 @@ import '../retiros_parciales/retiro_parcial.dart';
 
 class ImprovedLiquidacionesController extends GetxController {
   static const String LOADING_KEY = 'liquidacion';
-  
+
   final MovimientoProvider _movimientoProvider = MovimientoProvider();
   final TurnoProvider _turnoProvider = TurnoProvider();
-  final Usuario usuarioSession = Usuario.fromJson(GetStorage().read('usuario') ?? {});
+  final Usuario usuarioSession =
+      Usuario.fromJson(GetStorage().read('usuario') ?? {});
 
   Socket socket = io('${Environment.API_URL}', <String, dynamic>{
     'transports': ['websocket'],
@@ -42,7 +43,8 @@ class ImprovedLiquidacionesController extends GetxController {
   TextEditingController Moneda5Controller = TextEditingController();
   TextEditingController Moneda1Controller = TextEditingController();
 
-  ImprovedLiquidacionesController(Usuario usuario, List<Movimiento> movimientos) {
+  ImprovedLiquidacionesController(
+      Usuario usuario, List<Movimiento> movimientos) {
     this.usuario = usuario;
     this.movimientos = movimientos;
     connectAndListen();
@@ -50,13 +52,12 @@ class ImprovedLiquidacionesController extends GetxController {
 
   void connectAndListen() {
     socket.connect();
-    socket.onConnect((data) => {
-      print('Este dispositivo se conectó a SOCKET')
-    });
+    socket.onConnect((data) => {print('Este dispositivo se conectó a SOCKET')});
   }
 
   /// Registro de liquidación con validación de conexión obligatoria
-  Future<void> registrarLiquidacion(BuildContext context, Usuario usuario, List<Movimiento> movimientos) async {
+  Future<void> registrarLiquidacion(BuildContext context, Usuario usuario,
+      List<Movimiento> movimientos) async {
     // Validar que no haya una operación en curso
     if (LoadingController.to.isLoading(LOADING_KEY)) {
       Get.snackbar('Operación en Curso', 'Por favor espere...');
@@ -76,10 +77,8 @@ class ImprovedLiquidacionesController extends GetxController {
     }
 
     // Mostrar indicador de carga
-    LoadingController.to.setLoading(
-      LOADING_KEY,
-      message: 'Procesando liquidación...'
-    );
+    LoadingController.to
+        .setLoading(LOADING_KEY, message: 'Procesando liquidación...');
 
     try {
       // Crear el movimiento
@@ -90,7 +89,6 @@ class ImprovedLiquidacionesController extends GetxController {
 
       // Manejar respuesta
       await _handleTransactionResult(result, usuario);
-
     } catch (e) {
       _handleError(e);
     } finally {
@@ -99,10 +97,12 @@ class ImprovedLiquidacionesController extends GetxController {
   }
 
   Future<bool> _verifyConnection() async {
-    LoadingController.to.setLoading(LOADING_KEY, message: 'Verificando conexión...');
-    
+    LoadingController.to
+        .setLoading(LOADING_KEY, message: 'Verificando conexión...');
+
     try {
-      final connected = await ImprovedConnectionController.to.forceConnectionCheck();
+      final connected =
+          await ImprovedConnectionController.to.forceConnectionCheck();
       return connected;
     } catch (e) {
       return false;
@@ -125,7 +125,8 @@ class ImprovedLiquidacionesController extends GetxController {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('No se puede procesar la liquidación sin conexión al servidor.'),
+            Text(
+                'No se puede procesar la liquidación sin conexión al servidor.'),
             SizedBox(height: 16),
             Container(
               padding: EdgeInsets.all(12),
@@ -143,7 +144,9 @@ class ImprovedLiquidacionesController extends GetxController {
                       SizedBox(width: 8),
                       Text(
                         'Importante:',
-                        style: TextStyle(fontWeight: FontWeight.w500, color: Colors.red[800]),
+                        style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            color: Colors.red[800]),
                       ),
                     ],
                   ),
@@ -168,18 +171,24 @@ class ImprovedLiquidacionesController extends GetxController {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.info_outline, color: Colors.blue[800], size: 16),
+                      Icon(Icons.info_outline,
+                          color: Colors.blue[800], size: 16),
                       SizedBox(width: 8),
                       Text(
                         'Recomendaciones:',
-                        style: TextStyle(fontWeight: FontWeight.w500, color: Colors.blue[800]),
+                        style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            color: Colors.blue[800]),
                       ),
                     ],
                   ),
                   SizedBox(height: 8),
-                  Text('• Verifique su conexión a internet', style: TextStyle(fontSize: 13)),
-                  Text('• Acérquese a un punto con mejor señal', style: TextStyle(fontSize: 13)),
-                  Text('• Contacte al administrador de red', style: TextStyle(fontSize: 13)),
+                  Text('• Verifique su conexión a internet',
+                      style: TextStyle(fontSize: 13)),
+                  Text('• Acérquese a un punto con mejor señal',
+                      style: TextStyle(fontSize: 13)),
+                  Text('• Contacte al administrador de red',
+                      style: TextStyle(fontSize: 13)),
                 ],
               ),
             ),
@@ -269,73 +278,85 @@ class ImprovedLiquidacionesController extends GetxController {
   }
 
   Movimiento _buildMovimiento(Usuario usuario, List<Movimiento> movimientos) {
-    final liquidacion = movimientos.firstWhere(
-      (m) => m.idTipoMovimiento == '4',
-      orElse: () => Movimiento(partetrabajo: '0')
-    );
+    final liquidacion = movimientos.firstWhere((m) => m.idTipoMovimiento == '4',
+        orElse: () => Movimiento(partetrabajo: '0'));
 
     return Movimiento(
-      id: liquidacion.id,
-      turno: usuario.turno,
-      idturno: usuario.idTurno,
-      idSupervisor: usuarioSession.id,
-      idCajero: usuario.id,
-      idTipoMovimiento: '4',
-      idPeaje: usuarioSession.idPeaje,
-      via: usuario.via,
-      partetrabajo: liquidacion.partetrabajo,
-      recibe1C: Moneda1Controller.text.isEmpty ? '0' : Moneda1Controller.text,
-      recibe5C: Moneda5Controller.text.isEmpty ? '0' : Moneda5Controller.text,
-      recibe10C: Moneda10Controller.text.isEmpty ? '0' : Moneda10Controller.text,
-      recibe25C: Moneda25Controller.text.isEmpty ? '0' : Moneda25Controller.text,
-      recibe50C: Moneda50Controller.text.isEmpty ? '0' : Moneda50Controller.text,
-      recibe2D: billetes2Controller.text.isEmpty ? '0' : billetes2Controller.text,
-      recibe1D: moneda1dController.text.isEmpty ? '0' : moneda1dController.text,
-      recibe1DB: billetes1Controller.text.isEmpty ? '0' : billetes1Controller.text,
-      recibe5D: billetes5Controller.text.isEmpty ? '0' : billetes5Controller.text,
-      recibe10D: billetes10Controller.text.isEmpty ? '0' : billetes10Controller.text,
-      recibe20D: billetes20Controller.text.isEmpty ? '0' : billetes20Controller.text,
-      entrega1C: '0',
-      entrega5C: '0',
-      entrega10C: '0',
-      entrega25C: '0',
-      entrega50C: '0',
-      entrega1D: '0',
-      entrega1DB: '0',
-      entrega5D: '0',
-      entrega10D: '0',
-      entrega20D: '0',
-      anulaciones: '0',
-      valoranulaciones: '0',
-      simulaciones: '0',
-      valorsimulaciones: '0',
-      sobrante: '0'
-    );
+        id: liquidacion.id,
+        turno: usuario.turno,
+        idturno: usuario.idTurno,
+        idSupervisor: usuarioSession.id,
+        idCajero: usuario.id,
+        idTipoMovimiento: '4',
+        idPeaje: usuarioSession.idPeaje,
+        via: usuario.via,
+        partetrabajo: liquidacion.partetrabajo,
+        recibe1C: Moneda1Controller.text.isEmpty ? '0' : Moneda1Controller.text,
+        recibe5C: Moneda5Controller.text.isEmpty ? '0' : Moneda5Controller.text,
+        recibe10C:
+            Moneda10Controller.text.isEmpty ? '0' : Moneda10Controller.text,
+        recibe25C:
+            Moneda25Controller.text.isEmpty ? '0' : Moneda25Controller.text,
+        recibe50C:
+            Moneda50Controller.text.isEmpty ? '0' : Moneda50Controller.text,
+        recibe2D:
+            billetes2Controller.text.isEmpty ? '0' : billetes2Controller.text,
+        recibe1D:
+            moneda1dController.text.isEmpty ? '0' : moneda1dController.text,
+        recibe1DB:
+            billetes1Controller.text.isEmpty ? '0' : billetes1Controller.text,
+        recibe5D:
+            billetes5Controller.text.isEmpty ? '0' : billetes5Controller.text,
+        recibe10D:
+            billetes10Controller.text.isEmpty ? '0' : billetes10Controller.text,
+        recibe20D:
+            billetes20Controller.text.isEmpty ? '0' : billetes20Controller.text,
+        entrega1C: '0',
+        entrega5C: '0',
+        entrega10C: '0',
+        entrega25C: '0',
+        entrega50C: '0',
+        entrega1D: '0',
+        entrega1DB: '0',
+        entrega5D: '0',
+        entrega10D: '0',
+        entrega20D: '0',
+        anulaciones: '0',
+        valoranulaciones: '0',
+        simulaciones: '0',
+        valorsimulaciones: '0',
+        sobrante: '0');
   }
 
-  Future<TransactionResult> _submitTransactionWithRetries(Movimiento movimiento, Usuario usuario) async {
+  Future<TransactionResult> _submitTransactionWithRetries(
+      Movimiento movimiento, Usuario usuario) async {
     int maxRetries = 3;
     int currentRetry = 0;
-    
+
     while (currentRetry < maxRetries) {
       try {
-        LoadingController.to.setLoading(
-          LOADING_KEY,
-          message: currentRetry == 0 
-              ? 'Enviando liquidación...'
-              : 'Reintentando... (${currentRetry + 1}/$maxRetries)'
-        );
+        LoadingController.to.setLoading(LOADING_KEY,
+            message: currentRetry == 0
+                ? 'Enviando liquidación...'
+                : 'Reintentando... (${currentRetry + 1}/$maxRetries)');
 
         Response response;
         Response response2;
 
-        if (movimiento.partetrabajo == '0') {
-          // No se agregó el parte de trabajo
-          response = await _movimientoProvider.createOnlineOnly(movimiento)
+        // Verificar si ya existe una liquidación (tiene id válido)
+        final bool liquidacionExiste = movimiento.id != null &&
+            movimiento.id!.isNotEmpty &&
+            movimiento.id != '0';
+
+        if (!liquidacionExiste) {
+          // No existe liquidación, crear nueva
+          response = await _movimientoProvider
+              .createOnlineOnly(movimiento)
               .timeout(Duration(seconds: 45));
-          
+
           if (response.statusCode == 201) {
-            response2 = await _turnoProvider.updateEstado(usuario.idTurno ?? '')
+            response2 = await _turnoProvider
+                .updateEstado(usuario.idTurno ?? '')
                 .timeout(Duration(seconds: 30));
           } else {
             return TransactionResult(
@@ -345,12 +366,14 @@ class ImprovedLiquidacionesController extends GetxController {
             );
           }
         } else {
-          // Se agregó el parte de trabajo
-          response = await _movimientoProvider.updateLiquidacionCompletaOnlineOnly(movimiento)
+          // Ya existe liquidación, actualizar (agregar faltantes/sobrantes)
+          response = await _movimientoProvider
+              .updateLiquidacionCompletaOnlineOnly(movimiento)
               .timeout(Duration(seconds: 45));
-          
+
           if (response.statusCode == 201) {
-            response2 = await _turnoProvider.updateEstado(usuario.idTurno ?? '')
+            response2 = await _turnoProvider
+                .updateEstado(usuario.idTurno ?? '')
                 .timeout(Duration(seconds: 30));
           } else {
             return TransactionResult(
@@ -361,14 +384,14 @@ class ImprovedLiquidacionesController extends GetxController {
           }
         }
 
-        if ((response.statusCode ?? 0) == 201 && (response2.statusCode ?? 0) == 200) {
+        if ((response.statusCode ?? 0) == 201 &&
+            (response2.statusCode ?? 0) == 200) {
           // Emitir evento del socket
-          socket.emit('actualizar_turno', {
-            'id_turno': usuario.idTurno
-          });
-          
+          socket.emit('actualizar_turno', {'id_turno': usuario.idTurno});
+
           return TransactionResult(success: true, statusCode: 201);
-        } else if ((response.statusCode ?? 0) >= 400 && (response.statusCode ?? 0) < 500) {
+        } else if ((response.statusCode ?? 0) >= 400 &&
+            (response.statusCode ?? 0) < 500) {
           return TransactionResult(
             success: false,
             statusCode: response.statusCode ?? 0,
@@ -392,14 +415,15 @@ class ImprovedLiquidacionesController extends GetxController {
           return TransactionResult(
             success: false,
             statusCode: 0,
-            error: 'Error de conexión después de $maxRetries intentos: ${e.toString()}',
+            error:
+                'Error de conexión después de $maxRetries intentos: ${e.toString()}',
           );
         }
-        
+
         await Future.delayed(Duration(seconds: 2 * currentRetry));
       }
     }
-    
+
     return TransactionResult(
       success: false,
       statusCode: 0,
@@ -407,7 +431,8 @@ class ImprovedLiquidacionesController extends GetxController {
     );
   }
 
-  Future<void> _handleTransactionResult(TransactionResult result, Usuario usuario) async {
+  Future<void> _handleTransactionResult(
+      TransactionResult result, Usuario usuario) async {
     if (result.success) {
       Get.snackbar(
         'Liquidación Exitosa',
@@ -416,16 +441,16 @@ class ImprovedLiquidacionesController extends GetxController {
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
-      
+
       _clearFields();
       Get.offNamedUntil('/home', (route) => false, arguments: {'index': 2});
-      
     } else {
       await _showErrorDialog(result, usuario);
     }
   }
 
-  Future<void> _showErrorDialog(TransactionResult result, Usuario usuario) async {
+  Future<void> _showErrorDialog(
+      TransactionResult result, Usuario usuario) async {
     await Get.dialog(
       AlertDialog(
         title: Row(

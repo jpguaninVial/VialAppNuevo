@@ -28,7 +28,7 @@ class _RetiroParcialPageState extends State<RetiroParcialPage> {
     return Scaffold(
       appBar: AppBar(
         iconTheme: IconThemeData(color: Colors.white),
-        backgroundColor: Color(0xFF368983),
+        backgroundColor: Theme.of(context).colorScheme.primary,
         title: Text(
           'Retiro Parcial',
           style: TextStyle(color: Colors.white),
@@ -58,16 +58,16 @@ class _RetiroParcialPageState extends State<RetiroParcialPage> {
                             ),
                           ),
                           SizedBox(height: 12),
-                          _buildInfoRow('Nombre:', '${widget.usuario.nombre ?? ''} ${widget.usuario.apellido ?? ''}'),
-                          _buildInfoRow('Turno:', widget.usuario.turno ?? 'N/A'),
+                          _buildInfoRow('Nombre:',
+                              '${widget.usuario.nombre ?? ''} ${widget.usuario.apellido ?? ''}'),
+                          _buildInfoRow(
+                              'Turno:', widget.usuario.turno ?? 'N/A'),
                           _buildInfoRow('Vía:', widget.usuario.via ?? 'N/A'),
                         ],
                       ),
                     ),
                   ),
-                  
                   SizedBox(height: 20),
-                  
                   Card(
                     child: Padding(
                       padding: EdgeInsets.all(16),
@@ -83,7 +83,6 @@ class _RetiroParcialPageState extends State<RetiroParcialPage> {
                             ),
                           ),
                           SizedBox(height: 16),
-                          
                           Text(
                             'Billetes',
                             style: TextStyle(
@@ -93,24 +92,27 @@ class _RetiroParcialPageState extends State<RetiroParcialPage> {
                             ),
                           ),
                           SizedBox(height: 8),
-                          
                           _buildDenominacionField(
-                            controller: retiroParcialController.billetes20Controller,
+                            controller:
+                                retiroParcialController.billetes20Controller,
                             label: 'Billetes de \$20',
                             icon: Icons.money,
                           ),
                           _buildDenominacionField(
-                            controller: retiroParcialController.billetes10RecibeController,
+                            controller: retiroParcialController
+                                .billetes10RecibeController,
                             label: 'Billetes de \$10',
                             icon: Icons.money,
                           ),
                           _buildDenominacionField(
-                            controller: retiroParcialController.billetes5RecibeController,
+                            controller: retiroParcialController
+                                .billetes5RecibeController,
                             label: 'Billetes de \$5',
                             icon: Icons.money,
                           ),
                           _buildDenominacionField(
-                            controller: retiroParcialController.billetes1RecibeController,
+                            controller: retiroParcialController
+                                .billetes1RecibeController,
                             label: 'Billetes de \$1',
                             icon: Icons.money,
                           ),
@@ -118,14 +120,13 @@ class _RetiroParcialPageState extends State<RetiroParcialPage> {
                       ),
                     ),
                   ),
-                  
                   SizedBox(height: 30),
-                  
                   Obx(() {
                     return ElevatedButton(
-                      onPressed: retiroParcialController.cargando.value 
-                          ? null 
-                          : () => retiroParcialController.registarRetiroParcial(context, widget.usuario),
+                      onPressed: retiroParcialController.cargando.value
+                          ? null
+                          : () => retiroParcialController.registarRetiroParcial(
+                              context, widget.usuario),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Color(0xFF368983),
                         foregroundColor: Colors.white,
@@ -140,7 +141,8 @@ class _RetiroParcialPageState extends State<RetiroParcialPage> {
                               height: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(Colors.white),
                               ),
                             )
                           : Text(

@@ -15,7 +15,7 @@ class AsignacionPage extends StatelessWidget {
     return Obx(() => DefaultTabController(
           length: asignacionController.estados.length,
           child: Scaffold(
-            backgroundColor: Colors.grey[100],
+            backgroundColor: Theme.of(context).colorScheme.surface,
             body: Stack(
               children: [
                 Column(
@@ -24,7 +24,7 @@ class AsignacionPage extends StatelessWidget {
                     Expanded(
                       child: RefreshIndicator(
                         onRefresh: _pullToRefresh,
-                        color: Color(0xFF368983),
+                        color: Theme.of(context).colorScheme.primary,
                         child: TabBarView(
                           children: List<Widget>.generate(
                               asignacionController.estados.length, (index2) {
@@ -40,7 +40,9 @@ class AsignacionPage extends StatelessWidget {
                                   return Center(
                                     child: CircularProgressIndicator(
                                       valueColor: AlwaysStoppedAnimation<Color>(
-                                          Color(0xFF368983)),
+                                          Theme.of(context)
+                                              .colorScheme
+                                              .primary),
                                     ),
                                   );
                                 }
@@ -66,13 +68,20 @@ class AsignacionPage extends StatelessWidget {
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       Icon(Icons.person_off_outlined,
-                                          size: 80, color: Colors.grey[400]),
+                                          size: 80,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary
+                                              .withOpacity(0.3)),
                                       SizedBox(height: 16),
                                       Text(
                                         "No hay usuarios asignados",
                                         style: TextStyle(
                                           fontSize: 16,
-                                          color: Colors.grey[600],
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface
+                                              .withOpacity(0.6),
                                           fontWeight: FontWeight.w500,
                                         ),
                                       ),
@@ -113,8 +122,8 @@ class AsignacionPage extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFF368983),
-            Color(0xFF2C6E69),
+            Theme.of(context).colorScheme.primary.withOpacity(0.9),
+            Theme.of(context).colorScheme.primary.withOpacity(0.7),
           ],
         ),
         boxShadow: [
@@ -147,7 +156,10 @@ class AsignacionPage extends StatelessWidget {
                   ),
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primaryContainer
+                          .withOpacity(0.2),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: IconButton(
@@ -169,13 +181,13 @@ class AsignacionPage extends StatelessWidget {
               indicatorColor: Colors.white,
               indicatorWeight: 3,
               labelColor: Colors.white,
-              unselectedLabelColor: Colors.white70,
+              unselectedLabelColor: Colors.white.withOpacity(0.9),
               labelStyle: TextStyle(
-                fontSize: 15,
+                fontSize: 17,
                 fontWeight: FontWeight.bold,
               ),
               unselectedLabelStyle: TextStyle(
-                fontSize: 13,
+                fontSize: 15,
                 fontWeight: FontWeight.normal,
               ),
               labelPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -238,11 +250,11 @@ class AsignacionPage extends StatelessWidget {
           child: Container(
             margin: EdgeInsets.only(bottom: 12, left: 16, right: 16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.withOpacity(0.1),
+                  color: Theme.of(context).colorScheme.shadow.withOpacity(0.1),
                   spreadRadius: 1,
                   blurRadius: 10,
                   offset: Offset(0, 4),
@@ -260,18 +272,53 @@ class AsignacionPage extends StatelessWidget {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                          color: Color(0xFF368983).withOpacity(0.3), width: 2),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withOpacity(0.3),
+                          width: 2),
+                      gradient: usuario.imagen == null || usuario.imagen == ''
+                          ? LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                Theme.of(context)
+                                    .colorScheme
+                                    .primaryContainer
+                                    .withOpacity(0.15),
+                                Theme.of(context)
+                                    .colorScheme
+                                    .secondaryContainer
+                                    .withOpacity(0.15),
+                              ],
+                            )
+                          : null,
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(10),
-                      child: FadeInImage.assetNetwork(
-                        placeholder: 'assets/img/no-image.png',
-                        image: usuario.imagen ?? '',
-                        fit: BoxFit.cover,
-                        imageErrorBuilder: (context, error, stackTrace) {
-                          return Image.asset('assets/img/no-image.png');
-                        },
-                      ),
+                      child: usuario.imagen != null && usuario.imagen != ''
+                          ? FadeInImage.assetNetwork(
+                              placeholder: 'assets/img/no-image.png',
+                              image: usuario.imagen ?? '',
+                              fit: BoxFit.cover,
+                              imageErrorBuilder: (context, error, stackTrace) {
+                                return Center(
+                                  child: Icon(
+                                    Icons.person,
+                                    size: 32,
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
+                                  ),
+                                );
+                              },
+                            )
+                          : Center(
+                              child: Icon(
+                                Icons.person,
+                                size: 32,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                            ),
                     ),
                   ),
                   SizedBox(width: 16),
@@ -281,25 +328,32 @@ class AsignacionPage extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '${usuario.nombre} ${usuario.apellido}' ?? '',
+                          '${usuario.nombre} ${usuario.apellido}',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16.0,
-                            color: Colors.black87,
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                         ),
                         SizedBox(height: 4),
                         Row(
                           children: [
                             Icon(Icons.directions_car,
-                                size: 14, color: Colors.grey[600]),
+                                size: 14,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withOpacity(0.6)),
                             SizedBox(width: 4),
                             Text(
                               usuario.via != null
                                   ? 'Vía ${usuario.via}'
                                   : 'Vía no asignada',
                               style: TextStyle(
-                                color: Colors.grey[600],
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withOpacity(0.6),
                                 fontSize: 13,
                               ),
                             ),

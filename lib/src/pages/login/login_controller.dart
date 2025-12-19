@@ -4,6 +4,7 @@ import 'package:asistencia_vial_app/src/provider/usuario_provider.dart';
 import 'package:asistencia_vial_app/src/controllers/loading_controller.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 
@@ -49,22 +50,69 @@ class LoginController extends GetxController {
 
             Rol? rol =
                 usuario.roles?.isNotEmpty == true ? usuario.roles!.first : null;
-            Get.snackbar(
-                'Bienvenido/a ${usuario.nombre}', 'Inicio de sesion exitoso',
-                backgroundColor: Colors.green, colorText: Colors.white);
+
+            // Mensaje personalizado según la hora del día
+            String saludo = _obtenerSaludo();
+            String mensajeBienvenida = '$saludo ${usuario.nombre}';
+
+            Fluttertoast.showToast(
+              msg: mensajeBienvenida,
+              toastLength: Toast.LENGTH_LONG,
+              gravity: ToastGravity.TOP,
+              timeInSecForIosWeb: 3,
+              backgroundColor: Colors.green.shade600,
+              textColor: Colors.white,
+              fontSize: 16.0,
+            );
 
             Get.offNamedUntil(rol?.ruta ?? '', (route) => false);
           } else {
-            Get.snackbar('Error', 'Este usuario se encuentra inactivo');
+            Fluttertoast.showToast(
+              msg:
+                  'Este usuario se encuentra desactivado. Contacta con el administrador.',
+              toastLength: Toast.LENGTH_LONG,
+              gravity: ToastGravity.TOP,
+              timeInSecForIosWeb: 3,
+              backgroundColor: Colors.orange.shade600,
+              textColor: Colors.white,
+              fontSize: 16.0,
+            );
           }
         } else {
-          Get.snackbar('Login fallido', responseApi.message ?? '');
+          Fluttertoast.showToast(
+            msg: responseApi.message ?? 'Usuario o contraseña incorrectos',
+            toastLength: Toast.LENGTH_LONG,
+            gravity: ToastGravity.TOP,
+            timeInSecForIosWeb: 3,
+            backgroundColor: Colors.red.shade600,
+            textColor: Colors.white,
+            fontSize: 16.0,
+          );
         }
       }
     } catch (e) {
-      Get.snackbar('Error', 'Ocurrió un error inesperado: ${e.toString()}');
+      Fluttertoast.showToast(
+        msg: 'Ocurrió un error inesperado: ${e.toString()}',
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.TOP,
+        timeInSecForIosWeb: 3,
+        backgroundColor: Colors.red.shade600,
+        textColor: Colors.white,
+        fontSize: 16.0,
+      );
     } finally {
       LoadingController.to.clearLoading(LOADING_KEY);
+    }
+  }
+
+  String _obtenerSaludo() {
+    final hora = DateTime.now().hour;
+    if (hora < 12) {
+      return '¡Buenos días!';
+    } else if (hora < 18) {
+      return '¡Buenas tardes!';
+    } else {
+      return '¡Buenas noches!';
     }
   }
 

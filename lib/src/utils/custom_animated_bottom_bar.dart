@@ -75,7 +75,7 @@ class CustomAnimatedBottomBar extends StatelessWidget {
 }
 
 extension on ThemeData {
-  get bottomAppBarColor => Color(0xFF368983);
+  get bottomAppBarColor => colorScheme.surfaceContainer;
 }
 
 //0xFF368983

@@ -58,6 +58,11 @@ class UsuarioProvider extends GetConnect {
     Uri uri =
         Uri.http(Environment.API_URL_OLD, '/api/usuarios/createWithSignature');
 
+    print('Provider: URL -> $uri');
+    print('Provider: Usuario JSON -> ${json.encode(usuario.toJson())}');
+    print(
+        'Provider: Firma archivo -> ${basename(signature.path)}, tamaño: ${await signature.length()}');
+
     final request = http.MultipartRequest('POST', uri);
 
     // Agregar la firma como archivo en la solicitud
@@ -68,7 +73,14 @@ class UsuarioProvider extends GetConnect {
       filename: basename(signature.path),
     ));
     request.fields['usuario'] = json.encode(usuario);
+
+    print('Provider: Request fields -> ${request.fields}');
+    print(
+        'Provider: Request files -> ${request.files.map((f) => '${f.field}: ${f.filename} (${f.length} bytes)')}');
+
     final response = await request.send();
+    print('Provider: Response status code -> ${response.statusCode}');
+
     return response.stream.transform(utf8.decoder);
   }
 
@@ -76,6 +88,13 @@ class UsuarioProvider extends GetConnect {
       Usuario usuario, File signature, File image) async {
     Uri uri = Uri.http(
         Environment.API_URL_OLD, '/api/usuarios/createWithSignatureAndImage');
+
+    print('Provider: URL con firma+imagen -> $uri');
+    print('Provider: Usuario JSON -> ${json.encode(usuario.toJson())}');
+    print(
+        'Provider: Firma -> ${basename(signature.path)}, tamaño: ${await signature.length()}');
+    print(
+        'Provider: Imagen -> ${basename(image.path)}, tamaño: ${await image.length()}');
 
     final request = http.MultipartRequest('POST', uri);
 
@@ -94,7 +113,14 @@ class UsuarioProvider extends GetConnect {
     ));
 
     request.fields['usuario'] = json.encode(usuario);
+
+    print('Provider: Request fields -> ${request.fields}');
+    print(
+        'Provider: Request files -> ${request.files.map((f) => '${f.field}: ${f.filename} (${f.length} bytes)')}');
+
     final response = await request.send();
+    print('Provider: Response status code -> ${response.statusCode}');
+
     return response.stream.transform(utf8.decoder);
   }
 

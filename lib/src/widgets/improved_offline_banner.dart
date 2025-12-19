@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import '../controllers/improved_connection_controller.dart';
 import '../services/sync_service.dart';
 
@@ -11,11 +12,23 @@ class ImprovedOfflineBanner extends StatelessWidget {
     return Obx(() {
       final connectionController = ImprovedConnectionController.to;
       final syncService = SyncService.to;
-      
+
       final isOffline = connectionController.isOffline.value;
+      final isCheckingConnection =
+          connectionController.isCheckingConnection.value;
       final isSyncing = syncService.isSyncing.value;
       final pendingCount = syncService.pendingTransactions.value;
-      
+
+      // No mostrar banner durante la verificación inicial
+      if (isCheckingConnection &&
+          connectionController.lastConnectionCheck.value
+                  .difference(DateTime.now())
+                  .inSeconds
+                  .abs() <
+              3) {
+        return const SizedBox.shrink();
+      }
+
       if (!isOffline && pendingCount == 0 && !isSyncing) {
         return const SizedBox.shrink();
       }
@@ -34,7 +47,7 @@ class ImprovedOfflineBanner extends StatelessWidget {
         backgroundColor = Colors.orange[800]!;
         icon = Icons.wifi_off;
         title = 'Modo Offline';
-        subtitle = pendingCount > 0 
+        subtitle = pendingCount > 0
             ? '$pendingCount transacciones pendientes'
             : 'Sin conexión al servidor';
       } else if (pendingCount > 0) {
@@ -58,13 +71,14 @@ class ImprovedOfflineBanner extends StatelessWidget {
               children: [
                 AnimatedSwitcher(
                   duration: Duration(milliseconds: 300),
-                  child: isSyncing 
+                  child: isSyncing
                       ? SizedBox(
                           width: 20,
                           height: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
                           ),
                         )
                       : Icon(
@@ -101,7 +115,8 @@ class ImprovedOfflineBanner extends StatelessWidget {
                   GestureDetector(
                     onTap: () => _showSyncOptions(context),
                     child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(12),
@@ -150,13 +165,13 @@ class ImprovedOfflineBanner extends StatelessWidget {
               ],
             ),
             SizedBox(height: 20),
-            
+
             // Información actual
             Obx(() {
               final pendingCount = SyncService.to.pendingTransactions.value;
               final lastSync = SyncService.to.lastSyncTime.value;
               final isOffline = ImprovedConnectionController.to.isOffline.value;
-              
+
               return Container(
                 padding: EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -166,7 +181,8 @@ class ImprovedOfflineBanner extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Estado Actual:', style: TextStyle(fontWeight: FontWeight.w500)),
+                    Text('Estado Actual:',
+                        style: TextStyle(fontWeight: FontWeight.w500)),
                     SizedBox(height: 8),
                     Text('• Transacciones pendientes: $pendingCount'),
                     Text('• Estado: ${isOffline ? "Offline" : "Online"}'),
@@ -175,35 +191,43 @@ class ImprovedOfflineBanner extends StatelessWidget {
                 ),
               );
             }),
-            
+
             SizedBox(height: 20),
-            
+
             // Botón de sincronización manual
             ElevatedButton.icon(
               onPressed: () async {
                 Get.back();
-                Get.snackbar(
-                  'Sincronización Manual',
-                  'Iniciando sincronización...',
+                Fluttertoast.showToast(
+                  msg: 'Sincronización Manual - Iniciando...',
+                  toastLength: Toast.LENGTH_SHORT,
+                  gravity: ToastGravity.TOP,
                   backgroundColor: Colors.blue,
-                  colorText: Colors.white,
+                  textColor: Colors.white,
+                  fontSize: 16.0,
                 );
-                
+
                 final result = await SyncService.to.forceManuaSync();
-                
+
                 if (result.success) {
-                  Get.snackbar(
-                    'Sincronización Exitosa',
-                    '${result.successCount} transacciones enviadas',
+                  Fluttertoast.showToast(
+                    msg:
+                        'Sincronización Exitosa - ${result.successCount} transacciones enviadas',
+                    toastLength: Toast.LENGTH_LONG,
+                    gravity: ToastGravity.TOP,
                     backgroundColor: Colors.green,
-                    colorText: Colors.white,
+                    textColor: Colors.white,
+                    fontSize: 16.0,
                   );
                 } else {
-                  Get.snackbar(
-                    'Error de Sincronización',
-                    result.error ?? 'Error desconocido',
+                  Fluttertoast.showToast(
+                    msg:
+                        'Error de Sincronización - ${result.error ?? "Error desconocido"}',
+                    toastLength: Toast.LENGTH_LONG,
+                    gravity: ToastGravity.TOP,
                     backgroundColor: Colors.red,
-                    colorText: Colors.white,
+                    textColor: Colors.white,
+                    fontSize: 16.0,
                   );
                 }
               },
@@ -214,9 +238,9 @@ class ImprovedOfflineBanner extends StatelessWidget {
                 foregroundColor: Colors.white,
               ),
             ),
-            
+
             SizedBox(height: 10),
-            
+
             // Botón para limpiar transacciones (con confirmación)
             OutlinedButton.icon(
               onPressed: () => _showClearConfirmation(context),
@@ -227,9 +251,9 @@ class ImprovedOfflineBanner extends StatelessWidget {
                 side: BorderSide(color: Colors.red),
               ),
             ),
-            
+
             SizedBox(height: 10),
-            
+
             TextButton(
               onPressed: () => Get.back(),
               child: Text('Cerrar'),
@@ -242,7 +266,7 @@ class ImprovedOfflineBanner extends StatelessWidget {
 
   void _showClearConfirmation(BuildContext context) {
     Get.back(); // Cerrar el bottom sheet anterior
-    
+
     Get.dialog(
       AlertDialog(
         title: Row(
@@ -256,7 +280,8 @@ class ImprovedOfflineBanner extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('¿Está seguro de que desea eliminar todas las transacciones offline?'),
+            Text(
+                '¿Está seguro de que desea eliminar todas las transacciones offline?'),
             SizedBox(height: 12),
             Container(
               padding: EdgeInsets.all(12),
@@ -301,7 +326,7 @@ class ImprovedOfflineBanner extends StatelessWidget {
   String _formatTime(DateTime time) {
     final now = DateTime.now();
     final difference = now.difference(time);
-    
+
     if (difference.inMinutes < 1) {
       return 'Hace unos segundos';
     } else if (difference.inMinutes < 60) {

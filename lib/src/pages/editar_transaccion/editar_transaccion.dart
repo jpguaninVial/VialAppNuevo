@@ -6,18 +6,15 @@ import '../../models/movimiento.dart';
 import '../../models/usuario.dart';
 
 class EditarTransaccionPage extends StatelessWidget {
-
   late EditarTransaccionController editarTransaccionController;
 
   Usuario? usuario;
   Movimiento? movimiento;
 
-
   EditarTransaccionPage({@required this.movimiento}) {
     editarTransaccionController =
         Get.put(EditarTransaccionController(movimiento!));
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -26,42 +23,46 @@ class EditarTransaccionPage extends StatelessWidget {
         title: Text(
           'Editar de transacción',
           style: TextStyle(
-              fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.onPrimaryContainer),
         ),
-        backgroundColor: Color(0xFF368983),
+        backgroundColor: Theme.of(context).colorScheme.primary,
         elevation: 0,
+        iconTheme: IconThemeData(
+            color: Theme.of(context).colorScheme.onPrimaryContainer),
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16.0),
-        child:
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _sectionTitle('Recibe de Cajero'),
-                  _recibeGrid(),
-                  SizedBox(height: 10),
-                  Divider(thickness: 1, color: Colors.grey[300]),
-                  _sectionTitle('Entregó Supervisor'),
-                  SizedBox(height: 10),
-                  _entregaGrid(),
-                  SizedBox(height: 20),
-
-                    _confirmButton(context),
-                ],
-              ),
-
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _sectionTitle('Recibe de Cajero', context),
+            _recibeGrid(context),
+            SizedBox(height: 10),
+            Divider(
+                thickness: 1,
+                color:
+                    Theme.of(context).colorScheme.onSurface.withOpacity(0.2)),
+            _sectionTitle('Entregó Supervisor', context),
+            SizedBox(height: 10),
+            _entregaGrid(context),
+            SizedBox(height: 20),
+            _confirmButton(context),
+          ],
+        ),
       ),
     );
   }
 
   /// **Widget: Título de Sección**
-  Widget _sectionTitle(String title) {
+  Widget _sectionTitle(String title, BuildContext context) {
     return Text(
       title,
       style: TextStyle(
         fontSize: 18,
         fontWeight: FontWeight.bold,
-        color: Color(0xFF368983),
+        color: Theme.of(context).colorScheme.primary,
       ),
     );
   }
@@ -70,41 +71,86 @@ class EditarTransaccionPage extends StatelessWidget {
     required String label,
     String? assetIcon,
     required TextEditingController controller,
+    required BuildContext context,
     bool readOnly = false,
     int? maxLength,
   }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+    return Container(
+      margin: EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 6,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
       child: TextField(
-        style: TextStyle(color: Colors.black),
-        controller: controller,
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.onSurface,
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+        ),
         readOnly: readOnly,
+        controller: controller,
+        maxLength: maxLength ?? 3,
         keyboardType: TextInputType.number,
         decoration: InputDecoration(
+          counterText: '',
           labelText: label,
+          labelStyle: TextStyle(
+            color: controller.text.isEmpty
+                ? Theme.of(context).colorScheme.onSurfaceVariant
+                : Theme.of(context).colorScheme.primary,
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+          ),
           prefixIcon: assetIcon != null
               ? Padding(
-            padding: const EdgeInsets.all(10.0),
-            child: Image.asset(
-              assetIcon,
-              width: 24,
-              height: 24,
-              fit: BoxFit.contain,
-            ),
-          )
+                  padding: const EdgeInsets.all(12.0),
+                  child: Container(
+                    padding: EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Image.asset(
+                      assetIcon,
+                      width: 28,
+                      height: 28,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                )
               : null,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
           ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: Theme.of(context).colorScheme.primary,
+              width: 2,
+            ),
+          ),
+          filled: true,
+          fillColor: Theme.of(context).colorScheme.surface,
+          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         ),
-
       ),
     );
   }
 
-
-  Widget _recibeGrid() {
-   // bool mostrarTodasDenominaciones = usuario!.idRol == '4';
+  Widget _recibeGrid(BuildContext context) {
+    // bool mostrarTodasDenominaciones = usuario!.idRol == '4';
 
     return Column(
       children: [
@@ -114,6 +160,7 @@ class EditarTransaccionPage extends StatelessWidget {
           children: [
             Expanded(
               child: _inputField(
+                context: context,
                 label: '\$ 20',
                 assetIcon: 'assets/img/billete.png',
                 controller: editarTransaccionController.billetes20Controller,
@@ -122,94 +169,105 @@ class EditarTransaccionPage extends StatelessWidget {
             SizedBox(width: 5),
             Expanded(
               child: _inputField(
+                context: context,
                 label: '\$ 10',
                 assetIcon: 'assets/img/billete.png',
-                controller: editarTransaccionController.billetes10RecibeController,
+                controller:
+                    editarTransaccionController.billetes10RecibeController,
               ),
             ),
           ],
-        ),        // Fila de $5 y $1 (Siempre se muestra)
+        ), // Fila de $5 y $1 (Siempre se muestra)
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Expanded(
               child: _inputField(
+                context: context,
                 label: '\$ 5',
                 assetIcon: 'assets/img/billete.png',
-                controller: editarTransaccionController.billetes5RecibeController,
+                controller:
+                    editarTransaccionController.billetes5RecibeController,
               ),
             ),
             SizedBox(width: 10),
             Expanded(
               child: _inputField(
+                context: context,
                 label: '\$ 1',
                 assetIcon: 'assets/img/moneda.png',
-                controller: editarTransaccionController.billetes1RecibeController,
+                controller:
+                    editarTransaccionController.billetes1RecibeController,
               ),
             ),
           ],
         ),
 
         // Otras denominaciones (Solo si el rol es 3)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: _inputField(
-                  label: '50c',
-                  assetIcon: 'assets/img/moneda.png',
-                  controller: editarTransaccionController.Moneda50RecibeController,
-                ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: _inputField(
+                context: context,
+                label: '50c',
+                assetIcon: 'assets/img/moneda.png',
+                controller:
+                    editarTransaccionController.Moneda50RecibeController,
               ),
-              SizedBox(width: 10),
-              Expanded(
-                child: _inputField(
-                  label: '25c',
-                  assetIcon: 'assets/img/moneda.png',
-                  controller: editarTransaccionController.Moneda25RecibeController,
-                ),
+            ),
+            SizedBox(width: 10),
+            Expanded(
+              child: _inputField(
+                context: context,
+                label: '25c',
+                assetIcon: 'assets/img/moneda.png',
+                controller:
+                    editarTransaccionController.Moneda25RecibeController,
               ),
-            ],
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: _inputField(
-                  label: '10c',
-                  assetIcon: 'assets/img/moneda.png',
-                  controller: editarTransaccionController.Moneda10RecibeController,
-                ),
+            ),
+          ],
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: _inputField(
+                context: context,
+                label: '10c',
+                assetIcon: 'assets/img/moneda.png',
+                controller:
+                    editarTransaccionController.Moneda10RecibeController,
               ),
-              SizedBox(width: 10),
-              Expanded(
-                child: _inputField(
-                  label: '5c',
-                  assetIcon: 'assets/img/moneda.png',
-                  controller: editarTransaccionController.Moneda5RecibeController,
-                ),
+            ),
+            SizedBox(width: 10),
+            Expanded(
+              child: _inputField(
+                context: context,
+                label: '5c',
+                assetIcon: 'assets/img/moneda.png',
+                controller: editarTransaccionController.Moneda5RecibeController,
               ),
-            ],
-          ),
-          Row(
-            children: [
-              Expanded(
-                child: _inputField(
-                  label: '1c',
-                  assetIcon: 'assets/img/moneda.png',
-                  controller: editarTransaccionController.Moneda1RecibeController,
-                ),
+            ),
+          ],
+        ),
+        Row(
+          children: [
+            Expanded(
+              child: _inputField(
+                context: context,
+                label: '1c',
+                assetIcon: 'assets/img/moneda.png',
+                controller: editarTransaccionController.Moneda1RecibeController,
               ),
-            ],
-          ),
-        ],
-
+            ),
+          ],
+        ),
+      ],
     );
   }
 
-  Widget _entregaGrid() {
-
-
+  Widget _entregaGrid(BuildContext context) {
     return Column(
       children: [
         // Fila de $20 y $10 (Siempre se muestra)
@@ -218,37 +276,45 @@ class EditarTransaccionPage extends StatelessWidget {
           children: [
             Expanded(
               child: _inputField(
+                context: context,
                 label: '\$ 20',
                 assetIcon: 'assets/img/billete.png',
-                controller: editarTransaccionController.billetes20EntregaController,
+                controller:
+                    editarTransaccionController.billetes20EntregaController,
               ),
             ),
             SizedBox(width: 5),
             Expanded(
               child: _inputField(
+                context: context,
                 label: '\$ 10',
                 assetIcon: 'assets/img/billete.png',
-                controller: editarTransaccionController.billetes10EntregaController,
+                controller:
+                    editarTransaccionController.billetes10EntregaController,
               ),
             ),
           ],
-        ),        // Fila de $5 y $1 (Siempre se muestra)
+        ), // Fila de $5 y $1 (Siempre se muestra)
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Expanded(
               child: _inputField(
+                context: context,
                 label: '\$ 5',
                 assetIcon: 'assets/img/billete.png',
-                controller: editarTransaccionController.billetes5EntregaController,
+                controller:
+                    editarTransaccionController.billetes5EntregaController,
               ),
             ),
             SizedBox(width: 10),
             Expanded(
               child: _inputField(
+                context: context,
                 label: '\$ 1',
                 assetIcon: 'assets/img/moneda.png',
-                controller: editarTransaccionController.billetes1EntregaController,
+                controller:
+                    editarTransaccionController.billetes1EntregaController,
               ),
             ),
           ],
@@ -260,17 +326,21 @@ class EditarTransaccionPage extends StatelessWidget {
           children: [
             Expanded(
               child: _inputField(
+                context: context,
                 label: '50c',
                 assetIcon: 'assets/img/moneda.png',
-                controller: editarTransaccionController.Moneda50EntregaController,
+                controller:
+                    editarTransaccionController.Moneda50EntregaController,
               ),
             ),
             SizedBox(width: 10),
             Expanded(
               child: _inputField(
+                context: context,
                 label: '25c',
                 assetIcon: 'assets/img/moneda.png',
-                controller: editarTransaccionController.Moneda25EntregaController,
+                controller:
+                    editarTransaccionController.Moneda25EntregaController,
               ),
             ),
           ],
@@ -280,17 +350,21 @@ class EditarTransaccionPage extends StatelessWidget {
           children: [
             Expanded(
               child: _inputField(
+                context: context,
                 label: '10c',
                 assetIcon: 'assets/img/moneda.png',
-                controller: editarTransaccionController.Moneda10EntregaController,
+                controller:
+                    editarTransaccionController.Moneda10EntregaController,
               ),
             ),
             SizedBox(width: 10),
             Expanded(
               child: _inputField(
+                context: context,
                 label: '5c',
                 assetIcon: 'assets/img/moneda.png',
-                controller: editarTransaccionController.Moneda5EntregaController,
+                controller:
+                    editarTransaccionController.Moneda5EntregaController,
               ),
             ),
           ],
@@ -299,21 +373,18 @@ class EditarTransaccionPage extends StatelessWidget {
           children: [
             Expanded(
               child: _inputField(
+                context: context,
                 label: '1c',
                 assetIcon: 'assets/img/moneda.png',
-                controller: editarTransaccionController.Moneda1EntregaController,
+                controller:
+                    editarTransaccionController.Moneda1EntregaController,
               ),
             ),
           ],
         ),
       ],
-
     );
   }
-
-
-
-
 
   /// **Widget: Botón de Confirmación**
   Widget _confirmButton(BuildContext context) {
@@ -323,7 +394,7 @@ class EditarTransaccionPage extends StatelessWidget {
           _confirmEditartransaccion(context);
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: Color(0xFF368983),
+          backgroundColor: Theme.of(context).colorScheme.primary,
           padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
@@ -332,7 +403,7 @@ class EditarTransaccionPage extends StatelessWidget {
         child: Text(
           'Editar Transacción',
           style: TextStyle(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.onPrimaryContainer,
             fontSize: 16,
             fontWeight: FontWeight.bold,
           ),
@@ -340,38 +411,57 @@ class EditarTransaccionPage extends StatelessWidget {
       ),
     );
   }
+
   /// **Método: Confirmar Retiro de Apertura**
   void _confirmEditartransaccion(BuildContext context) {
-
     // Validar valores vacíos y asignar 0 por defecto
     String getValue(TextEditingController controller) =>
         controller.text.isEmpty ? '0' : controller.text;
 
     // Obtener los valores de los controladores
-    final billetes20Recibe = getValue(editarTransaccionController.billetes20Controller);
-    final billetes10Recibe = getValue(editarTransaccionController.billetes10RecibeController);
-    final billetes5Recibe = getValue(editarTransaccionController.billetes5RecibeController);
-    final billetes1Recibe = getValue(editarTransaccionController.billetes1RecibeController);
+    final billetes20Recibe =
+        getValue(editarTransaccionController.billetes20Controller);
+    final billetes10Recibe =
+        getValue(editarTransaccionController.billetes10RecibeController);
+    final billetes5Recibe =
+        getValue(editarTransaccionController.billetes5RecibeController);
+    final billetes1Recibe =
+        getValue(editarTransaccionController.billetes1RecibeController);
 
-    final billetes20Entrega = getValue(editarTransaccionController.billetes20EntregaController);
-    final billetes10Entrega = getValue(editarTransaccionController.billetes10EntregaController);
-    final billetes5Entrega = getValue(editarTransaccionController.billetes5EntregaController);
-    final billetes1Entrega = getValue(editarTransaccionController.billetes1EntregaController);
+    final billetes20Entrega =
+        getValue(editarTransaccionController.billetes20EntregaController);
+    final billetes10Entrega =
+        getValue(editarTransaccionController.billetes10EntregaController);
+    final billetes5Entrega =
+        getValue(editarTransaccionController.billetes5EntregaController);
+    final billetes1Entrega =
+        getValue(editarTransaccionController.billetes1EntregaController);
 
-    final moneda50Recibe = getValue(editarTransaccionController.Moneda50RecibeController);
-    final moneda25Recibe = getValue(editarTransaccionController.Moneda25RecibeController);
-    final moneda10Recibe = getValue(editarTransaccionController.Moneda10RecibeController);
-    final moneda5Recibe = getValue(editarTransaccionController.Moneda5RecibeController);
-    final moneda1Recibe = getValue(editarTransaccionController.Moneda1RecibeController);
+    final moneda50Recibe =
+        getValue(editarTransaccionController.Moneda50RecibeController);
+    final moneda25Recibe =
+        getValue(editarTransaccionController.Moneda25RecibeController);
+    final moneda10Recibe =
+        getValue(editarTransaccionController.Moneda10RecibeController);
+    final moneda5Recibe =
+        getValue(editarTransaccionController.Moneda5RecibeController);
+    final moneda1Recibe =
+        getValue(editarTransaccionController.Moneda1RecibeController);
 
-    final moneda50Entrega = getValue(editarTransaccionController.Moneda50EntregaController);
-    final moneda25Entrega = getValue(editarTransaccionController.Moneda25EntregaController);
-    final moneda10Entrega = getValue(editarTransaccionController.Moneda10EntregaController);
-    final moneda5Entrega = getValue(editarTransaccionController.Moneda5EntregaController);
-    final moneda1Entrega = getValue(editarTransaccionController.Moneda1EntregaController);
+    final moneda50Entrega =
+        getValue(editarTransaccionController.Moneda50EntregaController);
+    final moneda25Entrega =
+        getValue(editarTransaccionController.Moneda25EntregaController);
+    final moneda10Entrega =
+        getValue(editarTransaccionController.Moneda10EntregaController);
+    final moneda5Entrega =
+        getValue(editarTransaccionController.Moneda5EntregaController);
+    final moneda1Entrega =
+        getValue(editarTransaccionController.Moneda1EntregaController);
 
     // Cálculo del total entregado por el supervisor
-    final totalEntrega =(int.parse(billetes20Entrega) * 20)+ (int.parse(billetes10Entrega) * 10) +
+    final totalEntrega = (int.parse(billetes20Entrega) * 20) +
+        (int.parse(billetes10Entrega) * 10) +
         (int.parse(billetes5Entrega) * 5) +
         (int.parse(billetes1Entrega) * 1) +
         (int.parse(moneda50Entrega) * 0.5).toDouble() +
@@ -390,7 +480,6 @@ class EditarTransaccionPage extends StatelessWidget {
         (int.parse(moneda10Recibe) * 0.1).toDouble() +
         (int.parse(moneda5Recibe) * 0.05).toDouble() +
         (int.parse(moneda1Recibe) * 0.01).toDouble();
-
 
     // **Mostrar las denominaciones según el tipo de movimiento**
     List<Widget> _getDenominacionesRecibe() {
@@ -480,67 +569,89 @@ class EditarTransaccionPage extends StatelessWidget {
       }
     }
 
-
     // **Mostrar el diálogo de confirmación con las denominaciones correspondientes**
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return SingleChildScrollView(
-            child: AlertDialog(
-                title: Row(
-                  children: [
-                    Icon(Icons.library_add_check_outlined, color: Color(0xFF368983)),
-                    SizedBox(width: 10),
-                    Text(movimiento?.nombreMovimiento??'', style: TextStyle(fontWeight: FontWeight.bold)),
-                  ],
-                ),
-                content: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                    Text("¿Estás seguro de editar esta transacción?", style: TextStyle(fontSize: 16)),
+          child: AlertDialog(
+            title: Row(
+              children: [
+                Icon(Icons.library_add_check_outlined,
+                    color: Theme.of(context).colorScheme.primary),
+                SizedBox(width: 10),
+                Text(movimiento?.nombreMovimiento ?? '',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("¿Estás seguro de editar esta transacción?",
+                    style: TextStyle(fontSize: 16)),
                 SizedBox(height: 5),
-                Divider(color: Colors.grey[300]),
+                Divider(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withOpacity(0.2)),
                 SizedBox(height: 5),
 
-                Text("Recibe de Cajero:", style: TextStyle(fontWeight: FontWeight.bold)),
+                Text("Recibe de Cajero:",
+                    style: TextStyle(fontWeight: FontWeight.bold)),
                 ..._getDenominacionesRecibe(), // Muestra las denominaciones de recibe
-            SizedBox(height: 5),
+                SizedBox(height: 5),
 
-            Text("Total Recibido: \$${totalRecibe.toStringAsFixed(2)}", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF368983))),
+                Text("Total Recibido: \$${totalRecibe.toStringAsFixed(2)}",
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary)),
 
-            if (_getDenominacionesEntrega().isNotEmpty) ...[
-        Text("Entregó Supervisor:", style: TextStyle(fontWeight: FontWeight.bold)),
-        ..._getDenominacionesEntrega(), // Muestra las denominaciones de entrega
-        SizedBox(height: 5),
+                if (_getDenominacionesEntrega().isNotEmpty) ...[
+                  Text("Entregó Supervisor:",
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  ..._getDenominacionesEntrega(), // Muestra las denominaciones de entrega
+                  SizedBox(height: 5),
 
-        Text("Total Entregado: \$${totalEntrega.toStringAsFixed(2)}", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF368983))),
-        ],
-                    ],
-        ),
-        actions: [
-        TextButton(
-        onPressed: () {
-        Navigator.of(context).pop(); // Cierra el diálogo
-        },
-        child: Text("Cancelar", style: TextStyle(color: Colors.grey)),
-        ),
-        ElevatedButton(
-        onPressed: () {
-        Navigator.of(context).pop();
-        editarTransaccionController.editarTransaccion(context, movimiento!);
-        },
-        style: ElevatedButton.styleFrom(backgroundColor: Color(0xFF368983)),
-        child: Text("Confirmar"),
-        ),
-        ],
-        ),
+                  Text("Total Entregado: \$${totalEntrega.toStringAsFixed(2)}",
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.primary)),
+                ],
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // Cierra el diálogo
+                },
+                child: Text("Cancelar",
+                    style: TextStyle(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withOpacity(0.6))),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  editarTransaccionController.editarTransaccion(
+                      context, movimiento!);
+                },
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary),
+                child: Text("Confirmar",
+                    style: TextStyle(
+                        color:
+                            Theme.of(context).colorScheme.onPrimaryContainer)),
+              ),
+            ],
+          ),
         );
       },
     );
-
-
   }
-
-
 }

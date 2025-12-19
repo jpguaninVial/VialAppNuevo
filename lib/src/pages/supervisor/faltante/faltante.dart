@@ -8,23 +8,33 @@ import '../../../helper/offline_banner.dart';
 import '../../../models/movimiento.dart';
 import '../../../models/usuario.dart';
 
-class FaltantesPage extends StatelessWidget {
-  late FaltanteController faltanteController;
-  List<Movimiento>? movimientos;
-  int? bandera;
+class FaltantesPage extends StatefulWidget {
+  final List<Movimiento>? movimientos;
+  final int? bandera;
 
-  FaltantesPage({@required this.movimientos, @required this.bandera}) {
+  FaltantesPage({@required this.movimientos, @required this.bandera});
+
+  @override
+  State<FaltantesPage> createState() => _FaltantesPageState();
+}
+
+class _FaltantesPageState extends State<FaltantesPage> {
+  late FaltanteController faltanteController;
+
+  @override
+  void initState() {
+    super.initState();
     final Usuario usuario = Get.arguments;
-    faltanteController =
-        Get.put(FaltanteController(usuario, movimientos!, bandera!));
-    print('Bandera ${bandera}');
+    faltanteController = Get.put(
+        FaltanteController(usuario, widget.movimientos!, widget.bandera!));
+    print('Bandera ${widget.bandera}');
   }
 
   @override
   Widget build(BuildContext context) {
     final Usuario usuario = Get.arguments;
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: Stack(
         children: [
           Column(
@@ -42,7 +52,7 @@ class FaltantesPage extends StatelessWidget {
                       _buildNumberInputField("Parte de Trabajo",
                           faltanteController.parteTrabajoController),
                       const SizedBox(height: 24),
-                      if (bandera == 1) ...[
+                      if (widget.bandera == 1 || widget.bandera == 2) ...[
                         _buildToggleFaltantesButton(),
                         const SizedBox(height: 16),
                         Obx(() => Visibility(
@@ -54,12 +64,12 @@ class FaltantesPage extends StatelessWidget {
                                   _buildSectionTitle("Faltante Recibido",
                                       Icons.arrow_downward),
                                   const SizedBox(height: 16),
-                                  _recibeGrid(),
+                                  _recibeGrid(context),
                                   const SizedBox(height: 24),
                                   _buildSectionTitle(
                                       "Cambio Entregado", Icons.arrow_upward),
                                   const SizedBox(height: 16),
-                                  _entregaGrid(),
+                                  _entregaGrid(context),
                                   const SizedBox(height: 24),
                                 ],
                               ),
@@ -88,7 +98,7 @@ class FaltantesPage extends StatelessWidget {
                       _buildNumberInputField(
                           "Sobrantes", faltanteController.sobrantesController),
                       SizedBox(height: 32),
-                      bandera == 1
+                      widget.bandera == 1
                           ? _confirmParteTrabajo(usuario, context)
                           : _confirmButton(context),
                       SizedBox(height: 20),
@@ -115,7 +125,6 @@ class FaltantesPage extends StatelessWidget {
     );
   }
 
-  /// **Header moderno sin curvas**
   Widget _buildModernHeader(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
@@ -123,13 +132,13 @@ class FaltantesPage extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFF368983),
-            Color(0xFF2C6E69),
+            Theme.of(context).colorScheme.primaryContainer,
+            Theme.of(context).colorScheme.secondaryContainer,
           ],
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.15),
+            color: Theme.of(context).colorScheme.shadow.withOpacity(0.15),
             blurRadius: 8,
             offset: Offset(0, 3),
           ),
@@ -143,7 +152,9 @@ class FaltantesPage extends StatelessWidget {
           child: Row(
             children: [
               IconButton(
-                icon: Icon(Icons.arrow_back, color: Colors.white, size: 24),
+                icon: Icon(Icons.arrow_back,
+                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                    size: 24),
                 onPressed: () => Navigator.of(context).pop(),
               ),
               SizedBox(width: 8),
@@ -151,7 +162,7 @@ class FaltantesPage extends StatelessWidget {
                 child: Text(
                   'Faltantes y Ajustes',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.onPrimaryContainer,
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
                   ),
@@ -160,12 +171,15 @@ class FaltantesPage extends StatelessWidget {
               Container(
                 padding: EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .primaryContainer
+                      .withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
                   Icons.edit_note,
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.onPrimaryContainer,
                   size: 28,
                 ),
               ),
@@ -176,25 +190,26 @@ class FaltantesPage extends StatelessWidget {
     );
   }
 
-  /// **Widget: Título de Sección**
   Widget _buildSectionTitle(String title, IconData icon) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Color(0xFF368983).withOpacity(0.1),
+        color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFF368983).withOpacity(0.3), width: 1),
+        border: Border.all(
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+            width: 1),
       ),
       child: Row(
         children: [
-          Icon(icon, color: Color(0xFF368983), size: 24),
+          Icon(icon, color: Theme.of(context).colorScheme.primary, size: 24),
           SizedBox(width: 12),
           Text(
             title,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF368983),
+              color: Theme.of(context).colorScheme.primary,
             ),
           ),
         ],
@@ -202,71 +217,54 @@ class FaltantesPage extends StatelessWidget {
     );
   }
 
-  /// **Widget: Botón Toggle para Faltantes**
   Widget _buildToggleFaltantesButton() {
-    return Container(
-      width: double.infinity,
-      height: 50,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-          colors: [
-            Color(0xFF368983).withOpacity(0.8),
-            Color(0xFF2C6E69).withOpacity(0.8),
-          ],
+    return ElevatedButton(
+      onPressed: () {
+        faltanteController.isFaltanteVisible.value =
+            !faltanteController.isFaltanteVisible.value;
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
         ),
-        borderRadius: BorderRadius.circular(12),
+        padding: EdgeInsets.symmetric(vertical: 12),
       ),
-      child: ElevatedButton(
-        onPressed: () {
-          faltanteController.isFaltanteVisible.value =
-              !faltanteController.isFaltanteVisible.value;
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.transparent,
-          shadowColor: Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-        child: Obx(() => Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  faltanteController.isFaltanteVisible.value
-                      ? Icons.visibility_off
-                      : Icons.add_circle_outline,
-                  color: Colors.white,
-                  size: 22,
+      child: Obx(() => Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                faltanteController.isFaltanteVisible.value
+                    ? Icons.visibility_off
+                    : Icons.add_circle_outline,
+                color: Theme.of(context).colorScheme.onPrimaryContainer,
+                size: 22,
+              ),
+              SizedBox(width: 12),
+              Text(
+                faltanteController.isFaltanteVisible.value
+                    ? "Ocultar Faltantes"
+                    : "Agregar Faltantes",
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
                 ),
-                SizedBox(width: 12),
-                Text(
-                  faltanteController.isFaltanteVisible.value
-                      ? "Ocultar Faltantes"
-                      : "Agregar Faltantes",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            )),
-      ),
+              ),
+            ],
+          )),
     );
   }
 
-  /// **Widget: Campo de Entrada Numérica Mejorado**
   Widget _buildNumberInputField(
       String label, TextEditingController controller) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Theme.of(context).colorScheme.shadow.withOpacity(0.1),
             spreadRadius: 1,
             blurRadius: 6,
             offset: Offset(0, 2),
@@ -277,7 +275,9 @@ class FaltantesPage extends StatelessWidget {
         controller: controller,
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
         style: TextStyle(
-            color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold),
+            color: Theme.of(context).colorScheme.onSurface,
+            fontSize: 16,
+            fontWeight: FontWeight.bold),
         inputFormatters: [
           FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
           TextInputFormatter.withFunction((oldValue, newValue) {
@@ -298,39 +298,42 @@ class FaltantesPage extends StatelessWidget {
         decoration: InputDecoration(
           labelText: label,
           labelStyle: TextStyle(
-            color:
-                controller.text.isEmpty ? Colors.grey[600] : Color(0xFF368983),
+            color: controller.text.isEmpty
+                ? Theme.of(context).colorScheme.onSurface.withOpacity(0.6)
+                : Theme.of(context).colorScheme.primary,
             fontSize: 16,
             fontWeight: FontWeight.w500,
           ),
           hintText: 'Usa punto para decimales',
-          hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
+          hintStyle: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+              fontSize: 14),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide.none,
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Color(0xFF368983), width: 2),
+            borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.primary, width: 2),
           ),
           filled: true,
-          fillColor: Colors.white,
+          fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
           contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         ),
       ),
     );
   }
 
-  /// **Widget: Denominaciones Recibidas**
-  Widget _recibeGrid() {
+  Widget _recibeGrid(BuildContext context) {
     return Container(
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Theme.of(context).colorScheme.shadow.withOpacity(0.1),
             spreadRadius: 1,
             blurRadius: 10,
             offset: Offset(0, 4),
@@ -343,18 +346,21 @@ class FaltantesPage extends StatelessWidget {
             children: [
               Expanded(
                   child: _inputField(
+                      context: context,
                       label: '\$ 20',
                       assetIcon: 'assets/img/billete.png',
                       controller: faltanteController.billetes20ControllerR)),
               SizedBox(width: 8),
               Expanded(
                   child: _inputField(
+                      context: context,
                       label: '\$ 10',
                       assetIcon: 'assets/img/billete.png',
                       controller: faltanteController.billetes10ControllerR)),
               SizedBox(width: 8),
               Expanded(
                   child: _inputField(
+                      context: context,
                       label: '\$ 5',
                       assetIcon: 'assets/img/billete.png',
                       controller: faltanteController.billetes5ControllerR)),
@@ -365,18 +371,21 @@ class FaltantesPage extends StatelessWidget {
             children: [
               Expanded(
                   child: _inputField(
+                      context: context,
                       label: '\$ 1',
                       assetIcon: 'assets/img/moneda.png',
                       controller: faltanteController.billetes1ControllerR)),
               SizedBox(width: 8),
               Expanded(
                   child: _inputField(
+                      context: context,
                       label: '50¢',
                       assetIcon: 'assets/img/moneda.png',
                       controller: faltanteController.moneda50ControllerR)),
               SizedBox(width: 8),
               Expanded(
                   child: _inputField(
+                      context: context,
                       label: '25¢',
                       assetIcon: 'assets/img/moneda.png',
                       controller: faltanteController.moneda25ControllerR)),
@@ -387,12 +396,14 @@ class FaltantesPage extends StatelessWidget {
             children: [
               Expanded(
                   child: _inputField(
+                      context: context,
                       label: '10¢',
                       assetIcon: 'assets/img/moneda.png',
                       controller: faltanteController.moneda10ControllerR)),
               SizedBox(width: 8),
               Expanded(
                   child: _inputField(
+                      context: context,
                       label: '5¢',
                       assetIcon: 'assets/img/moneda.png',
                       controller: faltanteController.moneda5ControllerR)),
@@ -405,16 +416,15 @@ class FaltantesPage extends StatelessWidget {
     );
   }
 
-  /// **Widget: Denominaciones Entregadas**
-  Widget _entregaGrid() {
+  Widget _entregaGrid(BuildContext context) {
     return Container(
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Theme.of(context).colorScheme.shadow.withOpacity(0.1),
             spreadRadius: 1,
             blurRadius: 10,
             offset: Offset(0, 4),
@@ -427,18 +437,21 @@ class FaltantesPage extends StatelessWidget {
             children: [
               Expanded(
                   child: _inputField(
+                      context: context,
                       label: '\$ 10',
                       assetIcon: 'assets/img/billete.png',
                       controller: faltanteController.billetes10ControllerE)),
               SizedBox(width: 8),
               Expanded(
                   child: _inputField(
+                      context: context,
                       label: '\$ 5',
                       assetIcon: 'assets/img/billete.png',
                       controller: faltanteController.billetes5ControllerE)),
               SizedBox(width: 8),
               Expanded(
                   child: _inputField(
+                      context: context,
                       label: '\$ 1',
                       assetIcon: 'assets/img/moneda.png',
                       controller: faltanteController.billetes1ControllerE)),
@@ -449,18 +462,21 @@ class FaltantesPage extends StatelessWidget {
             children: [
               Expanded(
                   child: _inputField(
+                      context: context,
                       label: '50¢',
                       assetIcon: 'assets/img/moneda.png',
                       controller: faltanteController.moneda50ControllerE)),
               SizedBox(width: 8),
               Expanded(
                   child: _inputField(
+                      context: context,
                       label: '25¢',
                       assetIcon: 'assets/img/moneda.png',
                       controller: faltanteController.moneda25ControllerE)),
               SizedBox(width: 8),
               Expanded(
                   child: _inputField(
+                      context: context,
                       label: '10¢',
                       assetIcon: 'assets/img/moneda.png',
                       controller: faltanteController.moneda10ControllerE)),
@@ -471,6 +487,7 @@ class FaltantesPage extends StatelessWidget {
             children: [
               Expanded(
                   child: _inputField(
+                      context: context,
                       label: '5¢',
                       assetIcon: 'assets/img/moneda.png',
                       controller: faltanteController.moneda5ControllerE)),
@@ -485,7 +502,6 @@ class FaltantesPage extends StatelessWidget {
     );
   }
 
-  /// **Widget: Fila Dual de Entrada**
   Widget _buildDualInputRow(
     String label1,
     TextEditingController controller1,
@@ -501,8 +517,8 @@ class FaltantesPage extends StatelessWidget {
     );
   }
 
-  /// **Widget: Campo de Entrada con Ícono**
   Widget _inputField({
+    required BuildContext context,
     required String label,
     IconData? icon,
     String? assetIcon,
@@ -511,11 +527,11 @@ class FaltantesPage extends StatelessWidget {
     return Container(
       margin: EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.08),
+            color: Theme.of(context).colorScheme.shadow.withOpacity(0.08),
             spreadRadius: 1,
             blurRadius: 4,
             offset: Offset(0, 2),
@@ -524,14 +540,18 @@ class FaltantesPage extends StatelessWidget {
       ),
       child: TextField(
         style: TextStyle(
-            color: Colors.black, fontSize: 14, fontWeight: FontWeight.bold),
+            color: Theme.of(context).colorScheme.onSurface,
+            fontSize: 14,
+            fontWeight: FontWeight.bold),
         controller: controller,
         keyboardType: TextInputType.number,
+        onChanged: (_) => setState(() {}),
         decoration: InputDecoration(
           labelText: label,
           labelStyle: TextStyle(
-            color:
-                controller.text.isEmpty ? Colors.grey[600] : Color(0xFF368983),
+            color: controller.text.isEmpty
+                ? Theme.of(context).colorScheme.onSurface.withOpacity(0.6)
+                : Theme.of(context).colorScheme.primary,
             fontSize: 13,
             fontWeight: FontWeight.w500,
           ),
@@ -541,7 +561,10 @@ class FaltantesPage extends StatelessWidget {
                   child: Container(
                     padding: EdgeInsets.all(4),
                     decoration: BoxDecoration(
-                      color: Color(0xFF368983).withOpacity(0.1),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(0.1),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Image.asset(
@@ -554,7 +577,8 @@ class FaltantesPage extends StatelessWidget {
                 )
               : Padding(
                   padding: const EdgeInsets.all(10.0),
-                  child: Icon(icon, color: Color(0xFF368983), size: 20),
+                  child: Icon(icon,
+                      color: Theme.of(context).colorScheme.primary, size: 20),
                 ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
@@ -562,154 +586,119 @@ class FaltantesPage extends StatelessWidget {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(color: Color(0xFF368983), width: 2),
+            borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.primary, width: 2),
           ),
           filled: true,
-          fillColor: Colors.white,
+          fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
           contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         ),
       ),
     );
   }
 
-  /// **Widget: Botón de Confirmación Principal**
   Widget _confirmButton(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      height: 56,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-          colors: [
-            Color(0xFF368983),
-            Color(0xFF2C6E69),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Color(0xFF368983).withOpacity(0.3),
-            spreadRadius: 1,
-            blurRadius: 8,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: ElevatedButton(
-        onPressed: () {
-          showModalBottomSheet(
-            context: context,
-            isScrollControlled: true,
-            backgroundColor: Colors.transparent,
-            builder: (BuildContext context) {
-              return DraggableScrollableSheet(
-                initialChildSize: 0.5,
-                minChildSize: 0.3,
-                maxChildSize: 0.9,
-                builder: (context, scrollController) {
-                  return Container(
-                    padding: const EdgeInsets.all(20.0),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(24),
-                        topRight: Radius.circular(24),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.3),
-                          blurRadius: 10,
-                          offset: const Offset(0, 5),
-                        ),
-                      ],
+    return ElevatedButton(
+      onPressed: () {
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (BuildContext context) {
+            return DraggableScrollableSheet(
+              initialChildSize: 0.5,
+              minChildSize: 0.3,
+              maxChildSize: 0.9,
+              builder: (context, scrollController) {
+                return Container(
+                  padding: const EdgeInsets.all(20.0),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(24),
+                      topRight: Radius.circular(24),
                     ),
-                    child: SingleChildScrollView(
-                      controller: scrollController,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .shadow
+                            .withOpacity(0.3),
+                        blurRadius: 10,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: SingleChildScrollView(
+                    controller: scrollController,
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        bottom: MediaQuery.of(context).viewInsets.bottom,
+                      ),
                       child: confirmFaltante(context),
                     ),
-                  );
-                },
-              );
-            },
-          );
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.transparent,
-          shadowColor: Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.check_circle_outline, color: Colors.white, size: 24),
-            SizedBox(width: 12),
-            Text(
-              bandera == 1 ? 'Guardar' : 'Liquidar Turno',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+        padding: EdgeInsets.symmetric(vertical: 16),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.check_circle_outline,
+              color: Theme.of(context).colorScheme.onPrimaryContainer,
+              size: 24),
+          SizedBox(width: 12),
+          Text(
+            widget.bandera == 2 ? 'Guardar' : 'Liquidar Turno',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onPrimaryContainer,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  /// **Widget: Botón de Confirmación Parte de Trabajo**
   Widget _confirmParteTrabajo(Usuario usuario, BuildContext context) {
-    return Container(
-      width: double.infinity,
-      height: 56,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-          colors: [
-            Color(0xFF368983),
-            Color(0xFF2C6E69),
-          ],
+    return ElevatedButton(
+      onPressed: () {
+        _showParteTrabajoConfirm(context);
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
         ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Color(0xFF368983).withOpacity(0.3),
-            spreadRadius: 1,
-            blurRadius: 8,
-            offset: Offset(0, 4),
+        padding: EdgeInsets.symmetric(vertical: 16),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.save_outlined,
+              color: Theme.of(context).colorScheme.onPrimaryContainer,
+              size: 24),
+          SizedBox(width: 12),
+          Text(
+            'Confirmar Parte de Trabajo',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onPrimaryContainer,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
-      ),
-      child: ElevatedButton(
-        onPressed: () {
-          _showParteTrabajoConfirm(context);
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.transparent,
-          shadowColor: Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.save_outlined, color: Colors.white, size: 24),
-            SizedBox(width: 12),
-            Text(
-              'Confirmar Parte de Trabajo',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -723,7 +712,8 @@ class FaltantesPage extends StatelessWidget {
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: Row(
             children: [
-              Icon(Icons.save_outlined, color: Color(0xFF368983), size: 28),
+              Icon(Icons.save_outlined,
+                  color: Theme.of(context).colorScheme.primary, size: 28),
               SizedBox(width: 12),
               Text("Guardar",
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
@@ -732,7 +722,7 @@ class FaltantesPage extends StatelessWidget {
           content: Container(
             padding: EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Color(0xFF368983).withOpacity(0.1),
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
@@ -740,7 +730,7 @@ class FaltantesPage extends StatelessWidget {
               style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF368983)),
+                  color: Theme.of(context).colorScheme.primary),
             ),
           ),
           actions: [
@@ -749,11 +739,16 @@ class FaltantesPage extends StatelessWidget {
                 Navigator.of(context).pop();
               },
               child: Text("Cancelar",
-                  style: TextStyle(color: Colors.grey, fontSize: 16)),
+                  style: TextStyle(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withOpacity(0.6),
+                      fontSize: 16)),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF368983),
+                backgroundColor: Theme.of(context).colorScheme.primary,
                 padding: EdgeInsets.symmetric(vertical: 14, horizontal: 24),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8)),
@@ -766,7 +761,7 @@ class FaltantesPage extends StatelessWidget {
                   style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white)),
+                      color: Theme.of(context).colorScheme.onPrimaryContainer)),
             ),
           ],
         );
@@ -806,7 +801,7 @@ class FaltantesPage extends StatelessWidget {
             height: 4,
             margin: EdgeInsets.only(bottom: 20),
             decoration: BoxDecoration(
-              color: Colors.grey[300],
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -816,56 +811,44 @@ class FaltantesPage extends StatelessWidget {
           style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF368983)),
+              color: Theme.of(context).colorScheme.primary),
         ),
         const SizedBox(height: 20),
-        _buildSummaryRow(
-            "Total Faltantes:", "\$${totalFaltantes.toStringAsFixed(2)}"),
-        _buildSummaryRow("Anulaciones:",
+        _buildSummaryRow(context, "Total Faltantes:",
+            "\$${totalFaltantes.toStringAsFixed(2)}"),
+        _buildSummaryRow(context, "Anulaciones:",
             "$anulacionesCantidad - \$${anulacionesValor.toStringAsFixed(2)}"),
-        _buildSummaryRow("Simulaciones:",
+        _buildSummaryRow(context, "Simulaciones:",
             "$simulacionesCantidad - \$${simulacionesValor.toStringAsFixed(2)}"),
-        _buildSummaryRow("Sobrantes:", "\$${sobrantes.toStringAsFixed(2)}"),
+        _buildSummaryRow(
+            context, "Sobrantes:", "\$${sobrantes.toStringAsFixed(2)}"),
         const SizedBox(height: 24),
-        Container(
-          width: double.infinity,
-          height: 56,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-              colors: [
-                Color(0xFF368983),
-                Color(0xFF2C6E69),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(12),
+        ElevatedButton(
+          onPressed: () {
+            faltanteController.actualizarLiquidacion(context);
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            padding: EdgeInsets.symmetric(vertical: 14),
           ),
-          child: ElevatedButton(
-            onPressed: () {
-              faltanteController.actualizarLiquidacion(context!);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.transparent,
-              shadowColor: Colors.transparent,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.description_outlined, color: Colors.white, size: 22),
-                SizedBox(width: 12),
-                const Text(
-                  "Generar Reporte",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.description_outlined,
+                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                  size: 22),
+              SizedBox(width: 12),
+              Text(
+                "Generar Reporte",
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ],
@@ -968,24 +951,26 @@ class FaltantesPage extends StatelessWidget {
     return totalRecibido - totalEntregado;
   }
 
-  Widget _buildSummaryRow(String label, String value) {
+  Widget _buildSummaryRow(BuildContext context, String label, String value) {
     return Container(
       padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       margin: EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.grey[200]!, width: 1),
+        border: Border.all(
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
+            width: 1),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
           Text(
@@ -993,7 +978,7 @@ class FaltantesPage extends StatelessWidget {
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF368983),
+              color: Theme.of(context).colorScheme.primary,
             ),
           ),
         ],

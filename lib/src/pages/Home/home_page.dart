@@ -22,7 +22,7 @@ class HomePage extends StatelessWidget {
       bottom: true,
       child: Scaffold(
         extendBody: true,
-        bottomNavigationBar: _bottomBar(),
+        bottomNavigationBar: _bottomBar(context),
         body: Obx(() => IndexedStack(
               index: homeSupController.indexTab.value,
               children: _getPages(),
@@ -31,17 +31,16 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _bottomBar() {
+  Widget _bottomBar(BuildContext context) {
     return Obx(() => CustomAnimatedBottomBar(
           containerHeight: 70,
-          backgroundColor: Colors.white, // Fondo blanco para diseño limpio
+          backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
           showElevation: true,
           itemCornerRadius: 50,
           curve: Curves.easeIn,
           selectedIndex: homeSupController.indexTab.value,
           onItemSelected: (index) => homeSupController.chanceTab(index),
-          items:
-              _getBottomBarItems(), // Filtra los ítems del BottomNavigationBar
+          items: _getBottomBarItems(context),
         ));
   }
 
@@ -88,9 +87,10 @@ class HomePage extends StatelessWidget {
   }
 
   // Filtra los ítems del BottomNavigationBar según el idRol
-  List<BottomNavyBarItem> _getBottomBarItems() {
-    final activeColor = Color(0xFF368983);
-    final inactiveColor = Colors.grey;
+  List<BottomNavyBarItem> _getBottomBarItems(BuildContext context) {
+    final activeColor = Theme.of(context).colorScheme.primary;
+    final inactiveColor =
+        Theme.of(context).colorScheme.onSurface.withOpacity(0.6);
 
     List<BottomNavyBarItem> items = [];
     if (homeSupController.usuario.roles?.first.id != null &&

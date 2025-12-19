@@ -8,18 +8,15 @@ import '../../../widgets/improved_offline_banner.dart';
 import '../../../models/usuario.dart';
 
 class LiquidacionesPage extends StatelessWidget {
-
   late LiquidacionesController liquidacionesController;
 
   Usuario? usuario;
   List<Movimiento>? movimientos;
 
-  LiquidacionesPage({@required this.usuario,@required this.movimientos}){
-    liquidacionesController=Get.put(LiquidacionesController(usuario!,movimientos!));
-
+  LiquidacionesPage({@required this.usuario, @required this.movimientos}) {
+    liquidacionesController =
+        Get.put(LiquidacionesController(usuario!, movimientos!));
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +30,7 @@ class LiquidacionesPage extends StatelessWidget {
             color: Colors.white,
           ),
         ),
-        backgroundColor: Color(0xFF368983),
+        backgroundColor: Theme.of(context).colorScheme.primary,
         iconTheme: IconThemeData(color: Colors.white),
         elevation: 0,
       ),
@@ -51,20 +48,20 @@ class LiquidacionesPage extends StatelessWidget {
                     _sectionTitle2('Recibe de Cajero'),
                     _recibeGrid(),
                     SizedBox(height: 10),
-                        Divider(thickness: 1, color: Colors.grey[300]),
-                        _sectionTitle('Retiros Parciales'),
-                        SizedBox(height: 20),
-                        _retirosParcialesList(),
-                        SizedBox(height: 30),
-                        _confirmButton(context),
-                      ],
-                    ),
-                  ),
+                    Divider(thickness: 1, color: Colors.grey[300]),
+                    _sectionTitle('Retiros Parciales'),
+                    SizedBox(height: 20),
+                    _retirosParcialesList(),
+                    SizedBox(height: 30),
+                    _confirmButton(context),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
-        );
+        ],
+      ),
+    );
   }
 
   /// **Widget: Título de Sección**
@@ -78,8 +75,6 @@ class LiquidacionesPage extends StatelessWidget {
       ),
     );
   }
-
-
 
   /// **Widget: Título de Secciónnnn**
   Widget _sectionTitle(String title) {
@@ -99,7 +94,7 @@ class LiquidacionesPage extends StatelessWidget {
             liquidacionesController.goToRetiroParcial(usuario!);
           },
           icon: Icon(Icons.add, color: Colors.white),
-          label: Text('Añadir',style: TextStyle(color: Colors.white)),
+          label: Text('Añadir', style: TextStyle(color: Colors.white)),
           style: ElevatedButton.styleFrom(
             backgroundColor: Color(0xFF368983),
             padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
@@ -127,18 +122,22 @@ class LiquidacionesPage extends StatelessWidget {
         keyboardType: TextInputType.number,
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: TextStyle(color: controller.text.isEmpty ? Colors.grey : Colors.black),
+          labelStyle: TextStyle(
+              color: controller.text.isEmpty ? Colors.grey : Colors.black),
           prefixIcon: assetIcon != null
               ? Padding(
-            padding: const EdgeInsets.all(10.0), // Ajuste del tamaño del ícono
-            child: Image.asset(
-              assetIcon,
-              width: 24,
-              height: 24,
-              fit: BoxFit.contain,
-            ),
-          )
-              : Icon(icon, color: Color(0xFF368983)), // Ícono estándar si no hay assetIcon
+                  padding:
+                      const EdgeInsets.all(10.0), // Ajuste del tamaño del ícono
+                  child: Image.asset(
+                    assetIcon,
+                    width: 24,
+                    height: 24,
+                    fit: BoxFit.contain,
+                  ),
+                )
+              : Icon(icon,
+                  color:
+                      Color(0xFF368983)), // Ícono estándar si no hay assetIcon
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
             borderSide: BorderSide(color: Color(0xFF368983)),
@@ -151,7 +150,6 @@ class LiquidacionesPage extends StatelessWidget {
       ),
     );
   }
-
 
   Widget _recibeGrid() {
     return Column(
@@ -194,8 +192,8 @@ class LiquidacionesPage extends StatelessWidget {
                 assetIcon: 'assets/img/moneda.png',
                 controller: liquidacionesController.moneda1dController,
               ),
-            ),            SizedBox(width: 2),
-
+            ),
+            SizedBox(width: 2),
             Expanded(
               child: _inputField(
                 label: ' 50C',
@@ -223,7 +221,8 @@ class LiquidacionesPage extends StatelessWidget {
                 assetIcon: 'assets/img/moneda.png',
                 controller: liquidacionesController.Moneda10Controller,
               ),
-            ),            SizedBox(width: 2),
+            ),
+            SizedBox(width: 2),
 
             Expanded(
               child: _inputField(
@@ -242,13 +241,9 @@ class LiquidacionesPage extends StatelessWidget {
             ),
           ],
         ),
-
       ],
     );
   }
-
-
-
 
   /// **Widget: Botón de Confirmación**
   Widget _confirmButton(BuildContext context) {
@@ -315,19 +310,20 @@ class LiquidacionesPage extends StatelessWidget {
         : liquidacionesController.Moneda1Controller.text;
 
     // Calcular el total de retiros parciales  movimientos!.where((m) => m.idTipoMovimiento == '2'
-    final retirosparciales=movimientos?.where((m) => m.idTipoMovimiento == '2').toList();
+    final retirosparciales =
+        movimientos?.where((m) => m.idTipoMovimiento == '2').toList();
 
-
-
-    final totalRetirosParciales = retirosparciales!.where((m) => m.idTipoMovimiento == '2').isNotEmpty == true
-        ? retirosparciales!.map((movimiento) {
-      final recibido = (int.parse(movimiento.recibe20D ?? '0') * 20) +
-          (int.parse(movimiento.recibe10D ?? '0') * 10) +
-          (int.parse(movimiento.recibe5D ?? '0') * 5) +
-          (int.parse(movimiento.recibe1D ?? '0') * 1);
-      return recibido;
-    }).reduce((sum, current) => sum + current) :
-        0;
+    final totalRetirosParciales =
+        retirosparciales!.where((m) => m.idTipoMovimiento == '2').isNotEmpty ==
+                true
+            ? retirosparciales!.map((movimiento) {
+                final recibido = (int.parse(movimiento.recibe20D ?? '0') * 20) +
+                    (int.parse(movimiento.recibe10D ?? '0') * 10) +
+                    (int.parse(movimiento.recibe5D ?? '0') * 5) +
+                    (int.parse(movimiento.recibe1D ?? '0') * 1);
+                return recibido;
+              }).reduce((sum, current) => sum + current)
+            : 0;
 
     // Calcular el total de denominaciones
     final totalDenominaciones = (int.parse(billetes20) * 20) +
@@ -354,18 +350,21 @@ class LiquidacionesPage extends StatelessWidget {
             children: [
               Icon(Icons.monetization_on, color: Color(0xFF368983)),
               SizedBox(width: 10),
-              Text("Confirmación", style: TextStyle(fontWeight: FontWeight.bold)),
+              Text("Confirmación",
+                  style: TextStyle(fontWeight: FontWeight.bold)),
             ],
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text("¿Estás seguro de realizar esta liquidación?", style: TextStyle(fontSize: 16)),
+              Text("¿Estás seguro de realizar esta liquidación?",
+                  style: TextStyle(fontSize: 16)),
               SizedBox(height: 10),
               Divider(color: Colors.grey[300]),
               SizedBox(height: 10),
-              Text("Denominaciones:", style: TextStyle(fontWeight: FontWeight.bold)),
+              Text("Denominaciones:",
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               Text("- $billetes20 billetes de \$20"),
               Text("- $billetes10 billetes de \$10"),
               Text("- $billetes5 billetes de \$5"),
@@ -378,12 +377,23 @@ class LiquidacionesPage extends StatelessWidget {
               Text("- $moneda5 monedas de 5¢"),
               Text("- $moneda1 monedas de 1¢"),
               SizedBox(height: 10),
-              Text("Total Denominaciones: \$${totalDenominaciones.toStringAsFixed(2)}",
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.black)),
-              Text("Total Retiros Parciales: \$${totalRetirosParciales.toStringAsFixed(2)}",
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.black)),
+              Text(
+                  "Total Denominaciones: \$${totalDenominaciones.toStringAsFixed(2)}",
+                  style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black)),
+              Text(
+                  "Total Retiros Parciales: \$${totalRetirosParciales.toStringAsFixed(2)}",
+                  style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black)),
               Text("Total General: \$${totalGeneral.toStringAsFixed(2)}",
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF368983))),
+                  style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF368983))),
             ],
           ),
           actions: [
@@ -396,17 +406,20 @@ class LiquidacionesPage extends StatelessWidget {
             ElevatedButton(
               onPressed: () {
                 Get.back();
-                liquidacionesController.registrarLiquidacion(context, usuario!, movimientos!);
+                liquidacionesController.registrarLiquidacion(
+                    context, usuario!, movimientos!);
               },
               child: Obx(() {
-                final isLoading = LoadingController.to.isLoading(LiquidacionesController.LOADING_KEY);
+                final isLoading = LoadingController.to
+                    .isLoading(LiquidacionesController.LOADING_KEY);
                 return isLoading
                     ? SizedBox(
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.white),
                         ),
                       )
                     : Text('Confirmar');
@@ -423,10 +436,9 @@ class LiquidacionesPage extends StatelessWidget {
     );
   }
 
-
-
   Widget _retirosParcialesList() {
-    if (movimientos == null || movimientos!.where((m) => m.idTipoMovimiento == '2').isEmpty) {
+    if (movimientos == null ||
+        movimientos!.where((m) => m.idTipoMovimiento == '2').isEmpty) {
       return Center(
         child: Text(
           'No hay retiros parciales registrados.',
@@ -434,10 +446,10 @@ class LiquidacionesPage extends StatelessWidget {
         ),
       );
     }
-    final retirosparciales=movimientos?.where((m) => m.idTipoMovimiento == '2').toList();
+    final retirosparciales =
+        movimientos?.where((m) => m.idTipoMovimiento == '2').toList();
 
     return ListView.builder(
-
       shrinkWrap: true,
       physics: NeverScrollableScrollPhysics(),
       itemCount: retirosparciales!.length,
@@ -457,17 +469,20 @@ class LiquidacionesPage extends StatelessWidget {
             borderRadius: BorderRadius.circular(10.0),
           ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 15.0),
+            padding:
+                const EdgeInsets.symmetric(vertical: 10.0, horizontal: 15.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    Icon(Icons.directions_car, color: Color(0xFF368983), size: 24),
+                    Icon(Icons.directions_car,
+                        color: Color(0xFF368983), size: 24),
                     SizedBox(width: 8),
                     Text(
                       'Vía: ${movimiento.via ?? "No registrada"}',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
@@ -477,18 +492,20 @@ class LiquidacionesPage extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.calendar_today, color: Colors.grey, size: 20),
+                        Icon(Icons.calendar_today,
+                            color: Colors.grey, size: 20),
                         SizedBox(width: 8),
                         Text(
                           movimiento.fecha ?? 'Sin fecha',
-                          style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                          style:
+                              TextStyle(fontSize: 14, color: Colors.grey[600]),
                         ),
                       ],
-                    ),SizedBox(width: 7),
+                    ),
+                    SizedBox(width: 7),
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-
                         Text(
                           '\$${totalRecibido}',
                           style: TextStyle(
@@ -499,9 +516,11 @@ class LiquidacionesPage extends StatelessWidget {
                         ),
                         PopupMenuButton<String>(
                           icon: Icon(Icons.more_vert, color: Color(0xFF368983)),
-                          itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                          itemBuilder: (BuildContext context) =>
+                              <PopupMenuEntry<String>>[
                             PopupMenuItem<String>(
-                              onTap: ()=>liquidacionesController.goToEditTransaccion(movimiento),
+                              onTap: () => liquidacionesController
+                                  .goToEditTransaccion(movimiento),
                               child: Row(
                                 children: [
                                   Icon(Icons.edit, color: Color(0xFF368983)),
@@ -523,6 +542,4 @@ class LiquidacionesPage extends StatelessWidget {
       },
     );
   }
-
-
 }

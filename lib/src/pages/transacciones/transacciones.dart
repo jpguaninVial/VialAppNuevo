@@ -17,7 +17,7 @@ class Transacciones extends StatelessWidget {
     return Obx(() => DefaultTabController(
           length: transaccionesController.tipoMovimientos.length,
           child: Scaffold(
-            backgroundColor: Colors.grey[100],
+            backgroundColor: Theme.of(context).colorScheme.surface,
             body: Stack(
               children: [
                 Column(
@@ -59,8 +59,8 @@ class Transacciones extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFF368983),
-            Color(0xFF2C6E69),
+            Theme.of(context).colorScheme.primary.withOpacity(0.9),
+            Theme.of(context).colorScheme.primary.withOpacity(0.7),
           ],
         ),
         boxShadow: [
@@ -107,6 +107,7 @@ class Transacciones extends StatelessWidget {
                       child: _modernDateField(
                         label: 'Fecha Inicio',
                         value: transaccionesController.fechaInicio.value,
+                        context: context,
                       ),
                     ),
                   ),
@@ -125,13 +126,17 @@ class Transacciones extends StatelessWidget {
                       child: _modernDateField(
                         label: 'Fecha Fin',
                         value: transaccionesController.fechaFin.value,
+                        context: context,
                       ),
                     ),
                   ),
                   SizedBox(width: 10),
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primaryContainer
+                          .withOpacity(0.2),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: IconButton(
@@ -152,13 +157,13 @@ class Transacciones extends StatelessWidget {
               indicatorColor: Colors.white,
               indicatorWeight: 3,
               labelColor: Colors.white,
-              unselectedLabelColor: Colors.white70,
+              unselectedLabelColor: Colors.white.withOpacity(0.9),
               labelStyle: TextStyle(
-                fontSize: 15,
+                fontSize: 17,
                 fontWeight: FontWeight.bold,
               ),
               unselectedLabelStyle: TextStyle(
-                fontSize: 13,
+                fontSize: 15,
                 fontWeight: FontWeight.normal,
               ),
               labelPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -172,13 +177,21 @@ class Transacciones extends StatelessWidget {
     );
   }
 
-  Widget _modernDateField({required String label, required String value}) {
+  Widget _modernDateField(
+      {required String label,
+      required String value,
+      required BuildContext context}) {
     return Container(
       padding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
+        color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.2),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
+        border: Border.all(
+            color: Theme.of(context)
+                .colorScheme
+                .onPrimaryContainer
+                .withOpacity(0.3),
+            width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -204,7 +217,7 @@ class Transacciones extends StatelessWidget {
   Widget _buildTabContent(int idTipoMovimiento) {
     return RefreshIndicator(
       onRefresh: () => _pullToRefresh(idTipoMovimiento),
-      color: Color(0xFF368983),
+      color: Theme.of(Get.context!).colorScheme.primary,
       child: FutureBuilder(
         future: transaccionesController.getMovimientos(
           transaccionesController.fechaInicio.value,
@@ -216,7 +229,8 @@ class Transacciones extends StatelessWidget {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(
               child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF368983)),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                    Theme.of(Get.context!).colorScheme.primary),
               ),
             );
           }
@@ -236,13 +250,19 @@ class Transacciones extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.inbox_outlined, size: 80, color: Colors.grey[400]),
+                Icon(Icons.inbox_outlined,
+                    size: 80,
+                    color:
+                        Theme.of(context).colorScheme.primary.withOpacity(0.3)),
                 SizedBox(height: 16),
                 Text(
                   "No hay transacciones disponibles",
                   style: TextStyle(
                     fontSize: 16,
-                    color: Colors.grey[600],
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withOpacity(0.6),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -289,7 +309,7 @@ class Transacciones extends StatelessWidget {
     String valor;
     String detalle;
     IconData icono = Icons.paid_outlined;
-    Color iconColor = Color(0xFF368983);
+    Color iconColor = Theme.of(context).colorScheme.primary;
 
     switch (idTipoMovimiento) {
       case 1:
@@ -397,11 +417,11 @@ class Transacciones extends StatelessWidget {
       child: Container(
         margin: EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
+              color: Theme.of(context).colorScheme.shadow.withOpacity(0.1),
               spreadRadius: 1,
               blurRadius: 10,
               offset: Offset(0, 4),
@@ -434,7 +454,7 @@ class Transacciones extends StatelessWidget {
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 20,
-                        color: Color(0xFF368983),
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
                     SizedBox(height: 6),
@@ -442,7 +462,10 @@ class Transacciones extends StatelessWidget {
                       detalle,
                       style: TextStyle(
                         fontSize: 13,
-                        color: Colors.grey[600],
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withOpacity(0.6),
                         height: 1.4,
                       ),
                     ),
@@ -451,7 +474,7 @@ class Transacciones extends StatelessWidget {
               ),
               Icon(
                 Icons.chevron_right,
-                color: Colors.grey[400],
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
                 size: 24,
               ),
             ],

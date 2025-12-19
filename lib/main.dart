@@ -30,16 +30,17 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:dynamic_color/dynamic_color.dart';
 
 import 'src/pages/detalle/detalle_usuario.dart';
 import 'src/pages/supervisor/canje_fortius/canje_fortius.dart';
 import 'src/pages/transacciones/transacciones.dart';
 
-Usuario userSession=Usuario.fromJson(GetStorage().read('usuario')??{});
-Rol? rol = userSession.roles?.isNotEmpty == true ? userSession.roles!.first : null;
+Usuario userSession = Usuario.fromJson(GetStorage().read('usuario') ?? {});
+Rol? rol =
+    userSession.roles?.isNotEmpty == true ? userSession.roles!.first : null;
 
-
-void main() async{
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
 
@@ -58,17 +59,16 @@ void main() async{
   await Hive.openBox<Movimiento>('tipoMovimiento');
   await Hive.openBox<Turno>('turno');
 
-
   await GetStorage.init();
-  
+
   // Inicializar controladores ANTES de runApp
   Get.put(LoadingController());
   Get.put(ImprovedConnectionController());
   Get.put(SyncService());
-  
+
   // Mantener compatibilidad con ConnectionController original (como proxy)
   Get.put(ConnectionController());
-  
+
   runApp(const MyApp());
 }
 
@@ -80,7 +80,6 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-
   @override
   void initState() {
     // TODO: implement initState
@@ -89,56 +88,112 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
-      title: 'Asistencias App',
-      debugShowCheckedModeBanner: false,
+    return DynamicColorBuilder(
+      builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
+        // Si hay colores dinámicos disponibles, usarlos; sino, usar el esquema personalizado
+        ColorScheme lightColorScheme;
 
-
-
-      initialRoute: userSession.id!=null ? rol?.ruta : '/',
-      getPages: [
-        GetPage(name: '/', page: () => LoginPage()),
-        GetPage(name: '/register', page: () => RegisterPage()),
-        GetPage(name: '/home', page: () => HomePage()),
-        GetPage(name: '/detalle', page: () => DetalleUsuario()),
-        GetPage(name: '/transacciones', page: () => Transacciones()),
-        GetPage(name: '/detalletransaccion', page: () => DetalleTransaccion()),
-        GetPage(name: '/admin/estadisticas', page: () => EstadisticasPage()),
-        GetPage(name: '/admin/usuarios', page: () => UsuariosAdmin()),
-        GetPage(name: '/supervisor/usuarios', page: () => UsuariosSup()),
-        GetPage(name: '/profile/info', page: () => AdminProfile()),
-        GetPage(name: '/profile/update', page: () => AdminUpdate()),
-        GetPage(name: '/supervisor/asignacion', page: () => AsignacionPage()),
-        GetPage(name: '/supervisor/canje', page: () => CanjePage()),
-        GetPage(name: '/supervisor/detallecajero', page: () => DetalleCajero()),
-        GetPage(name: '/supervisor/retiroparcial', page: () => RetiroParcialPage()),
-        GetPage(name: '/supervisor/retiroapertura', page: () => RetiroAperturaPage()),
-        GetPage(name: '/supervisor/liquidaciones', page: () => LiquidacionesPage()),
-        GetPage(name: '/supervisor/apertura', page: () => AperturaPage()),
-        GetPage(name: '/supervisor/retirofortius', page: () => RetiroFortiusPage()),
-        GetPage(name: '/supervisor/canjefortius', page: () => CanjeFortiusPage()),
-
-
-
-
-
-      ],
-      theme: ThemeData(
-        primaryColor: Color(0xFF368983),
-        colorScheme: ColorScheme(
+        if (lightDynamic != null) {
+          // Usar completamente los colores del sistema (dinámicos)
+          lightColorScheme = lightDynamic;
+        } else {
+          // Fallback al esquema de color personalizado
+          lightColorScheme = ColorScheme.fromSeed(
+            seedColor: Color(0xFF368983),
             brightness: Brightness.light,
-            primary:  Colors.black,
-            onPrimary:  Colors.white,
-            secondary: Color(0xFF368983),
-            onSecondary: Colors.white,
-            error: Colors.white,
-            onError: Colors.grey,
-            surface: Colors.white,
-            onSurface: Colors.grey,
+          );
+        }
 
-        ),
-      ),
-      navigatorKey: Get.key,
+        return GetMaterialApp(
+          title: 'Asistencias App',
+          debugShowCheckedModeBanner: false,
+          initialRoute: userSession.id != null ? rol?.ruta : '/',
+          getPages: [
+            GetPage(name: '/', page: () => LoginPage()),
+            GetPage(name: '/register', page: () => RegisterPage()),
+            GetPage(name: '/home', page: () => HomePage()),
+            GetPage(name: '/detalle', page: () => DetalleUsuario()),
+            GetPage(name: '/transacciones', page: () => Transacciones()),
+            GetPage(
+                name: '/detalletransaccion', page: () => DetalleTransaccion()),
+            GetPage(
+                name: '/admin/estadisticas', page: () => EstadisticasPage()),
+            GetPage(name: '/admin/usuarios', page: () => UsuariosAdmin()),
+            GetPage(name: '/supervisor/usuarios', page: () => UsuariosSup()),
+            GetPage(name: '/profile/info', page: () => AdminProfile()),
+            GetPage(name: '/profile/update', page: () => AdminUpdate()),
+            GetPage(
+                name: '/supervisor/asignacion', page: () => AsignacionPage()),
+            GetPage(name: '/supervisor/canje', page: () => CanjePage()),
+            GetPage(
+                name: '/supervisor/detallecajero', page: () => DetalleCajero()),
+            GetPage(
+                name: '/supervisor/retiroparcial',
+                page: () => RetiroParcialPage()),
+            GetPage(
+                name: '/supervisor/retiroapertura',
+                page: () => RetiroAperturaPage()),
+            GetPage(
+                name: '/supervisor/liquidaciones',
+                page: () => LiquidacionesPage()),
+            GetPage(name: '/supervisor/apertura', page: () => AperturaPage()),
+            GetPage(
+                name: '/supervisor/retirofortius',
+                page: () => RetiroFortiusPage()),
+            GetPage(
+                name: '/supervisor/canjefortius',
+                page: () => CanjeFortiusPage()),
+          ],
+          theme: ThemeData(
+            useMaterial3: true,
+            colorScheme: lightColorScheme,
+            appBarTheme: AppBarTheme(
+              centerTitle: false,
+              elevation: 0,
+              scrolledUnderElevation: 0,
+              backgroundColor: lightColorScheme.primary,
+              foregroundColor: Colors.white,
+            ),
+            cardTheme: CardThemeData(
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              surfaceTintColor: Colors.transparent,
+            ),
+            elevatedButtonTheme: ElevatedButtonThemeData(
+              style: ElevatedButton.styleFrom(
+                elevation: 0,
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+            inputDecorationTheme: InputDecorationTheme(
+              filled: true,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            ),
+            chipTheme: ChipThemeData(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+            ),
+            floatingActionButtonTheme: FloatingActionButtonThemeData(
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+          ),
+          navigatorKey: Get.key,
+        );
+      },
     );
   }
 }

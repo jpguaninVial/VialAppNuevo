@@ -13,6 +13,7 @@ import 'package:asistencia_vial_app/src/provider/movimiento_provider.dart';
 import 'package:asistencia_vial_app/src/provider/provider-offline/usuario_provider_offline.dart';
 import 'package:asistencia_vial_app/src/provider/turno_provider.dart';
 import 'package:asistencia_vial_app/src/provider/usuario_provider.dart';
+import 'package:asistencia_vial_app/src/utils/custom_toast.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
@@ -189,9 +190,25 @@ class AsignacionController extends GetxController {
       movimientos =
           movimientoOffline.getMovimientoByTurno(usuario.idTurno ?? '0');
     }
+
+    final liquidacion = movimientos.firstWhere(
+      (m) => m.idTipoMovimiento == '4',
+      orElse: () => Movimiento(),
+    );
+    final bool hayFaltante = movimientos.any((m) => m.idTipoMovimiento == '6');
+
+    // Solo tratamos estado '1' como liquidado; null/'' cuenta como pendiente
+    final String estadoLiquidacion =
+        liquidacion.estado?.trim().isNotEmpty == true
+            ? liquidacion.estado!.trim()
+            : '0';
+    final int banderaFaltante =
+        (estadoLiquidacion == '1' || hayFaltante) ? 2 : 1;
+
     Get.to(
       () => FaltantesPage(
-          movimientos: movimientos, bandera: 1), // Página a la que navegas
+          movimientos: movimientos,
+          bandera: banderaFaltante), // Página a la que navegas
       arguments: usuario, // Envía el objeto Usuario como argumento
     );
   }
@@ -224,13 +241,22 @@ class AsignacionController extends GetxController {
     try {
       var response = await turnoProvider.updateVia(via, idTurno);
       if (response.isOk) {
-        Get.snackbar('Asignado', 'La via ha sido asignada correctamente');
+        CustomToast.showSuccess(
+          title: 'Asignado',
+          message: 'La via ha sido asignada correctamente',
+        );
         getEstados();
       } else {
-        Get.snackbar('Error', 'No se pudo asignar la via: ${via}');
+        CustomToast.showError(
+          title: 'Error',
+          message: 'No se pudo asignar la via: $via',
+        );
       }
     } catch (e) {
-      Get.snackbar('Error', 'Ocurrió un problema al asignar la via: $e');
+      CustomToast.showError(
+        title: 'Error',
+        message: 'Ocurrió un problema al asignar la via: $e',
+      );
     }
   }
 
@@ -238,11 +264,17 @@ class AsignacionController extends GetxController {
     try {
       var response = await turnoProvider.eliminar(idCajero);
       if (response.isOk) {
-        Get.snackbar('Eliminado', 'El turno ha sido eliminado correctamente');
+        CustomToast.showSuccess(
+          title: 'Eliminado',
+          message: 'El turno ha sido eliminado correctamente',
+        );
         getEstados();
       }
     } catch (e) {
-      Get.snackbar('Error', 'Ocurrió un problema al eliminar el turno: $e');
+      CustomToast.showError(
+        title: 'Error',
+        message: 'Ocurrió un problema al eliminar el turno: $e',
+      );
     }
   }
 
@@ -250,11 +282,17 @@ class AsignacionController extends GetxController {
     try {
       var response = await turnoProvider.enviarTurno(idCajero);
       if (response.isOk) {
-        Get.snackbar('Enviado', 'El usuario ha sido enviado a turno');
+        CustomToast.showSuccess(
+          title: 'Enviado',
+          message: 'El usuario ha sido enviado a turno',
+        );
         getEstados();
       }
     } catch (e) {
-      Get.snackbar('Error', 'Ocurrió un problema al eliminar el turno: $e');
+      CustomToast.showError(
+        title: 'Error',
+        message: 'Ocurrió un problema al eliminar el turno: $e',
+      );
     }
   }
 
@@ -262,11 +300,17 @@ class AsignacionController extends GetxController {
     try {
       var response = await turnoProvider.enviarBoveda(idCajero, idTurno);
       if (response.isOk) {
-        Get.snackbar('Enviado', 'El usuario ha sido enviado a Boveda');
+        CustomToast.showSuccess(
+          title: 'Enviado',
+          message: 'El usuario ha sido enviado a Boveda',
+        );
         getEstados();
       }
     } catch (e) {
-      Get.snackbar('Error', 'Ocurrió un problema al enviar a Boveda: $e');
+      CustomToast.showError(
+        title: 'Error',
+        message: 'Ocurrió un problema al enviar a Boveda: $e',
+      );
     }
   }
 

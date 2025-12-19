@@ -1,3 +1,4 @@
+import 'package:asistencia_vial_app/src/utils/custom_toast.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -11,10 +12,11 @@ import '../../../controllers/improved_connection_controller.dart';
 
 class ImprovedCanjeController extends GetxController {
   static const String LOADING_KEY = 'canje';
-  
+
   final MovimientoProvider _movimientoProvider = MovimientoProvider();
-  final Usuario usuarioSession = Usuario.fromJson(GetStorage().read('usuario') ?? {});
-  
+  final Usuario usuarioSession =
+      Usuario.fromJson(GetStorage().read('usuario') ?? {});
+
   Usuario? usuario;
 
   // Controllers para los campos
@@ -53,10 +55,8 @@ class ImprovedCanjeController extends GetxController {
     }
 
     // Mostrar indicador de carga
-    LoadingController.to.setLoading(
-      LOADING_KEY,
-      message: 'Procesando canje...'
-    );
+    LoadingController.to
+        .setLoading(LOADING_KEY, message: 'Procesando canje...');
 
     try {
       // Crear el movimiento
@@ -67,7 +67,6 @@ class ImprovedCanjeController extends GetxController {
 
       // Manejar respuesta
       await _handleTransactionResult(result);
-
     } catch (e) {
       _handleError(e);
     } finally {
@@ -76,10 +75,12 @@ class ImprovedCanjeController extends GetxController {
   }
 
   Future<bool> _verifyConnection() async {
-    LoadingController.to.setLoading(LOADING_KEY, message: 'Verificando conexión...');
-    
+    LoadingController.to
+        .setLoading(LOADING_KEY, message: 'Verificando conexión...');
+
     try {
-      final connected = await ImprovedConnectionController.to.forceConnectionCheck();
+      final connected =
+          await ImprovedConnectionController.to.forceConnectionCheck();
       return connected;
     } catch (e) {
       return false;
@@ -116,18 +117,24 @@ class ImprovedCanjeController extends GetxController {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.info_outline, color: Colors.blue[800], size: 16),
+                      Icon(Icons.info_outline,
+                          color: Colors.blue[800], size: 16),
                       SizedBox(width: 8),
                       Text(
                         'Recomendaciones:',
-                        style: TextStyle(fontWeight: FontWeight.w500, color: Colors.blue[800]),
+                        style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            color: Colors.blue[800]),
                       ),
                     ],
                   ),
                   SizedBox(height: 8),
-                  Text('• Verifique su conexión a internet', style: TextStyle(fontSize: 13)),
-                  Text('• Acérquese a un punto con mejor señal', style: TextStyle(fontSize: 13)),
-                  Text('• Contacte al administrador de red', style: TextStyle(fontSize: 13)),
+                  Text('• Verifique su conexión a internet',
+                      style: TextStyle(fontSize: 13)),
+                  Text('• Acérquese a un punto con mejor señal',
+                      style: TextStyle(fontSize: 13)),
+                  Text('• Contacte al administrador de red',
+                      style: TextStyle(fontSize: 13)),
                 ],
               ),
             ),
@@ -227,56 +234,73 @@ class ImprovedCanjeController extends GetxController {
 
   Movimiento _buildMovimiento(Usuario usuario) {
     return Movimiento(
-      turno: usuario.turno,
-      idturno: usuario.idTurno,
-      idSupervisor: usuarioSession.id,
-      idCajero: usuario.id,
-      idTipoMovimiento: '3',
-      idPeaje: usuarioSession.idPeaje,
-      via: usuario.via,
-      recibe1C: '0',
-      recibe5C: '0',
-      recibe10C: '0',
-      recibe25C: '0',
-      recibe50C: '0',
-      recibe2D: '0',
-      recibe1D: billetes1RecibeController.text.isEmpty ? '0' : billetes1RecibeController.text,
-      recibe1DB: '0',
-      recibe5D: billetes5RecibeController.text.isEmpty ? '0' : billetes5RecibeController.text,
-      recibe10D: billetes10RecibeController.text.isEmpty ? '0' : billetes10RecibeController.text,
-      recibe20D: billetes20Controller.text.isEmpty ? '0' : billetes20Controller.text,
-      entrega1C: '0',
-      entrega5C: '0',
-      entrega10C: '0',
-      entrega25C: moneda25EntregaController.text.isEmpty ? '0' : moneda25EntregaController.text,
-      entrega50C: moneda50EntregaController.text.isEmpty ? '0' : moneda50EntregaController.text,
-      entrega1D: billetes1EntregaController.text.isEmpty ? '0' : billetes1EntregaController.text,
-      entrega1DB: '0',
-      entrega5D: billetes5EntregaController.text.isEmpty ? '0' : billetes5EntregaController.text,
-      entrega10D: billetes10EntregaController.text.isEmpty ? '0' : billetes10EntregaController.text,
-      entrega20D: '0'
-    );
+        turno: usuario.turno,
+        idturno: usuario.idTurno,
+        idSupervisor: usuarioSession.id,
+        idCajero: usuario.id,
+        idTipoMovimiento: '3',
+        idPeaje: usuarioSession.idPeaje,
+        via: usuario.via,
+        recibe1C: '0',
+        recibe5C: '0',
+        recibe10C: '0',
+        recibe25C: '0',
+        recibe50C: '0',
+        recibe2D: '0',
+        recibe1D: billetes1RecibeController.text.isEmpty
+            ? '0'
+            : billetes1RecibeController.text,
+        recibe1DB: '0',
+        recibe5D: billetes5RecibeController.text.isEmpty
+            ? '0'
+            : billetes5RecibeController.text,
+        recibe10D: billetes10RecibeController.text.isEmpty
+            ? '0'
+            : billetes10RecibeController.text,
+        recibe20D:
+            billetes20Controller.text.isEmpty ? '0' : billetes20Controller.text,
+        entrega1C: '0',
+        entrega5C: '0',
+        entrega10C: '0',
+        entrega25C: moneda25EntregaController.text.isEmpty
+            ? '0'
+            : moneda25EntregaController.text,
+        entrega50C: moneda50EntregaController.text.isEmpty
+            ? '0'
+            : moneda50EntregaController.text,
+        entrega1D: billetes1EntregaController.text.isEmpty
+            ? '0'
+            : billetes1EntregaController.text,
+        entrega1DB: '0',
+        entrega5D: billetes5EntregaController.text.isEmpty
+            ? '0'
+            : billetes5EntregaController.text,
+        entrega10D: billetes10EntregaController.text.isEmpty
+            ? '0'
+            : billetes10EntregaController.text,
+        entrega20D: '0');
   }
 
-  Future<TransactionResult> _submitTransactionWithRetries(Movimiento movimiento) async {
+  Future<TransactionResult> _submitTransactionWithRetries(
+      Movimiento movimiento) async {
     int maxRetries = 3;
     int currentRetry = 0;
-    
+
     while (currentRetry < maxRetries) {
       try {
-        LoadingController.to.setLoading(
-          LOADING_KEY,
-          message: currentRetry == 0 
-              ? 'Enviando transacción...'
-              : 'Reintentando... (${currentRetry + 1}/$maxRetries)'
-        );
+        LoadingController.to.setLoading(LOADING_KEY,
+            message: currentRetry == 0
+                ? 'Enviando transacción...'
+                : 'Reintentando... (${currentRetry + 1}/$maxRetries)');
 
-        final response = await _movimientoProvider.createOnlineOnly(movimiento)
+        final response = await _movimientoProvider
+            .createOnlineOnly(movimiento)
             .timeout(Duration(seconds: 45));
 
         if (response.statusCode == 201) {
           return TransactionResult(success: true, statusCode: 201);
-        } else if ((response.statusCode ?? 0) >= 400 && (response.statusCode ?? 0) < 500) {
+        } else if ((response.statusCode ?? 0) >= 400 &&
+            (response.statusCode ?? 0) < 500) {
           return TransactionResult(
             success: false,
             statusCode: response.statusCode ?? 0,
@@ -300,14 +324,15 @@ class ImprovedCanjeController extends GetxController {
           return TransactionResult(
             success: false,
             statusCode: 0,
-            error: 'Error de conexión después de $maxRetries intentos: ${e.toString()}',
+            error:
+                'Error de conexión después de $maxRetries intentos: ${e.toString()}',
           );
         }
-        
+
         await Future.delayed(Duration(seconds: 2 * currentRetry));
       }
     }
-    
+
     return TransactionResult(
       success: false,
       statusCode: 0,
@@ -317,17 +342,13 @@ class ImprovedCanjeController extends GetxController {
 
   Future<void> _handleTransactionResult(TransactionResult result) async {
     if (result.success) {
-      Get.snackbar(
-        'Transacción Exitosa',
-        'El canje ha sido registrado correctamente',
-        icon: Icon(Icons.check_circle, color: Colors.white),
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
+      CustomToast.showSuccess(
+        title: 'Canje Registrado',
+        message: 'El canje ha sido registrado exitosamente',
       );
-      
+
       _clearFields();
       Get.offNamedUntil('/home', (route) => false, arguments: {'index': 2});
-      
     } else {
       await _showErrorDialog(result);
     }
@@ -373,11 +394,9 @@ class ImprovedCanjeController extends GetxController {
   }
 
   void _handleError(dynamic error) {
-    Get.snackbar(
-      'Error Inesperado',
-      'Ocurrió un error al procesar el canje',
-      backgroundColor: Colors.red,
-      colorText: Colors.white,
+    CustomToast.showError(
+      title: 'Error',
+      message: 'Ocurrió un error al procesar el canje',
     );
   }
 

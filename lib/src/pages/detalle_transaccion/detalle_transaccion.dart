@@ -10,6 +10,12 @@ class DetalleTransaccion extends StatelessWidget {
   late DetalleTransaccionController detalleTransaccionController;
 
   DetalleTransaccion({@required this.movimientos, @required this.bandera}) {
+    // Eliminar instancia previa si existe y crear una nueva
+    try {
+      Get.delete<DetalleTransaccionController>();
+    } catch (e) {
+      // No existe, continuar
+    }
     detalleTransaccionController =
         Get.put(DetalleTransaccionController(movimientos!, bandera!));
   }
@@ -18,8 +24,8 @@ class DetalleTransaccion extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(24),
           topRight: Radius.circular(24),
@@ -33,7 +39,7 @@ class DetalleTransaccion extends StatelessWidget {
           Expanded(
             child: SingleChildScrollView(
               padding: EdgeInsets.all(20.0),
-              child: _buildDetails(),
+              child: _buildDetails(context),
             ),
           ),
         ],
@@ -49,8 +55,8 @@ class DetalleTransaccion extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFF368983),
-            Color(0xFF2C6E69),
+            Theme.of(context).colorScheme.primaryContainer,
+            Theme.of(context).colorScheme.secondaryContainer,
           ],
         ),
         borderRadius: BorderRadius.only(
@@ -79,7 +85,10 @@ class DetalleTransaccion extends StatelessWidget {
               Container(
                 padding: EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .primaryContainer
+                      .withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -92,7 +101,7 @@ class DetalleTransaccion extends StatelessWidget {
                               : movimientos?.first.idTipoMovimiento == '4'
                                   ? Icons.request_page_outlined
                                   : Icons.directions_car,
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.onPrimaryContainer,
                   size: 28,
                 ),
               ),
@@ -105,11 +114,11 @@ class DetalleTransaccion extends StatelessWidget {
                     Text(
                       bandera == 2
                           ? 'Liquidación'
-                          : '${movimientos?.first.nombreMovimiento}' ?? '',
+                          : movimientos?.first.nombreMovimiento ?? '',
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.onPrimaryContainer,
                       ),
                     ),
                     SizedBox(height: 4),
@@ -117,7 +126,10 @@ class DetalleTransaccion extends StatelessWidget {
                       movimientos?.first.fecha ?? 'No registrado',
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.white70,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onPrimaryContainer
+                            .withOpacity(0.7),
                       ),
                     ),
                   ],
@@ -131,10 +143,15 @@ class DetalleTransaccion extends StatelessWidget {
                   icon: Container(
                     padding: EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primaryContainer
+                          .withOpacity(0.2),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(Icons.more_vert, color: Colors.white, size: 20),
+                    child: Icon(Icons.more_vert,
+                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                        size: 20),
                   ),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)),
@@ -149,7 +166,9 @@ class DetalleTransaccion extends StatelessWidget {
                       },
                       child: Row(
                         children: [
-                          Icon(Icons.edit, color: Color(0xFF368983), size: 20),
+                          Icon(Icons.edit,
+                              color: Theme.of(context).colorScheme.primary,
+                              size: 20),
                           SizedBox(width: 12),
                           Text('Editar Transacción'),
                         ],
@@ -160,38 +179,141 @@ class DetalleTransaccion extends StatelessWidget {
             ],
           ),
           SizedBox(height: 16),
-          // Información del supervisor y cajero
-          Container(
-            padding: EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              children: [
-                _infoRow(
-                  Icons.work_outline,
-                  'Supervisor',
-                  movimientos?.first.nombreSupervisor ?? 'No registrado',
+          // Información del supervisor y cajero en una sola card
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onPrimaryContainer
+                      .withOpacity(0.2),
+                  width: 1.5,
                 ),
-                if (movimientos?.first.idTipoMovimiento != '5') ...[
-                  SizedBox(height: 12),
-                  _infoRow(
-                    Icons.person_outline,
-                    'Cajero',
-                    movimientos?.first.nombreCajero ?? 'No registrado',
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Supervisor
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.work_outline,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onPrimaryContainer
+                            .withOpacity(0.7),
+                        size: 18,
+                      ),
+                      SizedBox(width: 8),
+                      Text(
+                        'Supervisor',
+                        style: TextStyle(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onPrimaryContainer
+                              .withOpacity(0.7),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Spacer(),
+                      Text(
+                        movimientos?.first.nombreSupervisor ?? 'No registrado',
+                        style: TextStyle(
+                          color:
+                              Theme.of(context).colorScheme.onPrimaryContainer,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
+                  if (movimientos?.first.idTipoMovimiento != '5') ...[
+                    SizedBox(height: 12),
+                    // Cajero
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.person_outline,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onPrimaryContainer
+                              .withOpacity(0.7),
+                          size: 18,
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          'Cajero',
+                          style: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onPrimaryContainer
+                                .withOpacity(0.7),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        Spacer(),
+                        Text(
+                          movimientos?.first.nombreCajero ?? 'No registrado',
+                          style: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onPrimaryContainer,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                  if (movimientos?.first.via != null &&
+                      movimientos?.first.idTipoMovimiento != '5') ...[
+                    SizedBox(height: 12),
+                    // Vía
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.directions_car_outlined,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onPrimaryContainer
+                              .withOpacity(0.7),
+                          size: 18,
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          'Vía',
+                          style: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onPrimaryContainer
+                                .withOpacity(0.7),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        Spacer(),
+                        Text(
+                          movimientos?.first.via ?? 'No registrado',
+                          style: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onPrimaryContainer,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
-                if (movimientos?.first.via != null &&
-                    movimientos?.first.idTipoMovimiento != '5') ...[
-                  SizedBox(height: 12),
-                  _infoRow(
-                    Icons.directions_car_outlined,
-                    'Vía',
-                    movimientos?.first.via ?? 'No registrado',
-                  ),
-                ],
-              ],
+              ),
             ),
           ),
         ],
@@ -199,63 +321,36 @@ class DetalleTransaccion extends StatelessWidget {
     );
   }
 
-  Widget _infoRow(IconData icon, String label, String value) {
-    return Row(
-      children: [
-        Icon(icon, color: Colors.white, size: 18),
-        SizedBox(width: 8),
-        Text(
-          '$label: ',
-          style: TextStyle(
-            color: Colors.white70,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        Expanded(
-          child: Text(
-            value,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
   /// Construye los detalles dinámicos según el tipo de movimiento
-  Widget _buildDetails() {
+  Widget _buildDetails(BuildContext context) {
     print("Movimiento id ${movimientos?.first.idTipoMovimiento}");
     switch (int.parse(movimientos?.first.idTipoMovimiento ?? '1')) {
       case 1: // Apertura
         return bandera == 2
-            ? _buildLiquidacionDetails()
-            : _buildAperturaDetails();
+            ? _buildLiquidacionDetails(context)
+            : _buildAperturaDetails(context);
       case 2: // Retiro Parcial
         return bandera == 2
-            ? _buildLiquidacionDetails()
-            : _buildRetiroParcialDetails();
+            ? _buildLiquidacionDetails(context)
+            : _buildRetiroParcialDetails(context);
       case 3: // Canje
-        return _buildCanjeDetails();
+        return _buildCanjeDetails(context);
       case 4: // Liquidación
-        return _buildLiquidacionDetails();
+        return _buildLiquidacionDetails(context);
       case 5: // Fortius
-        return _buildFortiusDetails();
+        return _buildFortiusDetails(context);
       case 6: // Fortius
         return bandera == 2
-            ? _buildLiquidacionDetails()
-            : _buildFaltanteDetails();
+            ? _buildLiquidacionDetails(context)
+            : _buildFaltanteDetails(context);
       case 7: // Fortius
-        return _buildTagDetails();
+        return _buildTagDetails(context);
       default:
         return Text('Tipo de movimiento no reconocido');
     }
   }
 
-  Widget _buildAperturaDetails() {
+  Widget _buildAperturaDetails(context) {
     final totalRecibido =
         (int.parse(movimientos?.first.recibe20D ?? '0') * 20) +
             (int.parse(movimientos?.first.recibe10D ?? '0') * 10) +
@@ -274,7 +369,7 @@ class DetalleTransaccion extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildDenominationList('Recibido:', {
+        _buildDenominationList(context, 'Recibido:', {
           '\$20': {
             'cantidad': int.parse(movimientos?.first.recibe20D ?? '0'),
             'icon': 'assets/img/billete.png'
@@ -293,9 +388,9 @@ class DetalleTransaccion extends StatelessWidget {
           },
         }),
         SizedBox(height: 16),
-        _detailRow('Total Recibido:', '\$${totalRecibido}'),
+        _detailRow(context, 'Total Recibido:', '\$${totalRecibido}'),
         SizedBox(height: 24),
-        _buildDenominationList('Entregado:', {
+        _buildDenominationList(context, 'Entregado:', {
           '\$10': {
             'cantidad': int.parse(movimientos?.first.entrega10D ?? '0'),
             'icon': 'assets/img/billete.png'
@@ -310,13 +405,13 @@ class DetalleTransaccion extends StatelessWidget {
           },
         }),
         SizedBox(height: 16),
-        _detailRow('Total Entregado:', '\$${totalEntregado}'),
+        _detailRow(context, 'Total Entregado:', '\$${totalEntregado}'),
       ],
     );
   }
 
-  Widget _buildDenominationList(
-      String title, Map<String, Map<String, dynamic>> denominaciones) {
+  Widget _buildDenominationList(BuildContext context, String title,
+      Map<String, Map<String, dynamic>> denominaciones) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -327,15 +422,20 @@ class DetalleTransaccion extends StatelessWidget {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF368983),
+              color: Theme.of(context).colorScheme.primary,
             ),
           ),
         ),
         Container(
           decoration: BoxDecoration(
-            color: Colors.grey[50],
+            color: Theme.of(context)
+                .colorScheme
+                .surfaceContainerHighest
+                .withOpacity(0.5),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey[200]!, width: 1),
+            border: Border.all(
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
+                width: 1),
           ),
           child: Column(
             children: denominaciones.entries.map((entry) {
@@ -348,7 +448,10 @@ class DetalleTransaccion extends StatelessWidget {
                 decoration: BoxDecoration(
                   border: Border(
                     bottom: BorderSide(
-                      color: Colors.grey[200]!,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withOpacity(0.1),
                       width: 0.5,
                     ),
                   ),
@@ -359,7 +462,10 @@ class DetalleTransaccion extends StatelessWidget {
                     Container(
                       padding: EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Color(0xFF368983).withOpacity(0.1),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withOpacity(0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Image.asset(
@@ -375,7 +481,7 @@ class DetalleTransaccion extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     Spacer(),
@@ -385,8 +491,11 @@ class DetalleTransaccion extends StatelessWidget {
                           EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                       decoration: BoxDecoration(
                         color: cantidad > 0
-                            ? Color(0xFF368983).withOpacity(0.1)
-                            : Colors.grey[100],
+                            ? Theme.of(context)
+                                .colorScheme
+                                .primary
+                                .withOpacity(0.1)
+                            : Theme.of(context).colorScheme.surface,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -395,8 +504,11 @@ class DetalleTransaccion extends StatelessWidget {
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: cantidad > 0
-                              ? Color(0xFF368983)
-                              : Colors.grey[500],
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withOpacity(0.5),
                         ),
                       ),
                     ),
@@ -410,11 +522,11 @@ class DetalleTransaccion extends StatelessWidget {
     );
   }
 
-  Widget _detailRow(String label, dynamic value) {
+  Widget _detailRow(BuildContext context, String label, dynamic value) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: Color(0xFF368983).withOpacity(0.1),
+        color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -425,7 +537,7 @@ class DetalleTransaccion extends StatelessWidget {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
           Text(
@@ -433,7 +545,7 @@ class DetalleTransaccion extends StatelessWidget {
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF368983),
+              color: Theme.of(context).colorScheme.primary,
             ),
           ),
         ],
@@ -441,7 +553,7 @@ class DetalleTransaccion extends StatelessWidget {
     );
   }
 
-  Widget _buildRetiroParcialDetails() {
+  Widget _buildRetiroParcialDetails(context) {
     final totalRecibido =
         (int.parse(movimientos?.first.recibe20D ?? '0') * 20) +
             (int.parse(movimientos?.first.recibe10D ?? '0') * 10) +
@@ -451,7 +563,7 @@ class DetalleTransaccion extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildDenominationList('Recibido:', {
+        _buildDenominationList(context, 'Recibido:', {
           '\$20': {
             'cantidad': int.parse(movimientos?.first.recibe20D ?? '0'),
             'icon': 'assets/img/billete.png'
@@ -471,12 +583,12 @@ class DetalleTransaccion extends StatelessWidget {
         }),
         SizedBox(height: 12),
         SizedBox(width: 15),
-        _detailRow('Total:', '\$${totalRecibido}'),
+        _detailRow(context, 'Total:', '\$${totalRecibido}'),
       ],
     );
   }
 
-  Widget _buildCanjeDetails() {
+  Widget _buildCanjeDetails(context) {
     final totalEntregado =
         (int.parse(movimientos?.first.entrega10D ?? '0') * 10) +
             (int.parse(movimientos?.first.entrega5D ?? '0') * 5) +
@@ -485,7 +597,7 @@ class DetalleTransaccion extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildDenominationList('Recibido:', {
+        _buildDenominationList(context, 'Recibido:', {
           '\$20': {
             'cantidad': int.parse(movimientos?.first.recibe20D ?? '0'),
             'icon': 'assets/img/billete.png'
@@ -505,7 +617,7 @@ class DetalleTransaccion extends StatelessWidget {
         }),
         SizedBox(height: 8),
         SizedBox(width: 15),
-        _buildDenominationList('Entregado:', {
+        _buildDenominationList(context, 'Entregado:', {
           '\$10': {
             'cantidad': int.parse(movimientos?.first.entrega10D ?? '0'),
             'icon': 'assets/img/billete.png'
@@ -520,12 +632,12 @@ class DetalleTransaccion extends StatelessWidget {
           },
         }),
         SizedBox(height: 8),
-        _detailRow('Total:', '\$${totalEntregado}'),
+        _detailRow(context, 'Total:', '\$${totalEntregado}'),
       ],
     );
   }
 
-  Widget _buildLiquidacionDetails() {
+  Widget _buildLiquidacionDetails(context) {
     // Calcula el total de la liquidación actual
 
     final liquidacion =
@@ -565,7 +677,7 @@ class DetalleTransaccion extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Detalles de la liquidación
-        _buildDenominationList('Recibido:', {
+        _buildDenominationList(context, 'Recibido:', {
           '\$20': {
             'cantidad': int.parse(movimientos?.first.recibe20D ?? '0'),
             'icon': 'assets/img/billete.png'
@@ -608,25 +720,39 @@ class DetalleTransaccion extends StatelessWidget {
           },
         }),
         SizedBox(height: 12),
-        _detailRow('Total Recibido:', '\$${totalRecibido.toStringAsFixed(2)}'),
+        _detailRow(context, 'Total Recibido:',
+            '\$${totalRecibido.toStringAsFixed(2)}'),
         SizedBox(height: 5),
-        _detailRow('Retiros Parciales:',
+        _detailRow(context, 'Retiros Parciales:',
             '\$${totalRetirosParciales.toStringAsFixed(2)}'),
         SizedBox(height: 12),
         // Detalle del total general de la liquidación
-        _detailRow('Total General:', '\$${totalGeneral.toStringAsFixed(2)}'),
+        _detailRow(
+            context, 'Total General:', '\$${totalGeneral.toStringAsFixed(2)}'),
         SizedBox(height: 12),
-        _confirmButton(movimientos?.first.idturno ?? '0'),
+        _confirmButton(context, movimientos?.first.idturno ?? '0'),
         SizedBox(height: 10),
-        detalleTransaccionController.usuarioSession.roles?.first.id == '6' &&
-                (bandera == 0 || bandera == 2)
-            ? _canjeBottom(movimientos?.first.idturno ?? '')
-            : Text(''),
+        Builder(builder: (context) {
+          final roleId =
+              detalleTransaccionController.usuarioSession.roles?.first.id ?? '';
+          final banderaValue = bandera;
+          final showButton = (roleId == '6' && banderaValue == 2);
+          print('🔍 Button visibility check:');
+          print('   roleId: "$roleId" (${roleId.runtimeType})');
+          print('   bandera: $banderaValue (${banderaValue.runtimeType})');
+          print('   roleId == "6": ${roleId == '6'}');
+          print('   bandera == 2: ${banderaValue == 2}');
+          print('   showButton: $showButton');
+
+          return showButton
+              ? _canjeBottom(context, movimientos?.first.idturno ?? '')
+              : Text('');
+        }),
       ],
     );
   }
 
-  Widget _buildFaltanteDetails() {
+  Widget _buildFaltanteDetails(context) {
     final totalEntregado = (int.parse(movimientos?.first.entrega10D ?? '0') *
             10) +
         (int.parse(movimientos?.first.entrega5D ?? '0') * 5) +
@@ -647,7 +773,7 @@ class DetalleTransaccion extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildDenominationList('Recibido:', {
+        _buildDenominationList(context, 'Recibido:', {
           '\$20': {
             'cantidad': int.parse(movimientos?.first.recibe20D ?? '0'),
             'icon': 'assets/img/billete.png'
@@ -679,7 +805,7 @@ class DetalleTransaccion extends StatelessWidget {
         }),
         SizedBox(height: 8),
         SizedBox(width: 15),
-        _buildDenominationList('Entregado:', {
+        _buildDenominationList(context, 'Entregado:', {
           '\$10': {
             'cantidad': int.parse(movimientos?.first.entrega10D ?? '0'),
             'icon': 'assets/img/billete.png'
@@ -706,12 +832,12 @@ class DetalleTransaccion extends StatelessWidget {
           },
         }),
         SizedBox(height: 8),
-        _detailRow('Total:', '\$${totalRecibido - totalEntregado}'),
+        _detailRow(context, 'Total:', '\$${totalRecibido - totalEntregado}'),
       ],
     );
   }
 
-  Widget _buildFortiusDetails() {
+  Widget _buildFortiusDetails(context) {
     final totalEntregado = (int.parse(movimientos?.first.entrega20D ?? '0') *
             20) +
         (int.parse(movimientos?.first.entrega10D ?? '0') * 10) +
@@ -727,7 +853,7 @@ class DetalleTransaccion extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         movimientos?.first.recibe5D == '0'
-            ? _buildDenominationList('Entregado:', {
+            ? _buildDenominationList(context, 'Entregado:', {
                 '\$20': {
                   'cantidad': int.parse(movimientos?.first.entrega20D ?? '0'),
                   'icon': 'assets/img/billete.png'
@@ -765,7 +891,7 @@ class DetalleTransaccion extends StatelessWidget {
                   'icon': 'assets/img/moneda.png'
                 },
               })
-            : _buildDenominationList('Entregado:', {
+            : _buildDenominationList(context, 'Entregado:', {
                 '\$20': {
                   'cantidad': int.parse(movimientos?.first.entrega20D ?? '0'),
                   'icon': 'assets/img/billete.png'
@@ -778,7 +904,7 @@ class DetalleTransaccion extends StatelessWidget {
         SizedBox(height: 12),
         SizedBox(width: 15),
         if (movimientos?.first.recibe5D != '0')
-          _buildDenominationList('Recibido:', {
+          _buildDenominationList(context, 'Recibido:', {
             '\$5': {
               'cantidad': int.parse(movimientos?.first.recibe5D ?? '0'),
               'icon': 'assets/img/billete.png'
@@ -788,12 +914,12 @@ class DetalleTransaccion extends StatelessWidget {
               'icon': 'assets/img/moneda.png'
             },
           }),
-        _detailRow('Total:', '\$${totalEntregado}'),
+        _detailRow(context, 'Total:', '\$${totalEntregado}'),
       ],
     );
   }
 
-  Widget _buildTagDetails() {
+  Widget _buildTagDetails(context) {
     // Calcula el total de la liquidación actual
     final totalRecibido =
         (int.parse(movimientos?.first.recibe20D ?? '0') * 20) +
@@ -815,7 +941,7 @@ class DetalleTransaccion extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Detalles de la liquidación
-        _buildDenominationList('Recibido:', {
+        _buildDenominationList(context, 'Recibido:', {
           '\$20': {
             'cantidad': int.parse(movimientos?.first.recibe20D ?? '0'),
             'icon': 'assets/img/billete.png'
@@ -860,21 +986,22 @@ class DetalleTransaccion extends StatelessWidget {
 
         SizedBox(height: 12),
         // Detalle del total general de la liquidación
-        _detailRow('Total General:', '\$${totalGeneral.toStringAsFixed(2)}'),
+        _detailRow(
+            context, 'Total General:', '\$${totalGeneral.toStringAsFixed(2)}'),
         SizedBox(height: 12),
-        _confirmButton(movimientos?.first.idturno ?? '0'),
+        _confirmButton(context, movimientos?.first.idturno ?? '0'),
       ],
     );
   }
 
-  Widget _confirmButton(String idturno) {
+  Widget _confirmButton(BuildContext context, String idturno) {
     return Center(
       child: ElevatedButton(
         onPressed: () {
           detalleTransaccionController.goToReportes(idturno);
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: Color(0xFF368983),
+          backgroundColor: Theme.of(context).colorScheme.primary,
           padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
@@ -883,7 +1010,7 @@ class DetalleTransaccion extends StatelessWidget {
         child: Text(
           'Reporte de Liquidación',
           style: TextStyle(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.onPrimaryContainer,
             fontSize: 16,
             fontWeight: FontWeight.bold,
           ),
@@ -892,14 +1019,14 @@ class DetalleTransaccion extends StatelessWidget {
     );
   }
 
-  Widget _canjeBottom(String idturno) {
+  Widget _canjeBottom(BuildContext context, String idturno) {
     return Center(
       child: ElevatedButton(
         onPressed: () {
           detalleTransaccionController.goToFaltantes(idturno);
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: Color(0xFF368983),
+          backgroundColor: Theme.of(context).colorScheme.primary,
           padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
@@ -908,7 +1035,7 @@ class DetalleTransaccion extends StatelessWidget {
         child: Text(
           'Agregar Faltantes/Sobrantes',
           style: TextStyle(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.onPrimaryContainer,
             fontSize: 16,
             fontWeight: FontWeight.bold,
           ),

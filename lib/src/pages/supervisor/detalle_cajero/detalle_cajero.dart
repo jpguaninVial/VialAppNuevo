@@ -16,8 +16,8 @@ class DetalleCajero extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(24),
           topRight: Radius.circular(24),
@@ -34,7 +34,7 @@ class DetalleCajero extends StatelessWidget {
               itemCount: movimientos?.length ?? 0,
               itemBuilder: (context, index) {
                 final movimiento = movimientos?[index];
-                return _buildTransactionCard(movimiento!);
+                return _buildTransactionCard(context, movimiento!);
               },
             ),
           ),
@@ -51,8 +51,8 @@ class DetalleCajero extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFF368983),
-            Color(0xFF2C6E69),
+            Theme.of(context).colorScheme.primaryContainer,
+            Theme.of(context).colorScheme.secondaryContainer,
           ],
         ),
         borderRadius: BorderRadius.only(
@@ -80,12 +80,15 @@ class DetalleCajero extends StatelessWidget {
               Container(
                 padding: EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .primaryContainer
+                      .withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
                   Icons.list_alt,
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.onPrimaryContainer,
                   size: 28,
                 ),
               ),
@@ -96,7 +99,7 @@ class DetalleCajero extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.onPrimaryContainer,
                   ),
                 ),
               ),
@@ -107,7 +110,7 @@ class DetalleCajero extends StatelessWidget {
     );
   }
 
-  Widget _buildTransactionCard(Movimiento movimiento) {
+  Widget _buildTransactionCard(BuildContext context, Movimiento movimiento) {
     // Calcula el valor total sumando denominaciones recibidas
     final totalRecibido = (int.parse(movimiento.recibe20D ?? '0') * 20) +
         (int.parse(movimiento.recibe10D ?? '0') * 10) +
@@ -132,11 +135,11 @@ class DetalleCajero extends StatelessWidget {
     return Container(
       margin: EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Theme.of(context).colorScheme.shadow.withOpacity(0.1),
             spreadRadius: 1,
             blurRadius: 10,
             offset: Offset(0, 4),
@@ -151,7 +154,7 @@ class DetalleCajero extends StatelessWidget {
             Container(
               padding: EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Color(0xFF368983).withOpacity(0.1),
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
@@ -164,7 +167,7 @@ class DetalleCajero extends StatelessWidget {
                             : movimiento.idTipoMovimiento == '4'
                                 ? Icons.request_page_outlined
                                 : Icons.directions_car,
-                color: Color(0xFF368983),
+                color: Theme.of(context).colorScheme.primary,
                 size: 32,
               ),
             ),
@@ -179,7 +182,7 @@ class DetalleCajero extends StatelessWidget {
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
-                      color: Colors.black87,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                   SizedBox(height: 4),
@@ -187,14 +190,20 @@ class DetalleCajero extends StatelessWidget {
                     movimiento.fecha ?? 'Sin Fecha',
                     style: TextStyle(
                       fontSize: 13,
-                      color: Colors.grey[600],
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withOpacity(0.6),
                     ),
                   ),
                   SizedBox(height: 8),
                   Container(
                     padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Color(0xFF368983).withOpacity(0.1),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -204,7 +213,7 @@ class DetalleCajero extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF368983),
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
                   ),
@@ -216,12 +225,13 @@ class DetalleCajero extends StatelessWidget {
               icon: Container(
                 padding: EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.grey[100],
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   Icons.more_vert,
-                  color: Colors.grey[700],
+                  color:
+                      Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                   size: 20,
                 ),
               ),
@@ -233,7 +243,9 @@ class DetalleCajero extends StatelessWidget {
                       detalleCajeroController.goToEditTransaccion(movimiento),
                   child: Row(
                     children: [
-                      Icon(Icons.edit, color: Color(0xFF368983), size: 20),
+                      Icon(Icons.edit,
+                          color: Theme.of(context).colorScheme.primary,
+                          size: 20),
                       SizedBox(width: 12),
                       Text('Editar transacción'),
                     ],

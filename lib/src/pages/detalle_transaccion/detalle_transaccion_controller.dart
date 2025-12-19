@@ -1,4 +1,3 @@
-import 'package:asistencia_vial_app/src/models/response_api.dart';
 import 'package:asistencia_vial_app/src/pages/editar_transaccion/editar_transaccion.dart';
 import 'package:asistencia_vial_app/src/pages/reportes/reporte_canje/reporte_canje.dart';
 import 'package:asistencia_vial_app/src/provider/movimiento_provider.dart';
@@ -21,9 +20,15 @@ class DetalleTransaccionController extends GetxController {
   int? bandera;
 
   DetalleTransaccionController(List<Movimiento> movimientos, int bandera) {
+    // Recargar usuario desde storage para asegurar datos actuales
+    usuarioSession = Usuario.fromJson(GetStorage().read('usuario') ?? {});
     this.movimientos = movimientos;
     this.bandera = bandera;
     print('Bandera $bandera');
+    final roleId = usuarioSession.roles?.first.id;
+    print('DetalleTransaccionController role id: ${roleId}');
+    print(
+        'DetalleTransaccionController usuarioSession.id: ${usuarioSession.id}');
   }
 
   void goToEditTransaccion(Movimiento movimiento) {
@@ -38,19 +43,21 @@ class DetalleTransaccionController extends GetxController {
     List<Movimiento>? movimientos;
     Movimiento liquidacion;
     var result = await movimientoProvider
-        .getMovimientoByTurno(idturno ?? ''); //cambiar getApertura
+        .getMovimientoByTurno(idturno); //cambiar getApertura
     movimientos = result;
     liquidacion = movimientos.firstWhere((m) => m.idTipoMovimiento == '4');
+    final bool hayFaltante = movimientos.any((m) => m.idTipoMovimiento == '6');
+    final int banderaFaltante =
+        (liquidacion.estado != '0' || hayFaltante) ? 2 : 1;
     if (usuarioSession.roles?.first.id == '6' && liquidacion.estado == '0') {
       liquidacion.idSupervisor = usuarioSession.id;
       liquidacion.estado = '1';
-      ResponseApi response2 =
-          await movimientoProvider.updateEstadoMovimiento(liquidacion);
+      await movimientoProvider.updateEstadoMovimiento(liquidacion);
     }
     Usuario usuario =
         usuarios.firstWhere((m) => m.id == '${liquidacion.idCajero}');
     Get.to(
-      () => FaltantesPage(movimientos: movimientos, bandera: 1),
+      () => FaltantesPage(movimientos: movimientos, bandera: banderaFaltante),
       arguments: usuario, // Página a la que navegas
     );
   }

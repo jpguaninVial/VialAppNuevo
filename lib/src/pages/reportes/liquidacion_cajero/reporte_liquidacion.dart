@@ -11,25 +11,25 @@ import '../../../models/movimiento.dart';
 import '../../../models/usuario.dart';
 
 class ReporteLiquidacion extends StatelessWidget {
+  late final ReporteLiquidacionController reporteLiquidacionController;
 
-  late ReporteLiquidacionController reporteLiquidacionController;
+  final Usuario? usuario;
+  final List<Movimiento>? movimientos;
+  final Function? onPDFClosed;
 
-  Usuario? usuario;
-  List<Movimiento>? movimientos;
-
-  ReporteLiquidacion({@required this.movimientos}){
-    reporteLiquidacionController=Get.put(ReporteLiquidacionController(movimientos!));
+  ReporteLiquidacion(
+      {@required this.movimientos, this.onPDFClosed, this.usuario}) {
+    reporteLiquidacionController = Get.put(
+        ReporteLiquidacionController(movimientos!, onPDFClosed: onPDFClosed));
   }
-
-
-
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          onPressed: () => Get.offNamedUntil('/home', (route) => false, arguments: {'index': 2}),
+          onPressed: () => Get.offNamedUntil('/home', (route) => false,
+              arguments: {'index': 2}),
           icon: const Icon(Icons.arrow_back_ios),
           color: Colors.black54,
         ),
@@ -62,7 +62,7 @@ class ReporteLiquidacion extends StatelessWidget {
     );
   }
 
-  Widget buttonBack(){
+  Widget buttonBack() {
     return SafeArea(
       child: Container(
         margin: EdgeInsets.only(left: 20),
@@ -74,4 +74,3 @@ class ReporteLiquidacion extends StatelessWidget {
     );
   }
 }
-

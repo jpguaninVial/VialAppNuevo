@@ -1,5 +1,6 @@
 import 'package:asistencia_vial_app/src/pages/supervisor/apertura/improved_apertura_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 import '../../../helper/connection_controller.dart';
@@ -9,93 +10,98 @@ import '../../../controllers/loading_controller.dart';
 import '../../../widgets/improved_offline_banner.dart';
 
 class AperturaPage extends StatelessWidget {
-
   late ImprovedAperturaController aperturaController;
 
   Usuario? usuario;
 
-  AperturaPage({@required this.usuario}){
-    aperturaController=Get.put(ImprovedAperturaController(usuario!));
+  AperturaPage({@required this.usuario}) {
+    aperturaController = Get.put(ImprovedAperturaController(usuario!));
   }
 
   @override
   Widget build(BuildContext context) {
     return Obx(() => Stack(
-      children: [
-        Scaffold(
-          appBar: AppBar(
-            title: Text(
-              'Apertura - ${usuario!.nombre} ${usuario!.apellido}',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            backgroundColor: Color(0xFF368983),
-            elevation: 0,
-          ),
-          body: Column(
-            children: [
-              ImprovedOfflineBanner(),
-              Expanded(
-                child: LoadingWrapper(
-                  loadingKey: ImprovedAperturaController.LOADING_KEY,
-                  child: SingleChildScrollView(
-                    padding: EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _sectionTitle('Recibe de Cajero'),
-                        _recibeGrid(),
-                        SizedBox(height: 10),
-                        if (usuario!.idRol != '4') ...[
-                          _confirmVia(context, usuario!.idTurno ?? ''),
-                          SizedBox(height: 10),
-                        ],
-                        Center(
-                          child: Text(
-                            aperturaController.asignacion.value == 'null'
-                                ? ''
-                                : 'Via Asignada ${aperturaController.asignacion.value}',
-                            style: TextStyle(
-                              color: aperturaController.asignacion.value == 'null'
-                                  ? Colors.redAccent
-                                  : Colors.green,
-                              fontSize: 16,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                        Divider(thickness: 1, color: Colors.grey[300]),
-                        SizedBox(height: 20),
-                        _confirmButton(context),
-                      ],
-                    ),
+          children: [
+            Scaffold(
+              appBar: AppBar(
+                title: Text(
+                  'Apertura - ${usuario!.nombre} ${usuario!.apellido}',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onPrimary,
                   ),
                 ),
+                backgroundColor: Color(0xFF1B5E5A),
+                elevation: 0,
               ),
-            ],
-          ),
-        ),
-      ],
-    ));
+              body: Column(
+                children: [
+                  ImprovedOfflineBanner(),
+                  Expanded(
+                    child: LoadingWrapper(
+                      loadingKey: ImprovedAperturaController.LOADING_KEY,
+                      child: SingleChildScrollView(
+                        padding: EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _sectionTitle(context, 'Recibe de Cajero'),
+                            _recibeGrid(context),
+                            SizedBox(height: 10),
+                            if (usuario!.idRol != '4') ...[
+                              _confirmVia(context, usuario!.idTurno ?? ''),
+                              SizedBox(height: 10),
+                            ],
+                            Center(
+                              child: Text(
+                                aperturaController.asignacion.value == 'null'
+                                    ? ''
+                                    : 'Via Asignada ${aperturaController.asignacion.value}',
+                                style: TextStyle(
+                                  color: aperturaController.asignacion.value ==
+                                          'null'
+                                      ? Theme.of(context).colorScheme.error
+                                      : Theme.of(context).colorScheme.tertiary,
+                                  fontSize: 16,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                            Divider(
+                                thickness: 1,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .outlineVariant),
+                            SizedBox(height: 20),
+                            _confirmButton(context),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ));
   }
 
   /// **Widget: Título de Sección**
-  Widget _sectionTitle(String title) {
+  Widget _sectionTitle(BuildContext context, String title) {
     return Text(
       title,
       style: TextStyle(
         fontSize: 18,
         fontWeight: FontWeight.bold,
-        color: Color(0xFF368983),
+        color: Theme.of(context).colorScheme.primary,
       ),
     );
   }
 
   /// **Widget: Campo de Entrada**
   Widget _inputField({
+    required BuildContext context,
     required String label,
     IconData? icon, // Cambiado para admitir null
     String? assetIcon, // Agregado para soportar íconos de assets
@@ -105,38 +111,49 @@ class AperturaPage extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TextField(
-        style: TextStyle(color: Colors.black),
+        style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
         controller: controller,
         keyboardType: TextInputType.number,
+        inputFormatters: [
+          FilteringTextInputFormatter.digitsOnly,
+        ],
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: TextStyle(color: controller.text.isEmpty ? Colors.grey : Colors.black),
+          labelStyle: TextStyle(
+              color: controller.text.isEmpty
+                  ? Theme.of(context).colorScheme.onSurfaceVariant
+                  : Theme.of(context).colorScheme.onSurface),
           prefixIcon: assetIcon != null
               ? Padding(
-            padding: const EdgeInsets.all(10.0), // Ajuste del tamaño del ícono
-            child: Image.asset(
-              assetIcon,
-              width: 24,
-              height: 24,
-              fit: BoxFit.contain,
-            ),
-          )
-              : Icon(icon, color: Color(0xFF368983)), // Ícono estándar si no hay assetIcon
+                  padding:
+                      const EdgeInsets.all(10.0), // Ajuste del tamaño del ícono
+                  child: Image.asset(
+                    assetIcon,
+                    width: 24,
+                    height: 24,
+                    fit: BoxFit.contain,
+                  ),
+                )
+              : Icon(icon,
+                  color: Theme.of(context)
+                      .colorScheme
+                      .primary), // Ícono estándar si no hay assetIcon
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(color: Color(0xFF368983)),
+            borderSide:
+                BorderSide(color: Theme.of(context).colorScheme.primary),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(color: Color(0xFF368983), width: 2),
+            borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.primary, width: 2),
           ),
         ),
       ),
     );
   }
 
-
-  Widget _recibeGrid() {
+  Widget _recibeGrid(BuildContext context) {
     bool mostrarTodasDenominaciones = usuario!.idRol == '4';
 
     return Column(
@@ -147,19 +164,21 @@ class AperturaPage extends StatelessWidget {
           children: [
             Expanded(
               child: _inputField(
+                context: context,
                 label: '\$ 10',
                 assetIcon: 'assets/img/billete.png',
                 controller: aperturaController.billetes10Controller,
-                maxLength: 2,
+                maxLength: 3,
               ),
             ),
             SizedBox(width: 10),
             Expanded(
               child: _inputField(
+                context: context,
                 label: '\$ 5',
                 assetIcon: 'assets/img/billete.png',
                 controller: aperturaController.billetes5Controller,
-                maxLength: 2,
+                maxLength: 3,
               ),
             ),
           ],
@@ -172,6 +191,7 @@ class AperturaPage extends StatelessWidget {
           children: [
             Expanded(
               child: _inputField(
+                context: context,
                 label: '\$ 1',
                 assetIcon: 'assets/img/moneda.png',
                 controller: aperturaController.billetes1Controller,
@@ -182,6 +202,7 @@ class AperturaPage extends StatelessWidget {
               SizedBox(width: 10),
               Expanded(
                 child: _inputField(
+                  context: context,
                   label: '50c',
                   assetIcon: 'assets/img/moneda.png',
                   controller: aperturaController.Moneda50Controller,
@@ -200,6 +221,7 @@ class AperturaPage extends StatelessWidget {
             children: [
               Expanded(
                 child: _inputField(
+                  context: context,
                   label: '25c',
                   assetIcon: 'assets/img/moneda.png',
                   controller: aperturaController.Moneda25Controller,
@@ -209,6 +231,7 @@ class AperturaPage extends StatelessWidget {
               SizedBox(width: 10),
               Expanded(
                 child: _inputField(
+                  context: context,
                   label: '10c',
                   assetIcon: 'assets/img/moneda.png',
                   controller: aperturaController.Moneda10Controller,
@@ -223,6 +246,7 @@ class AperturaPage extends StatelessWidget {
             children: [
               Expanded(
                 child: _inputField(
+                  context: context,
                   label: '5c',
                   assetIcon: 'assets/img/moneda.png',
                   controller: aperturaController.Moneda5Controller,
@@ -232,6 +256,7 @@ class AperturaPage extends StatelessWidget {
               SizedBox(width: 10),
               Expanded(
                 child: _inputField(
+                  context: context,
                   label: '1c',
                   assetIcon: 'assets/img/moneda.png',
                   controller: aperturaController.Moneda1Controller,
@@ -245,17 +270,15 @@ class AperturaPage extends StatelessWidget {
     );
   }
 
-
-
   /// **Widget: Botón de Confirmación**
-  Widget _confirmVia(BuildContext context,String idTurno) {
+  Widget _confirmVia(BuildContext context, String idTurno) {
     return Center(
       child: ElevatedButton(
         onPressed: () {
-          _showViaSelectionDialog(context,idTurno);
+          _showViaSelectionDialog(context, idTurno);
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.green,
+          backgroundColor: Theme.of(context).colorScheme.tertiary,
           padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
@@ -264,7 +287,7 @@ class AperturaPage extends StatelessWidget {
         child: Text(
           'Asignar Via',
           style: TextStyle(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.onPrimary,
             fontSize: 16,
             fontWeight: FontWeight.bold,
           ),
@@ -278,13 +301,13 @@ class AperturaPage extends StatelessWidget {
     return Center(
       child: ElevatedButton(
         onPressed: () {
-          (aperturaController.asignacion.value=='null' && usuario!.idRol!='4')?
-            _showViaConfirmationDialog(context,usuario!.idTurno??''):
-            _confirmCanje(context);
-
+          (aperturaController.asignacion.value == 'null' &&
+                  usuario!.idRol != '4')
+              ? _showViaConfirmationDialog(context, usuario!.idTurno ?? '')
+              : _confirmCanje(context);
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: Color(0xFF368983),
+          backgroundColor: Theme.of(context).colorScheme.primary,
           padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
@@ -293,7 +316,7 @@ class AperturaPage extends StatelessWidget {
         child: Text(
           'Confirmar Apertura',
           style: TextStyle(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.onPrimary,
             fontSize: 16,
             fontWeight: FontWeight.bold,
           ),
@@ -316,16 +339,18 @@ class AperturaPage extends StatelessWidget {
               onPressed: () {
                 Navigator.of(context).pop(); // Cierra el cuadro de diálogo
               },
-              child: Text("Regresar", style: TextStyle(color: Colors.grey)),
+              child: Text("Regresar",
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant)),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
+                backgroundColor: Theme.of(context).colorScheme.tertiary,
               ),
               onPressed: () {
                 Navigator.of(context).pop(); // Cierra el cuadro de diálogo
 
-                _showViaSelectionDialog(context,idTurno);
+                _showViaSelectionDialog(context, idTurno);
               },
               child: Text("Asignar via"),
             ),
@@ -347,15 +372,24 @@ class AperturaPage extends StatelessWidget {
     final billetes1Entrega = getValue(aperturaController.billetes1Controller);
 
     // Si el usuario es idRol = 3, también incluir denominaciones pequeñas
-    final moneda50Entrega = mostrarTodasDenominaciones ? getValue(aperturaController.Moneda50Controller) : '0';
-    final moneda25Entrega = mostrarTodasDenominaciones ? getValue(aperturaController.Moneda25Controller) : '0';
-    final moneda10Entrega = mostrarTodasDenominaciones ? getValue(aperturaController.Moneda10Controller) : '0';
-    final moneda5Entrega = mostrarTodasDenominaciones ? getValue(aperturaController.Moneda5Controller) : '0';
-    final moneda1Entrega = mostrarTodasDenominaciones ? getValue(aperturaController.Moneda1Controller) : '0';
+    final moneda50Entrega = mostrarTodasDenominaciones
+        ? getValue(aperturaController.Moneda50Controller)
+        : '0';
+    final moneda25Entrega = mostrarTodasDenominaciones
+        ? getValue(aperturaController.Moneda25Controller)
+        : '0';
+    final moneda10Entrega = mostrarTodasDenominaciones
+        ? getValue(aperturaController.Moneda10Controller)
+        : '0';
+    final moneda5Entrega = mostrarTodasDenominaciones
+        ? getValue(aperturaController.Moneda5Controller)
+        : '0';
+    final moneda1Entrega = mostrarTodasDenominaciones
+        ? getValue(aperturaController.Moneda1Controller)
+        : '0';
 
     // Cálculo del total entregado por el supervisor
-    final totalEntrega =
-        (int.parse(billetes10Entrega) * 10) +
+    final totalEntrega = (int.parse(billetes10Entrega) * 10) +
         (int.parse(billetes5Entrega) * 5) +
         (int.parse(billetes1Entrega) * 1) +
         (int.parse(moneda50Entrega) * 0.5).toDouble() +
@@ -371,21 +405,24 @@ class AperturaPage extends StatelessWidget {
         return AlertDialog(
           title: Row(
             children: [
-              Icon(Icons.library_add_check_outlined, color: Color(0xFF368983)),
+              Icon(Icons.library_add_check_outlined,
+                  color: Theme.of(context).colorScheme.primary),
               SizedBox(width: 10),
-              Text("Confirmación", style: TextStyle(fontWeight: FontWeight.bold)),
+              Text("Confirmación",
+                  style: TextStyle(fontWeight: FontWeight.bold)),
             ],
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text("¿Estás seguro de realizar esta apertura?", style: TextStyle(fontSize: 16)),
+              Text("¿Estás seguro de realizar esta apertura?",
+                  style: TextStyle(fontSize: 16)),
               SizedBox(height: 5),
-              Divider(color: Colors.grey[300]),
+              Divider(color: Theme.of(context).colorScheme.outlineVariant),
               SizedBox(height: 5),
-
-              Text("Entregó Supervisor:", style: TextStyle(fontWeight: FontWeight.bold)),
+              Text("Entregó Supervisor:",
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               Text("- $billetes10Entrega billetes de \$10"),
               Text("- $billetes5Entrega billetes de \$5"),
               Text("- $billetes1Entrega monedas de \$1"),
@@ -397,9 +434,11 @@ class AperturaPage extends StatelessWidget {
                 Text("- $moneda1Entrega monedas de 1c"),
               ],
               SizedBox(height: 5),
-
               Text("Total Entregado: \$${totalEntrega.toStringAsFixed(2)}",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF368983))),
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary)),
             ],
           ),
           actions: [
@@ -407,14 +446,17 @@ class AperturaPage extends StatelessWidget {
               onPressed: () {
                 Navigator.of(context).pop(); // Cierra el diálogo
               },
-              child: Text("Cancelar", style: TextStyle(color: Colors.grey)),
+              child: Text("Cancelar",
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant)),
             ),
             ElevatedButton(
               onPressed: () {
                 Navigator.of(context).pop(); // Cierra el diálogo
                 aperturaController.registrarApertura(context, usuario!);
               },
-              style: ElevatedButton.styleFrom(backgroundColor: Color(0xFF368983)),
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.primary),
               child: Text("Confirmar"),
             ),
           ],
@@ -422,7 +464,6 @@ class AperturaPage extends StatelessWidget {
       },
     );
   }
-
 
   void _showViaSelectionDialog(BuildContext context, String idTurno) {
     // Lista de números de las vías
@@ -451,10 +492,11 @@ class AperturaPage extends StatelessWidget {
                   onPressed: () {
                     Navigator.pop(context); // Cierra el diálogo
                     print("Vía ${vias[index]} seleccionada");
-                    aperturaController.updateVia(vias[index].toString(),idTurno);
+                    aperturaController.updateVia(
+                        vias[index].toString(), idTurno);
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF368983),
+                    backgroundColor: Theme.of(context).colorScheme.primary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -462,9 +504,10 @@ class AperturaPage extends StatelessWidget {
                   child: Text(
                     "${vias[index]}", // Muestra el número exacto de la vía
                     style: TextStyle(
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.onPrimary,
                       fontWeight: FontWeight.bold,
-                      fontSize: (vias[index] == 104 || vias[index] == 105) ? 7 : 16,
+                      fontSize:
+                          (vias[index] == 104 || vias[index] == 105) ? 7 : 16,
                     ),
                   ),
                 );
@@ -475,6 +518,4 @@ class AperturaPage extends StatelessWidget {
       },
     );
   }
-
-
 }

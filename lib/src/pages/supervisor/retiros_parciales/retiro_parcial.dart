@@ -1,5 +1,6 @@
 import 'package:asistencia_vial_app/src/pages/supervisor/retiros_parciales/improved_retiro_parcial_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../../../controllers/loading_controller.dart';
 import '../../../widgets/improved_offline_banner.dart';
@@ -17,7 +18,7 @@ class RetiroParcialPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
       body: Column(
         children: [
           _buildModernHeader(context),
@@ -30,9 +31,10 @@ class RetiroParcialPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _sectionTitle('Recibe del Cajero', Icons.arrow_downward),
+                    _sectionTitle(
+                        context, 'Recibe del Cajero', Icons.arrow_downward),
                     SizedBox(height: 16),
-                    _recibeGrid(),
+                    _recibeGrid(context),
                     SizedBox(height: 32),
                     _confirmButton(context),
                     SizedBox(height: 20),
@@ -53,13 +55,13 @@ class RetiroParcialPage extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFF368983),
-            Color(0xFF2C6E69),
+            Theme.of(context).colorScheme.primary.withOpacity(0.9),
+            Theme.of(context).colorScheme.primary.withOpacity(0.7),
           ],
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.15),
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.15),
             blurRadius: 8,
             offset: Offset(0, 3),
           ),
@@ -73,7 +75,8 @@ class RetiroParcialPage extends StatelessWidget {
           child: Row(
             children: [
               IconButton(
-                icon: Icon(Icons.arrow_back, color: Colors.white, size: 24),
+                icon: Icon(Icons.arrow_back,
+                    color: Theme.of(context).colorScheme.onPrimary, size: 24),
                 onPressed: () => Navigator.of(context).pop(),
               ),
               SizedBox(width: 8),
@@ -84,7 +87,7 @@ class RetiroParcialPage extends StatelessWidget {
                     Text(
                       'Retiro Parcial',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.onPrimary,
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
                       ),
@@ -93,7 +96,10 @@ class RetiroParcialPage extends StatelessWidget {
                     Text(
                       '${usuario!.nombre} ${usuario!.apellido}',
                       style: TextStyle(
-                        color: Colors.white70,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onPrimary
+                            .withOpacity(0.8),
                         fontSize: 14,
                       ),
                     ),
@@ -108,7 +114,7 @@ class RetiroParcialPage extends StatelessWidget {
                 ),
                 child: Icon(
                   Icons.payments_outlined,
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.onPrimary,
                   size: 28,
                 ),
               ),
@@ -119,24 +125,26 @@ class RetiroParcialPage extends StatelessWidget {
     );
   }
 
-  Widget _sectionTitle(String title, IconData icon) {
+  Widget _sectionTitle(BuildContext context, String title, IconData icon) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Color(0xFF368983).withOpacity(0.1),
+        color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFF368983).withOpacity(0.3), width: 1),
+        border: Border.all(
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+            width: 1),
       ),
       child: Row(
         children: [
-          Icon(icon, color: Color(0xFF368983), size: 24),
+          Icon(icon, color: Theme.of(context).colorScheme.primary, size: 24),
           SizedBox(width: 12),
           Text(
             title,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF368983),
+              color: Theme.of(context).colorScheme.primary,
             ),
           ),
         ],
@@ -145,6 +153,7 @@ class RetiroParcialPage extends StatelessWidget {
   }
 
   Widget _inputField({
+    required BuildContext context,
     required String label,
     IconData? icon,
     String? assetIcon,
@@ -154,7 +163,7 @@ class RetiroParcialPage extends StatelessWidget {
     return Container(
       margin: EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -167,16 +176,22 @@ class RetiroParcialPage extends StatelessWidget {
       ),
       child: TextField(
         style: TextStyle(
-            color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold),
+            color: Theme.of(context).colorScheme.onSurface,
+            fontSize: 16,
+            fontWeight: FontWeight.bold),
         controller: controller,
         keyboardType: TextInputType.number,
         maxLength: maxLength ?? 3,
+        inputFormatters: [
+          FilteringTextInputFormatter.digitsOnly,
+        ],
         decoration: InputDecoration(
           counterText: '',
           labelText: label,
           labelStyle: TextStyle(
-            color:
-                controller.text.isEmpty ? Colors.grey[600] : Color(0xFF368983),
+            color: controller.text.isEmpty
+                ? Theme.of(context).colorScheme.onSurfaceVariant
+                : Theme.of(context).colorScheme.primary,
             fontSize: 16,
             fontWeight: FontWeight.w500,
           ),
@@ -186,7 +201,10 @@ class RetiroParcialPage extends StatelessWidget {
                   child: Container(
                     padding: EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: Color(0xFF368983).withOpacity(0.1),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Image.asset(
@@ -199,7 +217,8 @@ class RetiroParcialPage extends StatelessWidget {
                 )
               : Padding(
                   padding: const EdgeInsets.all(12.0),
-                  child: Icon(icon, color: Color(0xFF368983), size: 28),
+                  child: Icon(icon,
+                      color: Theme.of(context).colorScheme.primary, size: 28),
                 ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
@@ -207,21 +226,22 @@ class RetiroParcialPage extends StatelessWidget {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Color(0xFF368983), width: 2),
+            borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.primary, width: 2),
           ),
           filled: true,
-          fillColor: Colors.white,
+          fillColor: Theme.of(context).colorScheme.surface,
           contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         ),
       ),
     );
   }
 
-  Widget _recibeGrid() {
+  Widget _recibeGrid(BuildContext context) {
     return Container(
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.onPrimary,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -238,20 +258,22 @@ class RetiroParcialPage extends StatelessWidget {
             children: [
               Expanded(
                 child: _inputField(
+                  context: context,
                   label: '\$ 20',
                   assetIcon: 'assets/img/billete.png',
                   controller: retiroParcialController.billetes20Controller,
-                  maxLength: 2,
+                  maxLength: 3,
                 ),
               ),
               SizedBox(width: 12),
               Expanded(
                 child: _inputField(
+                  context: context,
                   label: '\$ 10',
                   assetIcon: 'assets/img/billete.png',
                   controller:
                       retiroParcialController.billetes10RecibeController,
-                  maxLength: 2,
+                  maxLength: 3,
                 ),
               ),
             ],
@@ -260,19 +282,21 @@ class RetiroParcialPage extends StatelessWidget {
             children: [
               Expanded(
                 child: _inputField(
+                  context: context,
                   label: '\$ 5',
                   assetIcon: 'assets/img/billete.png',
                   controller: retiroParcialController.billetes5RecibeController,
-                  maxLength: 2,
+                  maxLength: 3,
                 ),
               ),
               SizedBox(width: 12),
               Expanded(
                 child: _inputField(
+                  context: context,
                   label: '\$ 1',
                   assetIcon: 'assets/img/moneda.png',
                   controller: retiroParcialController.billetes1RecibeController,
-                  maxLength: 2,
+                  maxLength: 3,
                 ),
               ),
             ],
@@ -291,14 +315,14 @@ class RetiroParcialPage extends StatelessWidget {
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
           colors: [
-            Color(0xFF368983),
-            Color(0xFF2C6E69),
+            Theme.of(context).colorScheme.primary,
+            Theme.of(context).colorScheme.primaryContainer,
           ],
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Color(0xFF368983).withOpacity(0.3),
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
             spreadRadius: 1,
             blurRadius: 8,
             offset: Offset(0, 4),
@@ -310,8 +334,9 @@ class RetiroParcialPage extends StatelessWidget {
           _confirmRetiroParcial(context);
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.transparent,
-          shadowColor: Colors.transparent,
+          backgroundColor: Theme.of(context).colorScheme.primary,
+          foregroundColor: Theme.of(context).colorScheme.onPrimary,
+          elevation: 4,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
@@ -319,12 +344,13 @@ class RetiroParcialPage extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.check_circle_outline, color: Colors.white, size: 24),
+            Icon(Icons.check_circle_outline,
+                color: Theme.of(context).colorScheme.onPrimary, size: 24),
             SizedBox(width: 12),
             Text(
               'Confirmar Retiro',
               style: TextStyle(
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.onPrimary,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
@@ -366,7 +392,7 @@ class RetiroParcialPage extends StatelessWidget {
           title: Row(
             children: [
               Icon(Icons.library_add_check_outlined,
-                  color: Color(0xFF368983), size: 28),
+                  color: Theme.of(context).colorScheme.primary, size: 28),
               SizedBox(width: 12),
               Text("Confirmación",
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
@@ -394,7 +420,8 @@ class RetiroParcialPage extends StatelessWidget {
                 Container(
                   padding: EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Color(0xFF368983).withOpacity(0.1),
+                    color:
+                        Theme.of(context).colorScheme.primary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -402,7 +429,7 @@ class RetiroParcialPage extends StatelessWidget {
                     style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF368983)),
+                        color: Theme.of(context).colorScheme.primary),
                   ),
                 ),
               ],
@@ -441,8 +468,8 @@ class RetiroParcialPage extends StatelessWidget {
               }),
               style: ElevatedButton.styleFrom(
                 padding: EdgeInsets.symmetric(vertical: 14, horizontal: 24),
-                backgroundColor: Color(0xFF368983),
-                foregroundColor: Colors.white,
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Theme.of(context).colorScheme.onPrimary,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8)),
               ),

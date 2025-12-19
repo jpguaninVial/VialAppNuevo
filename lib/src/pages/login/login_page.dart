@@ -11,145 +11,248 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _LoginPageState extends State<LoginPage>
+    with SingleTickerProviderStateMixin {
   late Color myColor;
   late Size mediaSize;
   LoginController loginController = Get.put(LoginController());
   bool _isPasswordVisible = false;
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: Duration(milliseconds: 1000),
+      vsync: this,
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeIn),
+    );
+
+    _slideAnimation =
+        Tween<Offset>(begin: Offset(0, 0.3), end: Offset.zero).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+    );
+
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Usando el color consistente de la app
-    myColor = Color(0xFF368983);
     mediaSize = MediaQuery.of(context).size;
-    return Container(
-      decoration: BoxDecoration(
-        color: myColor,
-        image: DecorationImage(
-          image: const AssetImage("assets/img/PeajeLogin.jpg"),
-          fit: BoxFit.cover,
-          alignment: Alignment.topCenter,
-          colorFilter:
-              ColorFilter.mode(myColor.withOpacity(0.2), BlendMode.dstATop),
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Scaffold(
+      backgroundColor: colorScheme.surface,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              colorScheme.primary.withOpacity(0.15),
+              colorScheme.surface,
+              colorScheme.secondary.withOpacity(0.1),
+            ],
+          ),
         ),
-      ),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: Stack(children: [
-          Positioned(top: 80, child: _buildTop()),
-          Positioned(bottom: 0, child: _buildBottom()),
+        child: Stack(children: [
+          Positioned(top: 60, child: _buildTop(context)),
+          Positioned(bottom: 0, child: _buildBottom(context)),
         ]),
       ),
     );
   }
 
-  Widget _buildTop() {
-    return SizedBox(
-      width: mediaSize.width,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Image.asset(
-            "assets/img/vial25blanco.png", // Ruta de la imagen PNG en assets
-            height: 80, // Ajusta el tamaño según lo necesites
+  Widget _buildTop(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: SlideTransition(
+        position: _slideAnimation,
+        child: SizedBox(
+          width: mediaSize.width,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      colorScheme.primary.withOpacity(0.2),
+                      colorScheme.primary.withOpacity(0.05),
+                    ],
+                  ),
+                ),
+                child: Image.asset(
+                  "assets/img/vialapp_logo.png",
+                  height: 150,
+                ),
+              ),
+              SizedBox(height: 24),
+              SizedBox(height: 8),
+              Text(
+                "Sistema de Gestión de Boveda",
+                style: TextStyle(
+                  color: colorScheme.onSurface.withOpacity(0.5),
+                  fontWeight: FontWeight.w400,
+                  fontSize: 16,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
           ),
-          const Text(
-            "Version 1.2.3",
-            style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w500,
-                fontSize: 15,
-                letterSpacing: 1),
-          )
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBottom() {
-    return SizedBox(
-      width: mediaSize.width,
-      child: Card(
-        shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(30),
-          topRight: Radius.circular(30),
-        )),
-        child: Padding(
-          padding: const EdgeInsets.all(32.0),
-          child: _buildForm(),
         ),
       ),
     );
   }
 
-  Widget _buildForm() {
+  Widget _buildBottom(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return SlideTransition(
+      position: Tween<Offset>(begin: Offset(0, 0.5), end: Offset.zero).animate(
+        CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+      ),
+      child: FadeTransition(
+        opacity: _fadeAnimation,
+        child: SizedBox(
+          width: mediaSize.width,
+          child: Card(
+            elevation: 12,
+            shadowColor: colorScheme.primary.withOpacity(0.3),
+            color: colorScheme.surfaceContainerLow,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(40),
+                topRight: Radius.circular(40),
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(40.0),
+              child: _buildForm(context),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildForm(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          "Bienvenido",
+          "¡Bienvenido!",
           style: TextStyle(
-              color: myColor, fontSize: 28, fontWeight: FontWeight.bold),
+            color: colorScheme.onSurface,
+            fontSize: 36,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
+          ),
         ),
-        const Text(
-          "Ingresa tus credenciales para continuar",
-          style: TextStyle(color: Colors.grey),
+        SizedBox(height: 12),
+        Text(
+          "Ingresa tus credenciales para acceder",
+          style: TextStyle(
+            color: colorScheme.onSurface.withOpacity(0.65),
+            fontSize: 16,
+            fontWeight: FontWeight.w400,
+            letterSpacing: 0.3,
+          ),
         ),
-        const SizedBox(height: 40),
+        SizedBox(height: 48),
         _buildInputField(
+          context: context,
           controller: loginController.usuarioController,
           label: "Usuario",
-          icon: Icons.person_outline,
+          icon: Icons.person_outline_rounded,
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 24),
         _buildInputField(
+          context: context,
           controller: loginController.passwordController,
           label: "Contraseña",
-          icon: Icons.lock_outline,
+          icon: Icons.lock_outline_rounded,
           isPassword: true,
         ),
-        const SizedBox(height: 40),
-        _buildLoginButton(),
-        const SizedBox(height: 10),
+        SizedBox(height: 48),
+        _buildLoginButton(context),
+        SizedBox(height: 20),
+        Center(
+          child: Text(
+            "Versión 1.1.2",
+            style: TextStyle(
+              color: colorScheme.onSurface.withOpacity(0.4),
+              fontSize: 12,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ),
       ],
     );
   }
 
   Widget _buildInputField({
+    required BuildContext context,
     required TextEditingController controller,
     required String label,
     required IconData icon,
     bool isPassword = false,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            spreadRadius: 1,
-            blurRadius: 6,
-            offset: const Offset(0, 3),
+            color: colorScheme.primary.withOpacity(0.08),
+            blurRadius: 8,
+            offset: Offset(0, 2),
           ),
         ],
       ),
       child: TextField(
         controller: controller,
         obscureText: isPassword && !_isPasswordVisible,
-        style: const TextStyle(fontWeight: FontWeight.w600),
+        style: TextStyle(
+          color: colorScheme.onSurface,
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+        ),
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: TextStyle(color: Colors.grey[600]),
-          prefixIcon: Icon(icon, color: myColor),
+          labelStyle: TextStyle(
+            color: colorScheme.onSurfaceVariant,
+            fontWeight: FontWeight.w500,
+          ),
+          prefixIcon: Icon(
+            icon,
+            color: colorScheme.primary,
+            size: 24,
+          ),
           suffixIcon: isPassword
               ? IconButton(
                   icon: Icon(
                     _isPasswordVisible
-                        ? Icons.visibility_off
-                        : Icons.visibility,
-                    color: Colors.grey,
+                        ? Icons.visibility_rounded
+                        : Icons.visibility_off_rounded,
+                    color: colorScheme.onSurfaceVariant,
                   ),
                   onPressed: () {
                     setState(() {
@@ -158,64 +261,66 @@ class _LoginPageState extends State<LoginPage> {
                   },
                 )
               : null,
+          filled: true,
+          fillColor: colorScheme.surfaceContainerHighest,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
             borderSide: BorderSide.none,
           ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: myColor, width: 2),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide(
+              color: colorScheme.outline.withOpacity(0.15),
+              width: 1.5,
+            ),
           ),
-          filled: true,
-          fillColor: Colors.white,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide(
+              color: colorScheme.primary,
+              width: 2.5,
+            ),
+          ),
+          contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         ),
       ),
     );
   }
 
-  Widget _buildLoginButton() {
-    return Container(
+  Widget _buildLoginButton(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return SizedBox(
       width: double.infinity,
-      height: 56,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [myColor, Color(0xFF2C6E69)],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: myColor.withOpacity(0.4),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: ElevatedButton(
+      height: 60,
+      child: FilledButton(
         onPressed: () => loginController.login(),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.transparent,
-          shadowColor: Colors.transparent,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        style: FilledButton.styleFrom(
+          backgroundColor: colorScheme.primary,
+          foregroundColor: colorScheme.onPrimary,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 6,
+          shadowColor: colorScheme.primary.withOpacity(0.4),
         ),
         child: Obx(() {
           final isLoading =
               LoadingController.to.isLoading(LoginController.LOADING_KEY);
           return isLoading
-              ? const CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  strokeWidth: 3,
+              ? SizedBox(
+                  height: 28,
+                  width: 28,
+                  child: CircularProgressIndicator(
+                    color: colorScheme.onPrimary,
+                    strokeWidth: 3,
+                  ),
                 )
-              : const Text(
-                  "LOGIN",
+              : Text(
+                  "Ingresar",
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    letterSpacing: 1,
                   ),
                 );
         }),

@@ -3,74 +3,94 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:signature/signature.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 import '../../../models/peaje.dart';
 import '../../../models/rol.dart';
 import '../../../models/usuario.dart';
 
-class AdminUpdate extends StatelessWidget {
+class AdminUpdate extends StatefulWidget {
+  final Usuario? usuario;
 
-  Usuario? usuario;
+  AdminUpdate({this.usuario});
 
+  @override
+  State<AdminUpdate> createState() => _AdminUpdateState();
+}
+
+class _AdminUpdateState extends State<AdminUpdate> {
   late AdminUpdateController adminUpdateController;
   final SignatureController signatureController = SignatureController();
 
-  AdminUpdate({this.usuario}){
-    adminUpdateController= Get.put(AdminUpdateController(usuario));
+  @override
+  void initState() {
+    super.initState();
+    adminUpdateController = Get.put(AdminUpdateController(widget.usuario));
+  }
 
+  @override
+  void dispose() {
+    Get.delete<AdminUpdateController>();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Obx(() => Stack(
-        children: [
-          _backgroundCover(context),
-          _boxForm(context),
-
-          SingleChildScrollView( //scrolear para registrarse
-            child: Column(
-              children: [
-                _imageCover(context,usuario),
-              ],
+      body: Obx(
+        () => Stack(
+          children: [
+            _backgroundCover(context),
+            _boxForm(context),
+            SingleChildScrollView(
+              //scrolear para registrarse
+              child: Column(
+                children: [
+                  _imageCover(context, widget.usuario),
+                ],
+              ),
             ),
-
-          ),
-
-          _buttonBack(),
-
-        ],
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 8,
+              left: 8,
+              child: IconButton(
+                icon: Icon(Icons.arrow_back_ios,
+                    color: Theme.of(context).colorScheme.onPrimary),
+                onPressed: () {
+                  Get.delete<AdminUpdateController>();
+                  Get.back();
+                },
+              ),
+            ),
+          ],
+        ),
       ),
-    ));
+    );
   }
 
-
-
-
-  List<DropdownMenuItem<String>>_dropDowItemsRoles(List<Rol> roles){
-    List<DropdownMenuItem<String>> list=[];
-    roles.forEach((rol){
+  List<DropdownMenuItem<String>> _dropDowItemsRoles(List<Rol> roles) {
+    List<DropdownMenuItem<String>> list = [];
+    roles.forEach((rol) {
       list.add(DropdownMenuItem(
-          child: Text(rol.nombre??''),
-          value: rol.id,
+        child: Text(rol.nombre ?? ''),
+        value: rol.id,
       ));
     });
     return list;
   }
 
-  List<DropdownMenuItem<String>>_dropDowItemsGrupos(List<String> grupos){
-    List<DropdownMenuItem<String>> list=[];
-    grupos.forEach((grupo){
+  List<DropdownMenuItem<String>> _dropDowItemsGrupos(List<String> grupos) {
+    List<DropdownMenuItem<String>> list = [];
+    grupos.forEach((grupo) {
       list.add(DropdownMenuItem(
-        child: Text('Grupo: $grupo'??''),
+        child: Text('Grupo: $grupo' ?? ''),
         value: grupo,
       ));
     });
     return list;
   }
 
-
-  Widget _dropdownGrupo(List<String> grupos){
+  Widget _dropdownGrupo(BuildContext context, List<String> grupos) {
     return Container(
         width: double.infinity,
         margin: EdgeInsets.symmetric(horizontal: 65, vertical: 5),
@@ -79,76 +99,67 @@ class AdminUpdate extends StatelessWidget {
             alignment: Alignment.centerRight,
             child: Icon(
               Icons.keyboard_arrow_down,
-              color: Color(0xFF368983),
+              color: Theme.of(context).colorScheme.primary,
             ),
           ),
           elevation: 3,
           isExpanded: true,
           hint: Text(
-            'Selecione el grupo',
+            'Seleccione el grupo',
             style: TextStyle(
-                color: Colors.black,
-                fontSize: 16
-            ),
+                color: Theme.of(context).colorScheme.onSurface, fontSize: 16),
           ),
           items: _dropDowItemsGrupos(grupos),
-          value: adminUpdateController.grupoSeleccionado.value==''?null:adminUpdateController.grupoSeleccionado.value,
-          onChanged: (option){
-            adminUpdateController.grupoSeleccionado.value=option.toString();
+          value: adminUpdateController.grupoSeleccionado.value == ''
+              ? null
+              : adminUpdateController.grupoSeleccionado.value,
+          onChanged: (option) {
+            adminUpdateController.grupoSeleccionado.value = option.toString();
           },
-
-        )
-    );
+        ));
   }
 
-
-
-
-
-  Widget _dropDownRoles(List<Rol> roles){
+  Widget _dropDownRoles(BuildContext context, List<Rol> roles) {
     return Container(
         width: double.infinity,
         margin: EdgeInsets.symmetric(horizontal: 65, vertical: 5),
         child: DropdownButton(
-            underline: Container(
-              alignment: Alignment.centerRight,
-              child: Icon(
-                Icons.keyboard_arrow_down,
-                color: Color(0xFF368983),
-              ),
+          underline: Container(
+            alignment: Alignment.centerRight,
+            child: Icon(
+              Icons.keyboard_arrow_down,
+              color: Theme.of(context).colorScheme.primary,
             ),
-            elevation: 3,
-            isExpanded: true,
-            hint: Text(
-                'Seleecione el rol',
-                style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 16
-                ),
-            ),
-            items: _dropDowItemsRoles(roles),
-            value: adminUpdateController.idRol.value==''?null:adminUpdateController.idRol.value,
-            onChanged: (option){
-                adminUpdateController.idRol.value=option.toString();
-            },
-
-        )
-    );
+          ),
+          elevation: 3,
+          isExpanded: true,
+          hint: Text(
+            'Seleccione el rol',
+            style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface, fontSize: 16),
+          ),
+          items: _dropDowItemsRoles(roles),
+          value: adminUpdateController.idRol.value == ''
+              ? null
+              : adminUpdateController.idRol.value,
+          onChanged: (option) {
+            adminUpdateController.idRol.value = option.toString();
+          },
+        ));
   }
 
-  List<DropdownMenuItem<String>>_dropDownItemsPeaje(List<Peaje> peajes){
-    List<DropdownMenuItem<String>> list=[];
-    peajes.forEach((peaje){
+  List<DropdownMenuItem<String>> _dropDownItemsPeaje(List<Peaje> peajes) {
+    List<DropdownMenuItem<String>> list = [];
+    peajes.forEach((peaje) {
       list.add(DropdownMenuItem(
-        child: Text(peaje.nombre??''),
+        child: Text(peaje.nombre ?? ''),
         value: peaje.id,
       ));
     });
     return list;
   }
 
-
-  Widget _dropdownPeaje(List<Peaje> peajes){
+  Widget _dropdownPeaje(BuildContext context, List<Peaje> peajes) {
     return Container(
         width: double.infinity,
         margin: EdgeInsets.symmetric(horizontal: 65, vertical: 5),
@@ -157,54 +168,58 @@ class AdminUpdate extends StatelessWidget {
             alignment: Alignment.centerRight,
             child: Icon(
               Icons.keyboard_arrow_down,
-              color: Color(0xFF368983),
+              color: Theme.of(context).colorScheme.primary,
             ),
           ),
           elevation: 3,
           isExpanded: true,
           hint: Text(
-            'Seleecione el peaje',
+            'Seleccione el peaje',
             style: TextStyle(
-                color: Colors.black,
-                fontSize: 16
-            ),
+                color: Theme.of(context).colorScheme.onSurface, fontSize: 16),
           ),
           items: _dropDownItemsPeaje(peajes),
-          value: adminUpdateController.idPeaje.value==''?null:adminUpdateController.idPeaje.value,
-          onChanged: (option){
-            adminUpdateController.idPeaje.value=option.toString();
+          value: adminUpdateController.idPeaje.value == ''
+              ? null
+              : adminUpdateController.idPeaje.value,
+          onChanged: (option) {
+            adminUpdateController.idPeaje.value = option.toString();
           },
-
-        )
-    );
+        ));
   }
 
-
-
-  Widget _backgroundCover(BuildContext context){
-
+  Widget _backgroundCover(BuildContext context) {
     return Container(
       width: double.infinity,
-      height: MediaQuery.of(context).size.height*1,
-      color: Color(0xFF368983),
+      height: MediaQuery.of(context).size.height * 1,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Theme.of(context).colorScheme.primary.withOpacity(0.9),
+            Theme.of(context).colorScheme.primary.withOpacity(0.7),
+          ],
+        ),
+      ),
     );
   }
 
   Widget _imageCover(BuildContext context, Usuario? usuario) {
     return SafeArea(
       child: Container(
-        margin: EdgeInsets.only(top: 25),
+        margin: EdgeInsets.only(top: 15),
         alignment: Alignment.topCenter,
         child: GestureDetector(
           onTap: () => adminUpdateController.showAlertDialog(context),
           child: GetBuilder<AdminUpdateController>(
             builder: (value) => CircleAvatar(
               backgroundImage: adminUpdateController.imageFile != null
-                  ? FileImage(adminUpdateController.imageFile!) // Imagen seleccionada
-                  : (usuario?.imagen != null && usuario!.imagen!.isNotEmpty) // Verifica si usuario.imagen no está vacía
-                  ? NetworkImage(usuario.imagen!) // Imagen de usuario
-                  : AssetImage('assets/img/no-image.png') as ImageProvider, // Imagen predeterminada
-              radius: 60,
+                  ? FileImage(adminUpdateController.imageFile!)
+                  : (usuario?.imagen != null && usuario!.imagen!.isNotEmpty)
+                      ? NetworkImage(usuario.imagen!)
+                      : AssetImage('assets/img/no-image.png') as ImageProvider,
+              radius: 50,
               backgroundColor: Colors.white,
             ),
           ),
@@ -213,145 +228,157 @@ class AdminUpdate extends StatelessWidget {
     );
   }
 
-
-
-  Widget _boxForm(BuildContext context){
+  Widget _boxForm(BuildContext context) {
     return Container(
-      height: MediaQuery.of(context).size.height *1,
-      margin: EdgeInsets.only(top: MediaQuery.of(context).size.height * 0.27),
+      height: MediaQuery.of(context).size.height * 1,
+      margin: EdgeInsets.only(top: MediaQuery.of(context).size.height * 0.18),
       decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: <BoxShadow>[ //sombras
+        color: Theme.of(context).colorScheme.surface,
+        boxShadow: <BoxShadow>[
           BoxShadow(
-              color: Colors.black54,
+              color: Theme.of(context).colorScheme.shadow.withOpacity(0.15),
               blurRadius: 15,
-              offset: Offset(0, 0.75)
-          )
+              offset: Offset(0, 0.75))
         ],
         borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(20), // Radio superior izquierdo
-          topRight: Radius.circular(20), // Radio superior derecho
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
         ),
       ),
       child: SingleChildScrollView(
         child: Column(
           children: [
-            _textoUpdate(),
-            _textFieldNombre(),
-            _textFieldApellido(),
-            _textFieldTelefono(),
-            if (adminUpdateController.usuarioSession.roles?.first.id  == '1') ...[
-              _dropDownRoles(adminUpdateController.roles), // Dropdown de Roles
-              _dropdownGrupo(adminUpdateController.grupos), // Dropdown de Grupos
-              _dropdownPeaje(adminUpdateController.peajes), // Dropdown de Peajes
-            ] else...[
-              _dropdownGrupo(adminUpdateController.grupos), // Solo mostramos Grupos
+            _textoUpdate(context),
+            _textFieldNombre(context),
+            _textFieldApellido(context),
+            _textFieldTelefono(context),
+            if (adminUpdateController.usuarioSession.roles?.first.id ==
+                '1') ...[
+              _dropDownRoles(context, adminUpdateController.roles),
+              _dropdownGrupo(context, adminUpdateController.grupos),
+              _dropdownPeaje(context, adminUpdateController.peajes),
+            ] else ...[
+              _dropdownGrupo(context, adminUpdateController.grupos),
             ],
             _signatureBox(context),
             _bottomUpdate(context),
           ],
-
         ),
       ),
     );
   }
 
-  Widget _bottomUpdate(BuildContext context){
+  Widget _bottomUpdate(BuildContext context) {
     return Container(
       width: double.infinity,
       margin: EdgeInsets.symmetric(horizontal: 40, vertical: 40),
-
       child: ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: Color(0xFF368983),
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            foregroundColor: Theme.of(context).colorScheme.onPrimary,
             padding: EdgeInsets.symmetric(vertical: 15),
-            elevation: 10, // Controla la intensidad de la sombra
-            shadowColor: Colors.black, // Color de la sombra
-          ),
-
-          onPressed: () => adminUpdateController.actualizar(context),
-          child: Text('Actualizar',
-            style: TextStyle(
-                color: Colors.white
+            elevation: 3,
+            shadowColor: Theme.of(context).colorScheme.shadow,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
             ),
+          ),
+          onPressed: () => adminUpdateController.actualizar(context),
+          child: Text(
+            'Actualizar',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           )),
     );
   }
 
-
-
-  Widget _textFieldNombre(){
+  Widget _textFieldNombre(BuildContext context) {
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 40,vertical: 5),
-
+      margin: EdgeInsets.symmetric(horizontal: 40, vertical: 5),
       child: TextField(
         controller: adminUpdateController.nombreController,
         keyboardType: TextInputType.text,
         decoration: InputDecoration(
             hintText: 'Nombre',
-            prefixIcon: Icon(Icons.supervised_user_circle, color: Color(0xFF368983))
-        ),
+            contentPadding: EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+            prefixIcon: Icon(Icons.supervised_user_circle,
+                color: Theme.of(context).colorScheme.primary),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide:
+                  BorderSide(color: Theme.of(context).colorScheme.outline),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                  color: Theme.of(context).colorScheme.primary, width: 2),
+            )),
       ),
     );
   }
 
-  Widget _textFieldApellido(){
+  Widget _textFieldApellido(BuildContext context) {
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 40,vertical: 5),
+      margin: EdgeInsets.symmetric(horizontal: 40, vertical: 5),
       child: TextField(
         controller: adminUpdateController.apellidoController,
         keyboardType: TextInputType.text,
         decoration: InputDecoration(
             hintText: 'Apellido',
-            prefixIcon: Icon(Icons.supervised_user_circle_outlined, color: Color(0xFF368983))
-        ),
+            contentPadding: EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+            prefixIcon: Icon(Icons.supervised_user_circle_outlined,
+                color: Theme.of(context).colorScheme.primary),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide:
+                  BorderSide(color: Theme.of(context).colorScheme.outline),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                  color: Theme.of(context).colorScheme.primary, width: 2),
+            )),
       ),
     );
   }
 
-  Widget _textFieldTelefono(){
+  Widget _textFieldTelefono(BuildContext context) {
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 40,vertical: 5),
-
+      margin: EdgeInsets.symmetric(horizontal: 40, vertical: 5),
       child: TextField(
         controller: adminUpdateController.telefonoController,
         keyboardType: TextInputType.phone,
         decoration: InputDecoration(
             hintText: 'Teléfono',
-            prefixIcon: Icon(Icons.call, color: Color(0xFF368983))
-        ),
+            contentPadding: EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+            prefixIcon:
+                Icon(Icons.call, color: Theme.of(context).colorScheme.primary),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide:
+                  BorderSide(color: Theme.of(context).colorScheme.outline),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                  color: Theme.of(context).colorScheme.primary, width: 2),
+            )),
       ),
     );
   }
 
-
-
-  Widget _textoUpdate(){
+  Widget _textoUpdate(BuildContext context) {
     return Container(
-      margin: EdgeInsets.only(top: 30, bottom: 50),
+      margin: EdgeInsets.only(top: 20, bottom: 10),
       child: Text(
-
-        'ACTUALIZACION DE DATOS',
+        'ACTUALIZACIÓN DE DATOS',
         style: TextStyle(
-          color: Colors.black,
+          color: Theme.of(context).colorScheme.onSurface,
           fontWeight: FontWeight.bold,
           fontSize: 20,
         ),
       ),
     );
   }
-
-  Widget _buttonBack(){
-    return SafeArea(
-      child: Container(
-        margin: EdgeInsets.only(left: 20),
-        child: IconButton(
-            onPressed: () => Get.back(),
-            icon: Icon(Icons.arrow_back), color: Colors.white),
-      ),
-    );
-  }
-
 
   Widget _signatureBox(BuildContext context) {
     return GestureDetector(
@@ -361,35 +388,45 @@ class AdminUpdate extends StatelessWidget {
           margin: EdgeInsets.symmetric(horizontal: 40, vertical: 10),
           padding: EdgeInsets.all(10),
           decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey),
-            borderRadius: BorderRadius.circular(5),
+            border: Border.all(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.5)),
+            borderRadius: BorderRadius.circular(12),
+            color: Theme.of(context)
+                .colorScheme
+                .surfaceContainerHighest
+                .withOpacity(0.3),
           ),
           child: Column(
             children: [
               controller.signature == null
                   ? Column(
-                children: [
-                  Icon(Icons.edit, size: 30, color: Color(0xFF368983)),
-                  SizedBox(height: 5),
-                  Text(
-                    'Capturar Firma',
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                ],
-              )
+                      children: [
+                        Icon(Icons.edit,
+                            size: 30,
+                            color: Theme.of(context).colorScheme.primary),
+                        SizedBox(height: 5),
+                        Text(
+                          'Capturar Firma',
+                          style: TextStyle(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withOpacity(0.6)),
+                        ),
+                      ],
+                    )
                   : Image.memory(
-                controller.signature!,
-                height: 100,
-                width: double.infinity,
-                fit: BoxFit.cover,
-              ),
+                      controller.signature!,
+                      height: 100,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
             ],
           ),
         ),
       ),
     );
   }
-
 
   void _openSignaturePad(BuildContext context) {
     final signatureController = SignatureController();
@@ -398,7 +435,9 @@ class AdminUpdate extends StatelessWidget {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("Captura tu Firma"),
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          title: Text("Captura tu Firma",
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
           content: SizedBox(
             width: MediaQuery.of(context).size.width * 0.9,
             child: Column(
@@ -407,30 +446,52 @@ class AdminUpdate extends StatelessWidget {
                 Signature(
                   controller: signatureController,
                   height: 150,
-                  backgroundColor: Colors.grey[200]!,
+                  backgroundColor:
+                      Theme.of(context).colorScheme.surfaceContainerHighest,
                 ),
                 SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:
+                            Theme.of(context).colorScheme.secondaryContainer,
+                        foregroundColor:
+                            Theme.of(context).colorScheme.onSecondaryContainer,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
                       onPressed: () => signatureController.clear(),
                       child: Text("Borrar"),
                     ),
                     ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        foregroundColor:
+                            Theme.of(context).colorScheme.onPrimary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
                       onPressed: () async {
                         if (signatureController.isNotEmpty) {
-                          final signature = await signatureController.toPngBytes();
+                          final signature =
+                              await signatureController.toPngBytes();
                           if (signature != null) {
                             adminUpdateController.saveSignature(signature);
                           }
-                          Navigator.of(context).pop(); // Cierra el diálogo
+                          Navigator.of(context).pop();
                         } else {
-                          Get.snackbar(
-                            "Error",
-                            "La firma está vacía.",
-                            backgroundColor: Colors.red,
-                            colorText: Colors.white,
+                          Fluttertoast.showToast(
+                            msg: 'La firma está vacía',
+                            toastLength: Toast.LENGTH_SHORT,
+                            gravity: ToastGravity.TOP,
+                            timeInSecForIosWeb: 2,
+                            backgroundColor: Colors.red.shade600,
+                            textColor: Colors.white,
+                            fontSize: 16.0,
                           );
                         }
                       },
@@ -445,7 +506,4 @@ class AdminUpdate extends StatelessWidget {
       },
     );
   }
-
-
-
 }

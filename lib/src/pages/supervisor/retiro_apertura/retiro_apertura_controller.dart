@@ -1,4 +1,5 @@
 import 'package:asistencia_vial_app/src/models/response_api.dart';
+import 'package:asistencia_vial_app/src/utils/custom_toast.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -8,11 +9,9 @@ import '../../../models/movimiento.dart';
 import '../../../models/usuario.dart';
 import '../../../provider/movimiento_provider.dart';
 
-class RetiroAperturaController extends GetxController{
-
-  MovimientoProvider movimientoProvider=MovimientoProvider();
-  Usuario usuarioSession = Usuario.fromJson(GetStorage().read('usuario')??{});
-
+class RetiroAperturaController extends GetxController {
+  MovimientoProvider movimientoProvider = MovimientoProvider();
+  Usuario usuarioSession = Usuario.fromJson(GetStorage().read('usuario') ?? {});
 
   TextEditingController billetes20Controller = TextEditingController();
   TextEditingController billetes10RecibeController = TextEditingController();
@@ -31,8 +30,8 @@ class RetiroAperturaController extends GetxController{
   TextEditingController Moneda10EntregaController = TextEditingController();
   TextEditingController Moneda5EntregaController = TextEditingController();
   TextEditingController Moneda1EntregaController = TextEditingController();
-   late String idmovimiento;
-   late String via;
+  late String idmovimiento;
+  late String via;
 
   Usuario? usuario;
   Movimiento? movimiento;
@@ -45,14 +44,9 @@ class RetiroAperturaController extends GetxController{
   RxBool enProgresoApertura = false.obs;
   RxBool aperturaCompleta = false.obs;
 
-
-
-
   RetiroAperturaController(Usuario usuario, Movimiento movimiento) {
-
-
-    this.usuario=usuario;
-    this.movimiento=movimiento;
+    this.usuario = usuario;
+    this.movimiento = movimiento;
 
     billetes10EntregaController.text = movimiento.entrega10D?.toString() ?? '0';
     billetes5EntregaController.text = movimiento.entrega5D?.toString() ?? '0';
@@ -62,50 +56,95 @@ class RetiroAperturaController extends GetxController{
     Moneda5EntregaController.text = movimiento.entrega10C?.toString() ?? '0';
     Moneda10EntregaController.text = movimiento.entrega5C?.toString() ?? '0';
     Moneda1EntregaController.text = movimiento.entrega1C?.toString() ?? '0';
-    movimiento.recibe20D=='0'?movimiento.recibe20D='':billetes20Controller.text = movimiento.recibe20D??'';
-    movimiento.recibe10D=='0'?movimiento.recibe10D='':billetes10RecibeController.text = movimiento.recibe10D??'';
-    movimiento.recibe5D=='0'?movimiento.recibe5D='':billetes5RecibeController.text = movimiento.recibe5D??'';
-    movimiento.recibe1D=='0'?movimiento.recibe1D='':billetes1RecibeController.text = movimiento.recibe1D??'';
-    movimiento.recibe50C=='0'?movimiento.recibe50C='':Moneda50RecibeController.text = movimiento.recibe50C??'';
-    movimiento.recibe25C=='0'?movimiento.recibe25C='':Moneda25RecibeController.text = movimiento.recibe25C??'';
-    movimiento.recibe10C=='0'?movimiento.recibe10C='':Moneda10RecibeController.text = movimiento.recibe10C??'';
-    movimiento.recibe5C=='0'?movimiento.recibe5C='':Moneda5RecibeController.text = movimiento.recibe5C??'';
-    movimiento.recibe1C=='0'?movimiento.recibe1C='':Moneda1RecibeController.text = movimiento.recibe1C??'';
+    movimiento.recibe20D == '0'
+        ? movimiento.recibe20D = ''
+        : billetes20Controller.text = movimiento.recibe20D ?? '';
+    movimiento.recibe10D == '0'
+        ? movimiento.recibe10D = ''
+        : billetes10RecibeController.text = movimiento.recibe10D ?? '';
+    movimiento.recibe5D == '0'
+        ? movimiento.recibe5D = ''
+        : billetes5RecibeController.text = movimiento.recibe5D ?? '';
+    movimiento.recibe1D == '0'
+        ? movimiento.recibe1D = ''
+        : billetes1RecibeController.text = movimiento.recibe1D ?? '';
+    movimiento.recibe50C == '0'
+        ? movimiento.recibe50C = ''
+        : Moneda50RecibeController.text = movimiento.recibe50C ?? '';
+    movimiento.recibe25C == '0'
+        ? movimiento.recibe25C = ''
+        : Moneda25RecibeController.text = movimiento.recibe25C ?? '';
+    movimiento.recibe10C == '0'
+        ? movimiento.recibe10C = ''
+        : Moneda10RecibeController.text = movimiento.recibe10C ?? '';
+    movimiento.recibe5C == '0'
+        ? movimiento.recibe5C = ''
+        : Moneda5RecibeController.text = movimiento.recibe5C ?? '';
+    movimiento.recibe1C == '0'
+        ? movimiento.recibe1C = ''
+        : Moneda1RecibeController.text = movimiento.recibe1C ?? '';
 
-    idmovimiento=movimiento.id?.toString()??'0';
-    via=movimiento.via?.toString()??'0';
-
-
+    idmovimiento = movimiento.id?.toString() ?? '0';
+    via = movimiento.via?.toString() ?? '0';
   }
 
-
-  void registarRetiroApertura(BuildContext context, Usuario usuario,Movimiento movimientos) async {
-
+  void registarRetiroApertura(
+      BuildContext context, Usuario usuario, Movimiento movimientos) async {
     if (cargando.value) return; // Protección extra
     cargando.value = true;
 
     try {
+      String entrega10D = billetes10EntregaController.text.isEmpty
+          ? '0'
+          : billetes10EntregaController.text;
+      String entrega5D = billetes5EntregaController.text.isEmpty
+          ? '0'
+          : billetes5EntregaController.text;
+      String entrega1D = billetes1EntregaController.text.isEmpty
+          ? '0'
+          : billetes1EntregaController.text;
+      String entrega50C = Moneda50EntregaController.text.isEmpty
+          ? '0'
+          : Moneda50EntregaController.text;
+      String entrega25C = Moneda25EntregaController.text.isEmpty
+          ? '0'
+          : Moneda25EntregaController.text;
+      String entrega10C = Moneda10EntregaController.text.isEmpty
+          ? '0'
+          : Moneda10EntregaController.text;
+      String entrega5C = Moneda5EntregaController.text.isEmpty
+          ? '0'
+          : Moneda5EntregaController.text;
+      String entrega1C = Moneda1EntregaController.text.isEmpty
+          ? '0'
+          : Moneda1EntregaController.text;
 
-      String entrega10D = billetes10EntregaController.text.isEmpty ? '0' : billetes10EntregaController.text;
-      String entrega5D = billetes5EntregaController.text.isEmpty ? '0' : billetes5EntregaController.text;
-      String entrega1D = billetes1EntregaController.text.isEmpty ? '0' : billetes1EntregaController.text;
-      String entrega50C = Moneda50EntregaController.text.isEmpty ? '0' : Moneda50EntregaController.text;
-      String entrega25C = Moneda25EntregaController.text.isEmpty ? '0' : Moneda25EntregaController.text;
-      String entrega10C = Moneda10EntregaController.text.isEmpty ? '0' : Moneda10EntregaController.text;
-      String entrega5C = Moneda5EntregaController.text.isEmpty ? '0' : Moneda5EntregaController.text;
-      String entrega1C = Moneda1EntregaController.text.isEmpty ? '0' : Moneda1EntregaController.text;
-
-
-      String recibe1D = billetes1RecibeController.text.isEmpty ? '0' : billetes1RecibeController.text;
-      String recibe5D = billetes5RecibeController.text.isEmpty ? '0' : billetes5RecibeController.text;
-      String recibe10D = billetes10RecibeController.text.isEmpty ? '0' : billetes10RecibeController.text;
-      String recibe20D = billetes20Controller.text.isEmpty ? '0' : billetes20Controller.text;
-      String recibe50C = Moneda50RecibeController.text.isEmpty ? '0' : Moneda50RecibeController.text;
-      String recibe25C = Moneda25RecibeController.text.isEmpty ? '0' : Moneda25RecibeController.text;
-      String recibe10C = Moneda10RecibeController.text.isEmpty ? '0' : Moneda10RecibeController.text;
-      String recibe5C = Moneda5RecibeController.text.isEmpty ? '0' : Moneda5RecibeController.text;
-      String recibe1C = Moneda1RecibeController.text.isEmpty ? '0' : Moneda1RecibeController.text;
-
+      String recibe1D = billetes1RecibeController.text.isEmpty
+          ? '0'
+          : billetes1RecibeController.text;
+      String recibe5D = billetes5RecibeController.text.isEmpty
+          ? '0'
+          : billetes5RecibeController.text;
+      String recibe10D = billetes10RecibeController.text.isEmpty
+          ? '0'
+          : billetes10RecibeController.text;
+      String recibe20D =
+          billetes20Controller.text.isEmpty ? '0' : billetes20Controller.text;
+      String recibe50C = Moneda50RecibeController.text.isEmpty
+          ? '0'
+          : Moneda50RecibeController.text;
+      String recibe25C = Moneda25RecibeController.text.isEmpty
+          ? '0'
+          : Moneda25RecibeController.text;
+      String recibe10C = Moneda10RecibeController.text.isEmpty
+          ? '0'
+          : Moneda10RecibeController.text;
+      String recibe5C = Moneda5RecibeController.text.isEmpty
+          ? '0'
+          : Moneda5RecibeController.text;
+      String recibe1C = Moneda1RecibeController.text.isEmpty
+          ? '0'
+          : Moneda1RecibeController.text;
 
       // Crear el objeto Movimiento
       Movimiento movimiento = Movimiento(
@@ -129,63 +168,58 @@ class RetiroAperturaController extends GetxController{
           recibe1D: recibe1D,
           recibe5D: recibe5D,
           recibe10D: recibe10D,
-          recibe20D: recibe20D
-
-      );
+          recibe20D: recibe20D);
 
       Response response = await movimientoProvider.update(movimiento);
 
-      if(response.statusCode== 201){
-        Get.snackbar(
-            'Transacción Exitosa',
-            'El retiro de la apertura ha sido registrado',
-            backgroundColor: Colors.green,
-            colorText: Colors.white
+      if (response.statusCode == 201) {
+        CustomToast.showSuccess(
+          title: 'Retiro Registrado',
+          message: 'El retiro de apertura ha sido registrado exitosamente',
         );
         Get.offNamedUntil('/home', (route) => false, arguments: {'index': 2});
       }
 
       if (response.statusCode == 202) {
-        Get.snackbar(
-            'Transacción Offline',
-            'La apertura ha sido retirada exitosamente sin conexión',
-            icon: Icon(Icons.cloud_off_outlined,color: Colors.white,),
-            backgroundColor: Colors.orange[800],
-            colorText: Colors.white
+        CustomToast.showOffline(
+          title: 'Transacción Offline',
+          message: 'El retiro ha sido registrado sin conexión',
         );
         Get.offNamedUntil('/home', (route) => false, arguments: {'index': 2});
       }
-
-
-
     } catch (e) {
-      Get.snackbar('Error', 'Ocurrió un error inesperado');
-    } finally{
+      CustomToast.showError(
+        title: 'Error',
+        message: 'Ocurrió un error al registrar el retiro',
+      );
+    } finally {
       cargando.value = false;
     }
   }
 
-
   void verificarApertura() {
     enProgresoApertura.value = true;
 
-    final totalEntregado = (int.tryParse(billetes10EntregaController.text) ?? 0) * 10 +
+    final totalEntregado = (int.tryParse(billetes10EntregaController.text) ??
+                0) *
+            10 +
         (int.tryParse(billetes5EntregaController.text) ?? 0) * 5 +
-        (int.tryParse(billetes1EntregaController.text) ?? 0) * 1+
-        ((int.tryParse(Moneda50EntregaController.text) ?? 0) * 0.5).toDouble()+
-        ((int.tryParse(Moneda25EntregaController.text) ?? 0) * 0.25).toDouble()+
-        ((int.tryParse(Moneda10EntregaController.text) ?? 0) * 0.5).toDouble()+
-        ((int.tryParse(Moneda5EntregaController.text) ?? 0) * 0.05).toDouble()+
+        (int.tryParse(billetes1EntregaController.text) ?? 0) * 1 +
+        ((int.tryParse(Moneda50EntregaController.text) ?? 0) * 0.5).toDouble() +
+        ((int.tryParse(Moneda25EntregaController.text) ?? 0) * 0.25)
+            .toDouble() +
+        ((int.tryParse(Moneda10EntregaController.text) ?? 0) * 0.5).toDouble() +
+        ((int.tryParse(Moneda5EntregaController.text) ?? 0) * 0.05).toDouble() +
         ((int.tryParse(Moneda5EntregaController.text) ?? 0) * 0.01).toDouble();
 
     final totalRecibido = (int.tryParse(billetes20Controller.text) ?? 0) * 20 +
         (int.tryParse(billetes10RecibeController.text) ?? 0) * 10 +
         (int.tryParse(billetes5RecibeController.text) ?? 0) * 5 +
-        (int.tryParse(billetes1RecibeController.text) ?? 0) * 1+
-        ((int.tryParse(Moneda50RecibeController.text) ?? 0) * 0.5).toDouble()+
-        ((int.tryParse(Moneda25RecibeController.text) ?? 0) * 0.25).toDouble()+
-        ((int.tryParse(Moneda10RecibeController.text) ?? 0) * 0.5).toDouble()+
-        ((int.tryParse(Moneda5RecibeController.text) ?? 0) * 0.05).toDouble()+
+        (int.tryParse(billetes1RecibeController.text) ?? 0) * 1 +
+        ((int.tryParse(Moneda50RecibeController.text) ?? 0) * 0.5).toDouble() +
+        ((int.tryParse(Moneda25RecibeController.text) ?? 0) * 0.25).toDouble() +
+        ((int.tryParse(Moneda10RecibeController.text) ?? 0) * 0.5).toDouble() +
+        ((int.tryParse(Moneda5RecibeController.text) ?? 0) * 0.05).toDouble() +
         ((int.tryParse(Moneda5RecibeController.text) ?? 0) * 0.01).toDouble();
 
     aperturaCompleta.value = (totalEntregado - totalRecibido) == 0;
@@ -197,9 +231,4 @@ class RetiroAperturaController extends GetxController{
       enProgresoApertura.value = false;
     }
   }
-
-
-
-
-
 }

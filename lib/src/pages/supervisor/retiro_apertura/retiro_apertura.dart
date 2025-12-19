@@ -1,6 +1,7 @@
 import 'package:asistencia_vial_app/src/models/movimiento.dart';
 import 'package:asistencia_vial_app/src/pages/supervisor/retiro_apertura/improved_retiro_apertura_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 import '../../../controllers/loading_controller.dart';
@@ -22,7 +23,7 @@ class RetiroAperturaPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
       body: Column(
         children: [
           _buildModernHeader(context),
@@ -35,15 +36,18 @@ class RetiroAperturaPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _sectionTitle('Recibe de Cajero', Icons.arrow_downward),
+                    _sectionTitle(
+                        context, 'Recibe de Cajero', Icons.arrow_downward),
                     SizedBox(height: 16),
                     _recibeGrid(
+                        context,
                         !retiroAperturaController.enProgresoApertura.value &&
                             retiroAperturaController.aperturaCompleta.value),
                     SizedBox(height: 24),
-                    _sectionTitle('Entregó Supervisor', Icons.arrow_upward),
+                    _sectionTitle(
+                        context, 'Entregó Supervisor', Icons.arrow_upward),
                     SizedBox(height: 10),
-                    _entregaGrid(),
+                    _entregaGrid(context),
                     SizedBox(height: 32),
                     if (!retiroAperturaController.aperturaCompleta.value)
                       _confirmButton(context),
@@ -66,13 +70,13 @@ class RetiroAperturaPage extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFF368983),
-            Color(0xFF2C6E69),
+            Theme.of(context).colorScheme.primary.withOpacity(0.9),
+            Theme.of(context).colorScheme.primary.withOpacity(0.7),
           ],
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.15),
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.15),
             blurRadius: 8,
             offset: Offset(0, 3),
           ),
@@ -86,7 +90,8 @@ class RetiroAperturaPage extends StatelessWidget {
           child: Row(
             children: [
               IconButton(
-                icon: Icon(Icons.arrow_back, color: Colors.white, size: 24),
+                icon: Icon(Icons.arrow_back,
+                    color: Theme.of(context).colorScheme.onPrimary, size: 24),
                 onPressed: () => Navigator.of(context).pop(),
               ),
               SizedBox(width: 8),
@@ -97,7 +102,7 @@ class RetiroAperturaPage extends StatelessWidget {
                     Text(
                       'Retiro de Apertura',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.onPrimary,
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
                       ),
@@ -106,7 +111,10 @@ class RetiroAperturaPage extends StatelessWidget {
                     Text(
                       '${usuario!.nombre} ${usuario!.apellido}',
                       style: TextStyle(
-                        color: Colors.white70,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onPrimary
+                            .withOpacity(0.8),
                         fontSize: 14,
                       ),
                     ),
@@ -121,7 +129,7 @@ class RetiroAperturaPage extends StatelessWidget {
                 ),
                 child: Icon(
                   Icons.account_balance_wallet_outlined,
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.onPrimary,
                   size: 28,
                 ),
               ),
@@ -133,24 +141,26 @@ class RetiroAperturaPage extends StatelessWidget {
   }
 
   /// **Widget: Título de Sección**
-  Widget _sectionTitle(String title, IconData icon) {
+  Widget _sectionTitle(BuildContext context, String title, IconData icon) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Color(0xFF368983).withOpacity(0.1),
+        color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFF368983).withOpacity(0.3), width: 1),
+        border: Border.all(
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+            width: 1),
       ),
       child: Row(
         children: [
-          Icon(icon, color: Color(0xFF368983), size: 24),
+          Icon(icon, color: Theme.of(context).colorScheme.primary, size: 24),
           SizedBox(width: 12),
           Text(
             title,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF368983),
+              color: Theme.of(context).colorScheme.primary,
             ),
           ),
         ],
@@ -160,6 +170,7 @@ class RetiroAperturaPage extends StatelessWidget {
 
   /// **Widget: Campo de Entrada Mejorado**
   Widget _inputField({
+    required BuildContext context,
     required String label,
     String? assetIcon,
     required TextEditingController controller,
@@ -169,7 +180,7 @@ class RetiroAperturaPage extends StatelessWidget {
     return Container(
       margin: EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.onPrimary,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -182,17 +193,23 @@ class RetiroAperturaPage extends StatelessWidget {
       ),
       child: TextField(
         style: TextStyle(
-            color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold),
+            color: Theme.of(context).colorScheme.onSurface,
+            fontSize: 16,
+            fontWeight: FontWeight.bold),
         readOnly: readOnly,
         controller: controller,
-        maxLength: maxLength ?? (label == '\$ 1' ? 3 : 2),
+        maxLength: maxLength ?? 3,
         keyboardType: TextInputType.number,
+        inputFormatters: [
+          FilteringTextInputFormatter.digitsOnly,
+        ],
         decoration: InputDecoration(
           counterText: '',
           labelText: label,
           labelStyle: TextStyle(
-            color:
-                controller.text.isEmpty ? Colors.grey[600] : Color(0xFF368983),
+            color: controller.text.isEmpty
+                ? Theme.of(context).colorScheme.onSurfaceVariant
+                : Theme.of(context).colorScheme.primary,
             fontSize: 16,
             fontWeight: FontWeight.w500,
           ),
@@ -202,7 +219,10 @@ class RetiroAperturaPage extends StatelessWidget {
                   child: Container(
                     padding: EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: Color(0xFF368983).withOpacity(0.1),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Image.asset(
@@ -220,23 +240,24 @@ class RetiroAperturaPage extends StatelessWidget {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Color(0xFF368983), width: 2),
+            borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.primary, width: 2),
           ),
           filled: true,
-          fillColor: Colors.white,
+          fillColor: Theme.of(context).colorScheme.surface,
           contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         ),
       ),
     );
   }
 
-  Widget _recibeGrid(bool aperturaCompleta) {
+  Widget _recibeGrid(BuildContext context, bool aperturaCompleta) {
     bool mostrarTodasDenominaciones = usuario!.idRol == '4';
 
     return Container(
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.onPrimary,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -254,6 +275,7 @@ class RetiroAperturaPage extends StatelessWidget {
             children: [
               Expanded(
                 child: _inputField(
+                  context: context,
                   label: '\$ 20',
                   assetIcon: 'assets/img/billete.png',
                   controller: retiroAperturaController.billetes20Controller,
@@ -263,6 +285,7 @@ class RetiroAperturaPage extends StatelessWidget {
               SizedBox(width: 12),
               Expanded(
                 child: _inputField(
+                  context: context,
                   label: '\$ 10',
                   assetIcon: 'assets/img/billete.png',
                   controller:
@@ -276,6 +299,7 @@ class RetiroAperturaPage extends StatelessWidget {
             children: [
               Expanded(
                 child: _inputField(
+                  context: context,
                   label: '\$ 5',
                   assetIcon: 'assets/img/billete.png',
                   controller:
@@ -286,6 +310,7 @@ class RetiroAperturaPage extends StatelessWidget {
               SizedBox(width: 12),
               Expanded(
                 child: _inputField(
+                  context: context,
                   label: '\$ 1',
                   assetIcon: 'assets/img/moneda.png',
                   controller:
@@ -302,6 +327,7 @@ class RetiroAperturaPage extends StatelessWidget {
               children: [
                 Expanded(
                   child: _inputField(
+                    context: context,
                     label: '50c',
                     assetIcon: 'assets/img/moneda.png',
                     controller:
@@ -312,6 +338,7 @@ class RetiroAperturaPage extends StatelessWidget {
                 SizedBox(width: 12),
                 Expanded(
                   child: _inputField(
+                    context: context,
                     label: '25c',
                     assetIcon: 'assets/img/moneda.png',
                     controller:
@@ -325,6 +352,7 @@ class RetiroAperturaPage extends StatelessWidget {
               children: [
                 Expanded(
                   child: _inputField(
+                    context: context,
                     label: '10c',
                     assetIcon: 'assets/img/moneda.png',
                     controller:
@@ -335,6 +363,7 @@ class RetiroAperturaPage extends StatelessWidget {
                 SizedBox(width: 12),
                 Expanded(
                   child: _inputField(
+                    context: context,
                     label: '5c',
                     assetIcon: 'assets/img/moneda.png',
                     controller:
@@ -348,6 +377,7 @@ class RetiroAperturaPage extends StatelessWidget {
               children: [
                 Expanded(
                   child: _inputField(
+                    context: context,
                     label: '1c',
                     assetIcon: 'assets/img/moneda.png',
                     controller:
@@ -363,13 +393,13 @@ class RetiroAperturaPage extends StatelessWidget {
     );
   }
 
-  Widget _entregaGrid() {
+  Widget _entregaGrid(BuildContext context) {
     bool mostrarTodasDenominaciones = usuario!.idRol == '4';
 
     return Container(
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.onPrimary,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -387,6 +417,7 @@ class RetiroAperturaPage extends StatelessWidget {
             children: [
               Expanded(
                 child: _inputField(
+                  context: context,
                   label: '\$ 10',
                   assetIcon: 'assets/img/billete.png',
                   controller:
@@ -397,6 +428,7 @@ class RetiroAperturaPage extends StatelessWidget {
               SizedBox(width: 12),
               Expanded(
                 child: _inputField(
+                  context: context,
                   label: '\$ 5',
                   assetIcon: 'assets/img/billete.png',
                   controller:
@@ -410,6 +442,7 @@ class RetiroAperturaPage extends StatelessWidget {
             children: [
               Expanded(
                 child: _inputField(
+                  context: context,
                   label: '\$ 1',
                   assetIcon: 'assets/img/moneda.png',
                   controller:
@@ -421,6 +454,7 @@ class RetiroAperturaPage extends StatelessWidget {
               if (mostrarTodasDenominaciones) ...[
                 Expanded(
                   child: _inputField(
+                    context: context,
                     label: '50c',
                     assetIcon: 'assets/img/moneda.png',
                     controller:
@@ -437,6 +471,7 @@ class RetiroAperturaPage extends StatelessWidget {
               children: [
                 Expanded(
                   child: _inputField(
+                    context: context,
                     label: '25c',
                     assetIcon: 'assets/img/moneda.png',
                     controller:
@@ -447,6 +482,7 @@ class RetiroAperturaPage extends StatelessWidget {
                 SizedBox(width: 12),
                 Expanded(
                   child: _inputField(
+                    context: context,
                     label: '10c',
                     assetIcon: 'assets/img/moneda.png',
                     controller:
@@ -460,6 +496,7 @@ class RetiroAperturaPage extends StatelessWidget {
               children: [
                 Expanded(
                   child: _inputField(
+                    context: context,
                     label: '5c',
                     assetIcon: 'assets/img/moneda.png',
                     controller:
@@ -470,6 +507,7 @@ class RetiroAperturaPage extends StatelessWidget {
                 SizedBox(width: 12),
                 Expanded(
                   child: _inputField(
+                    context: context,
                     label: '1c',
                     assetIcon: 'assets/img/moneda.png',
                     controller:
@@ -495,14 +533,14 @@ class RetiroAperturaPage extends StatelessWidget {
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
           colors: [
-            Color(0xFF368983),
-            Color(0xFF2C6E69),
+            Theme.of(context).colorScheme.primary,
+            Theme.of(context).colorScheme.primaryContainer,
           ],
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Color(0xFF368983).withOpacity(0.3),
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
             spreadRadius: 1,
             blurRadius: 8,
             offset: Offset(0, 4),
@@ -514,8 +552,9 @@ class RetiroAperturaPage extends StatelessWidget {
           _confirmRetiroApertura(context);
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.transparent,
-          shadowColor: Colors.transparent,
+          backgroundColor: Theme.of(context).colorScheme.primary,
+          foregroundColor: Theme.of(context).colorScheme.onPrimary,
+          elevation: 4,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
@@ -531,7 +570,7 @@ class RetiroAperturaPage extends StatelessWidget {
               : Text(
                   'Retirar Apertura',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.onPrimary,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
@@ -671,7 +710,7 @@ class RetiroAperturaPage extends StatelessWidget {
             title: Row(
               children: [
                 Icon(Icons.library_add_check_outlined,
-                    color: Color(0xFF368983)),
+                    color: Theme.of(context).colorScheme.primary),
                 SizedBox(width: 10),
                 Text("Confirmación",
                     style: TextStyle(fontWeight: FontWeight.bold)),
@@ -704,7 +743,7 @@ class RetiroAperturaPage extends StatelessWidget {
                     style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF368983))),
+                        color: Theme.of(context).colorScheme.primary)),
                 Text("Entregó Supervisor:",
                     style: TextStyle(fontWeight: FontWeight.bold)),
                 Text("- $billetes10Entrega billetes de \$10"),
@@ -722,7 +761,7 @@ class RetiroAperturaPage extends StatelessWidget {
                     style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF368983))),
+                        color: Theme.of(context).colorScheme.primary)),
               ],
             ),
             actions: [
@@ -755,8 +794,8 @@ class RetiroAperturaPage extends StatelessWidget {
                 }),
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: Color(0xFF368983),
-                  foregroundColor: Colors.white,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
                 ),
               ),
             ],

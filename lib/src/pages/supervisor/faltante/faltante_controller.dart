@@ -1,4 +1,5 @@
 import 'package:asistencia_vial_app/src/pages/reportes/liquidacion_cajero/reporte_liquidacion.dart';
+import 'package:asistencia_vial_app/src/utils/custom_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -59,21 +60,42 @@ class FaltanteController extends GetxController {
 
   // Observable
   final isFaltanteVisible = false.obs;
+  final operacionExitosa = false.obs;
 
   FaltanteController(this.usuario, this.movimientos, this.bandera) {
+    print('🔍 [FALTANTE_CONTROLLER] Constructor llamado');
+    print('🔍 [FALTANTE_CONTROLLER] Usuario ID: ${usuario.id}');
+    print(
+        '🔍 [FALTANTE_CONTROLLER] Usuario: ${usuario.nombre} ${usuario.apellido}');
+    print('🔍 [FALTANTE_CONTROLLER] Bandera: $bandera');
+    print('🔍 [FALTANTE_CONTROLLER] Total movimientos: ${movimientos.length}');
     _initializeController();
   }
 
   void _initializeController() {
+    print('⚙️ [FALTANTE_CONTROLLER] _initializeController() iniciando');
+
     final liquidacion = _findMovimientoByTipo(_TIPO_LIQUIDACION);
     final faltante = _findMovimientoByTipo(_TIPO_FALTANTE);
     final apertura = _findMovimientoByTipo(_TIPO_APERTURA);
 
+    print('📋 [FALTANTE_CONTROLLER] Movimientos encontrados:');
+    print(
+        '   - Liquidación ID: ${liquidacion.id}, Estado: ${liquidacion.estado}');
+    print('   - Faltante ID: ${faltante.id}');
+    print('   - Apertura ID: ${apertura.id}');
+
     parteTrabajo = _generateParteTrabajo(apertura);
     idMovimientoFaltante = faltante.id?.toString() ?? '0';
 
+    print('📝 [FALTANTE_CONTROLLER] Parte Trabajo generado: $parteTrabajo');
+    print(
+        '📝 [FALTANTE_CONTROLLER] ID Movimiento Faltante: $idMovimientoFaltante');
+
     _initializeLiquidacionFields(liquidacion);
     _initializeFaltanteFields(faltante);
+
+    print('✅ [FALTANTE_CONTROLLER] _initializeController() completado\n');
   }
 
   Movimiento _findMovimientoByTipo(String tipo) {
@@ -84,12 +106,25 @@ class FaltanteController extends GetxController {
   }
 
   String _generateParteTrabajo(Movimiento apertura) {
+    print('📅 [PARTE_TRABAJO] Generando parte de trabajo:');
+    print('   - usuario.via: ${usuario.via}');
+    print('   - apertura.fecha (raw): ${apertura.fecha}');
+
     DateTime fechaApertura = DateTime.parse(apertura.fecha ?? '');
+    print('   - fechaApertura parseada: $fechaApertura');
+
     if (fechaApertura.hour == 23) {
       fechaApertura = fechaApertura.add(const Duration(days: 1));
+      print('   - ajuste por hora 23: $fechaApertura');
     }
+
     String formattedFecha = DateFormat('ddMMyyyy').format(fechaApertura);
-    return '${usuario.via ?? '0'}$formattedFecha';
+    print('   - formattedFecha (ddMMyyyy): $formattedFecha');
+
+    final resultado = '${usuario.via ?? '0'}$formattedFecha';
+    print('   - PARTE TRABAJO FINAL: $resultado\n');
+
+    return resultado;
   }
 
   void _initializeLiquidacionFields(Movimiento liquidacion) {
@@ -249,6 +284,13 @@ class FaltanteController extends GetxController {
     print(
         'Respuesta backend faltante: status=${response.statusCode}, body=${response.body}');
 
+    if (response.statusCode != 201 && response.statusCode != 202) {
+      final errorMessage = _extractErrorMessage(response.body) ??
+          'No se pudo registrar el faltante. Verifique las denominaciones entregadas o recibidas.';
+      _showErrorSnackbar(errorMessage);
+      return;
+    }
+
     bool liquidacionOk = false;
 
     if (!liquidacionExiste) {
@@ -261,8 +303,10 @@ class FaltanteController extends GetxController {
           'Respuesta backend crear liquidacion: status=${responseLiq.statusCode}');
 
       if (responseLiq.statusCode == 201 || responseLiq.statusCode == 202) {
-        // Actualizar estado del turno
-        await _turnoProvider.updateEstado(usuario.idTurno ?? '');
+        // Solo bandera 2 debe marcar el turno como liquidado
+        if (bandera == 2) {
+          await _turnoProvider.updateEstado(usuario.idTurno ?? '');
+        }
         liquidacionOk = true;
       }
     } else {
@@ -276,8 +320,8 @@ class FaltanteController extends GetxController {
           'Respuesta backend liquidacion: success=${responseApi.success}, message=${responseApi.message}');
 
       if (responseApi.success == true) {
-        // También actualizar el estado del movimiento para marcarlo como liquidado
-        if (liquidacion.estado != '1') {
+        // Solo bandera 2 debe marcar el movimiento como liquidado
+        if (bandera == 2 && liquidacion.estado != '1') {
           liquidacion.idSupervisor = _usuarioSession.id;
           liquidacion.estado = '1';
           await _movimientoProvider.updateEstadoMovimiento(liquidacion);
@@ -287,9 +331,9 @@ class FaltanteController extends GetxController {
       }
     }
 
-    if (liquidacionOk && response.statusCode == 201) {
-      _showSuccessSnackbar(
-          'La liquidación ha sido procesada - se añadió el faltante');
+    if (liquidacionOk &&
+        (response.statusCode == 201 || response.statusCode == 202)) {
+      operacionExitosa.value = true;
       await _refreshMovimientos();
       _navigateToReporte();
     } else {
@@ -313,10 +357,17 @@ class FaltanteController extends GetxController {
     print(
         'Respuesta backend faltante: status=${response.statusCode}, body=${response.body}');
 
+    if (response.statusCode != 201 && response.statusCode != 202) {
+      final errorMessage = _extractErrorMessage(response.body) ??
+          'No se pudo actualizar el faltante. Verifique las denominaciones entregadas o recibidas.';
+      _showErrorSnackbar(errorMessage);
+      return;
+    }
+
     if (responseApi.success == true && response.statusCode == 201) {
-      _showSuccessSnackbar('La liquidación ha sido modificada');
+      operacionExitosa.value = true;
       await _refreshMovimientos();
-      _navigateToHome();
+      _navigateToReporte();
     } else {
       _showErrorSnackbar(
           responseApi.message ?? 'Error al modificar la liquidación');
@@ -341,13 +392,17 @@ class FaltanteController extends GetxController {
           'Respuesta backend crear liquidacion: status=${response.statusCode}');
 
       if (response.statusCode == 201 || response.statusCode == 202) {
-        // Actualizar estado del turno
-        await _turnoProvider.updateEstado(usuario.idTurno ?? '');
-        _showSuccessSnackbar('La liquidación ha sido creada correctamente');
+        // Solo bandera 2 debe marcar el turno como liquidado
+        if (bandera == 2) {
+          await _turnoProvider.updateEstado(usuario.idTurno ?? '');
+        }
+        operacionExitosa.value = true;
         await _refreshMovimientos();
         _navigateToReporte();
       } else {
-        _showErrorSnackbar('Error al crear la liquidación');
+        final errorMessage = _extractErrorMessage(response.body) ??
+            'Error al crear la liquidación';
+        _showErrorSnackbar(errorMessage);
       }
     } else {
       // Ya existe liquidación, actualizar
@@ -361,14 +416,7 @@ class FaltanteController extends GetxController {
           'Respuesta backend liquidacion: success=${responseApi.success}, message=${responseApi.message}');
 
       if (responseApi.success == true) {
-        // También actualizar el estado del movimiento para marcarlo como liquidado
-        if (liquidacion.estado != '1') {
-          liquidacion.idSupervisor = _usuarioSession.id;
-          liquidacion.estado = '1';
-          await _movimientoProvider.updateEstadoMovimiento(liquidacion);
-          print('Estado del movimiento actualizado a liquidado');
-        }
-        _showSuccessSnackbar('La liquidación ha sido actualizada');
+        _showSuccessSnackbar('Datos de liquidación actualizados correctamente');
         await _refreshMovimientos();
         _navigateToReporte();
       } else {
@@ -415,7 +463,6 @@ class FaltanteController extends GetxController {
       simulaciones: data['simulaciones'] ?? '0',
       valorsimulaciones: data['valorsimulaciones'] ?? '0',
       sobrante: data['sobrante'] ?? '0',
-      estado: '1', // Marcar como liquidado
     );
   }
 
@@ -547,7 +594,26 @@ class FaltanteController extends GetxController {
 
   void _navigateToReporte() {
     Get.off(
-      () => ReporteLiquidacion(movimientos: movimientos),
+      () => ReporteLiquidacion(
+        movimientos: movimientos,
+        onPDFClosed: () {
+          if (operacionExitosa.value) {
+            print('🎉 Ejecutando callback después de cerrar PDF');
+            // Primero redirige al Home (Asignación pestaña Liquidado)
+            Get.offNamedUntil('/home', (route) => false,
+                arguments: {'index': 2});
+            // Luego muestra el toast con el contexto del Home
+            Future.delayed(Duration(milliseconds: 300), () {
+              print('📢 Mostrando toast de éxito en Home');
+              CustomToast.showSuccess(
+                title: 'Operación Exitosa',
+                message: 'Liquidación guardada exitosamente',
+              );
+              operacionExitosa.value = false;
+            });
+          }
+        },
+      ),
       arguments: usuario,
     );
   }
@@ -561,33 +627,51 @@ class FaltanteController extends GetxController {
     movimientos.addAll(result);
   }
 
-  // Snackbar methods
+  // Toast methods
   void _showSuccessSnackbar(String message) {
-    Get.snackbar(
-      'Operación Exitosa',
-      message,
-      backgroundColor: Colors.green,
-      colorText: Colors.white,
+    CustomToast.showSuccess(
+      title: 'Operación Exitosa',
+      message: message,
     );
   }
 
   void _showOfflineSnackbar(String message) {
-    Get.snackbar(
-      'Transacción Offline',
-      message,
-      icon: const Icon(Icons.cloud_off_outlined, color: Colors.white),
-      backgroundColor: Colors.orange[800],
-      colorText: Colors.white,
+    CustomToast.showOffline(
+      title: 'Transacción Offline',
+      message: message,
     );
   }
 
   void _showErrorSnackbar(String message) {
-    Get.snackbar(
-      'Error',
-      message,
-      backgroundColor: Colors.red,
-      colorText: Colors.white,
+    CustomToast.showError(
+      title: 'Error',
+      message: message,
     );
+  }
+
+  String? _extractErrorMessage(dynamic body) {
+    if (body == null) return null;
+    if (body is Map<String, dynamic>) {
+      final error = body['error']?.toString();
+      final message = body['message']?.toString();
+      if (error != null && error.isNotEmpty) return _mapBackendError(error);
+      if (message != null && message.isNotEmpty)
+        return _mapBackendError(message);
+    }
+    if (body is String && body.isNotEmpty) {
+      return _mapBackendError(body);
+    }
+    return null;
+  }
+
+  String _mapBackendError(String raw) {
+    final text = raw.toLowerCase();
+    if (text.contains('constraint') ||
+        text.contains('boveda') ||
+        text.contains('moneda')) {
+      return 'No se pudo registrar el faltante. Verifique las denominaciones (saldo insuficiente en esa moneda/billete).';
+    }
+    return raw;
   }
 
   @override

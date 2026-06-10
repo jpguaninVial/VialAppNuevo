@@ -13,11 +13,12 @@ import '../../../controllers/improved_connection_controller.dart';
 
 class ImprovedAperturaController extends GetxController {
   static const String LOADING_KEY = 'apertura';
-  
+
   final MovimientoProvider _movimientoProvider = MovimientoProvider();
   final TurnoProvider _turnoProvider = TurnoProvider();
-  final Usuario usuarioSession = Usuario.fromJson(GetStorage().read('usuario') ?? {});
-  
+  final Usuario usuarioSession =
+      Usuario.fromJson(GetStorage().read('usuario') ?? {});
+
   Usuario? usuario;
   final asignacion = 'null'.obs;
   String via1 = '';
@@ -32,14 +33,50 @@ class ImprovedAperturaController extends GetxController {
   TextEditingController Moneda5Controller = TextEditingController();
   TextEditingController Moneda1Controller = TextEditingController();
 
+  final totalCalculado = 0.0.obs;
+
   ImprovedAperturaController(Usuario usuario) {
     this.usuario = usuario;
+  }
+
+  @override
+  void onInit() {
+    super.onInit();
+    final controllers = [
+      billetes10Controller,
+      billetes5Controller,
+      billetes1Controller,
+      Moneda50Controller,
+      Moneda25Controller,
+      Moneda10Controller,
+      Moneda5Controller,
+      Moneda1Controller,
+    ];
+    for (var controller in controllers) {
+      controller.addListener(_recalculateTotal);
+    }
+  }
+
+  void _recalculateTotal() {
+    double getValue(TextEditingController controller) {
+      if (controller.text.isEmpty) return 0;
+      return double.tryParse(controller.text) ?? 0;
+    }
+
+    totalCalculado.value = (getValue(billetes10Controller) * 10) +
+        (getValue(billetes5Controller) * 5) +
+        (getValue(billetes1Controller) * 1) +
+        (getValue(Moneda50Controller) * 0.5) +
+        (getValue(Moneda25Controller) * 0.25) +
+        (getValue(Moneda10Controller) * 0.1) +
+        (getValue(Moneda5Controller) * 0.05) +
+        (getValue(Moneda1Controller) * 0.01);
   }
 
   Future<void> updateVia(String via, String idTurno) async {
     try {
       LoadingController.to.setLoading(LOADING_KEY, message: 'Asignando vía...');
-      
+
       var response = await _turnoProvider.updateVia(via, idTurno);
       if (response.isOk) {
         asignacion.value = via;
@@ -78,10 +115,8 @@ class ImprovedAperturaController extends GetxController {
     }
 
     // Mostrar indicador de carga
-    LoadingController.to.setLoading(
-      LOADING_KEY,
-      message: 'Procesando apertura...'
-    );
+    LoadingController.to
+        .setLoading(LOADING_KEY, message: 'Procesando apertura...');
 
     try {
       // Crear el movimiento
@@ -92,7 +127,6 @@ class ImprovedAperturaController extends GetxController {
 
       // Manejar respuesta
       await _handleTransactionResult(result);
-
     } catch (e) {
       _handleError(e);
     } finally {
@@ -101,10 +135,12 @@ class ImprovedAperturaController extends GetxController {
   }
 
   Future<bool> _verifyConnection() async {
-    LoadingController.to.setLoading(LOADING_KEY, message: 'Verificando conexión...');
-    
+    LoadingController.to
+        .setLoading(LOADING_KEY, message: 'Verificando conexión...');
+
     try {
-      final connected = await ImprovedConnectionController.to.forceConnectionCheck();
+      final connected =
+          await ImprovedConnectionController.to.forceConnectionCheck();
       return connected;
     } catch (e) {
       return false;
@@ -145,7 +181,9 @@ class ImprovedAperturaController extends GetxController {
                       SizedBox(width: 8),
                       Text(
                         'Importante:',
-                        style: TextStyle(fontWeight: FontWeight.w500, color: Colors.red[800]),
+                        style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            color: Colors.red[800]),
                       ),
                     ],
                   ),
@@ -170,18 +208,24 @@ class ImprovedAperturaController extends GetxController {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.info_outline, color: Colors.blue[800], size: 16),
+                      Icon(Icons.info_outline,
+                          color: Colors.blue[800], size: 16),
                       SizedBox(width: 8),
                       Text(
                         'Recomendaciones:',
-                        style: TextStyle(fontWeight: FontWeight.w500, color: Colors.blue[800]),
+                        style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            color: Colors.blue[800]),
                       ),
                     ],
                   ),
                   SizedBox(height: 8),
-                  Text('• Verifique su conexión a internet', style: TextStyle(fontSize: 13)),
-                  Text('• Acérquese a un punto con mejor señal', style: TextStyle(fontSize: 13)),
-                  Text('• Contacte al administrador de red', style: TextStyle(fontSize: 13)),
+                  Text('• Verifique su conexión a internet',
+                      style: TextStyle(fontSize: 13)),
+                  Text('• Acérquese a un punto con mejor señal',
+                      style: TextStyle(fontSize: 13)),
+                  Text('• Contacte al administrador de red',
+                      style: TextStyle(fontSize: 13)),
                 ],
               ),
             ),
@@ -268,56 +312,64 @@ class ImprovedAperturaController extends GetxController {
     String via = usuario.idRol == '4' ? '0' : via1;
 
     return Movimiento(
-      turno: usuario.turno,
-      idSupervisor: usuarioSession.id,
-      idCajero: usuario.id,
-      idTipoMovimiento: '1',
-      idPeaje: usuarioSession.idPeaje,
-      via: via,
-      idturno: usuario.idTurno,
-      recibe1C: '0',
-      recibe5C: '0',
-      recibe10C: '0',
-      recibe25C: '0',
-      recibe50C: '0',
-      recibe2D: '0',
-      recibe1D: '0',
-      recibe1DB: '0',
-      recibe5D: '0',
-      recibe10D: '0',
-      recibe20D: '0',
-      entrega1C: Moneda1Controller.text.isEmpty ? '0' : Moneda1Controller.text,
-      entrega5C: Moneda5Controller.text.isEmpty ? '0' : Moneda5Controller.text,
-      entrega10C: Moneda10Controller.text.isEmpty ? '0' : Moneda10Controller.text,
-      entrega25C: Moneda25Controller.text.isEmpty ? '0' : Moneda25Controller.text,
-      entrega50C: Moneda50Controller.text.isEmpty ? '0' : Moneda50Controller.text,
-      entrega1D: billetes1Controller.text.isEmpty ? '0' : billetes1Controller.text,
-      entrega1DB: '0',
-      entrega5D: billetes5Controller.text.isEmpty ? '0' : billetes5Controller.text,
-      entrega10D: billetes10Controller.text.isEmpty ? '0' : billetes10Controller.text,
-      entrega20D: '0'
-    );
+        turno: usuario.turno,
+        idSupervisor: usuarioSession.id,
+        idCajero: usuario.id,
+        idTipoMovimiento: '1',
+        idPeaje: usuarioSession.idPeaje,
+        via: via,
+        idturno: usuario.idTurno,
+        recibe1C: '0',
+        recibe5C: '0',
+        recibe10C: '0',
+        recibe25C: '0',
+        recibe50C: '0',
+        recibe2D: '0',
+        recibe1D: '0',
+        recibe1DB: '0',
+        recibe5D: '0',
+        recibe10D: '0',
+        recibe20D: '0',
+        entrega1C:
+            Moneda1Controller.text.isEmpty ? '0' : Moneda1Controller.text,
+        entrega5C:
+            Moneda5Controller.text.isEmpty ? '0' : Moneda5Controller.text,
+        entrega10C:
+            Moneda10Controller.text.isEmpty ? '0' : Moneda10Controller.text,
+        entrega25C:
+            Moneda25Controller.text.isEmpty ? '0' : Moneda25Controller.text,
+        entrega50C:
+            Moneda50Controller.text.isEmpty ? '0' : Moneda50Controller.text,
+        entrega1D:
+            billetes1Controller.text.isEmpty ? '0' : billetes1Controller.text,
+        entrega1DB: '0',
+        entrega5D:
+            billetes5Controller.text.isEmpty ? '0' : billetes5Controller.text,
+        entrega10D:
+            billetes10Controller.text.isEmpty ? '0' : billetes10Controller.text,
+        entrega20D: '0');
   }
 
-  Future<TransactionResult> _submitTransactionWithRetries(Movimiento movimiento) async {
+  Future<TransactionResult> _submitTransactionWithRetries(
+      Movimiento movimiento) async {
     int maxRetries = 3;
     int currentRetry = 0;
-    
+
     while (currentRetry < maxRetries) {
       try {
-        LoadingController.to.setLoading(
-          LOADING_KEY,
-          message: currentRetry == 0 
-              ? 'Enviando apertura...'
-              : 'Reintentando... (${currentRetry + 1}/$maxRetries)'
-        );
+        LoadingController.to.setLoading(LOADING_KEY,
+            message: currentRetry == 0
+                ? 'Enviando apertura...'
+                : 'Reintentando... (${currentRetry + 1}/$maxRetries)');
 
-        final response = await _movimientoProvider.createOnlineOnly(movimiento)
+        final response = await _movimientoProvider
+            .createOnlineOnly(movimiento)
             .timeout(Duration(seconds: 45));
 
         if (response.statusCode == 201) {
           return TransactionResult(success: true, statusCode: 201);
-        } else if ((response.statusCode ?? 0) >= 400 && (response.statusCode ?? 0) < 500) {
+        } else if ((response.statusCode ?? 0) >= 400 &&
+            (response.statusCode ?? 0) < 500) {
           return TransactionResult(
             success: false,
             statusCode: response.statusCode ?? 0,
@@ -341,14 +393,15 @@ class ImprovedAperturaController extends GetxController {
           return TransactionResult(
             success: false,
             statusCode: 0,
-            error: 'Error de conexión después de $maxRetries intentos: ${e.toString()}',
+            error:
+                'Error de conexión después de $maxRetries intentos: ${e.toString()}',
           );
         }
-        
+
         await Future.delayed(Duration(seconds: 2 * currentRetry));
       }
     }
-    
+
     return TransactionResult(
       success: false,
       statusCode: 0,
@@ -365,10 +418,9 @@ class ImprovedAperturaController extends GetxController {
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
-      
+
       _clearFields();
       Get.offNamedUntil('/home', (route) => false, arguments: {'index': 2});
-      
     } else {
       await _showErrorDialog(result);
     }
@@ -435,6 +487,14 @@ class ImprovedAperturaController extends GetxController {
 
   @override
   void onClose() {
+    billetes10Controller.dispose();
+    billetes5Controller.dispose();
+    billetes1Controller.dispose();
+    Moneda50Controller.dispose();
+    Moneda25Controller.dispose();
+    Moneda10Controller.dispose();
+    Moneda5Controller.dispose();
+    Moneda1Controller.dispose();
     LoadingController.to.clearLoading(LOADING_KEY);
     super.onClose();
   }

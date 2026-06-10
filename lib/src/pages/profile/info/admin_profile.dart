@@ -5,215 +5,199 @@ import 'package:get/get.dart';
 import '../../../models/rol.dart';
 
 class AdminProfile extends StatelessWidget {
+  final AdminProfileController adminProfileController =
+      Get.put(AdminProfileController());
 
-  AdminProfileController adminProfileController = Get.put(AdminProfileController());
-
-
+  AdminProfile({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Obx(()=> Stack(
-        children: [
-          _backgroundCover(context),
-          _boxForm(context),
-          _imageCover(context),
-          _buttonSignOut(),
-          _buttonBack(),
-
-
-        ],
-      )),
+      body: Obx(() => Stack(
+            children: [
+              _backgroundCover(context),
+              _boxForm(context),
+              _imageCover(context),
+              _buttonSignOut(),
+              _buttonBack(),
+            ],
+          )),
     );
   }
 
-
-
-  Widget _backgroundCover(BuildContext context){
-
+  Widget _backgroundCover(BuildContext context) {
     return Container(
       width: double.infinity,
-      height: MediaQuery.of(context).size.height*1,
-      color: Color(0xFF368983),
+      height: MediaQuery.of(context).size.height * 1,
+      color: Theme.of(context).colorScheme.primary,
     );
   }
 
-  Widget _imageCover(context) {
+  Widget _imageCover(BuildContext context) {
     return SafeArea(
       child: Container(
-        margin: EdgeInsets.only(top: 25),
+        margin: const EdgeInsets.only(top: 25),
         alignment: Alignment.topCenter,
         child: CircleAvatar(
           backgroundImage: adminProfileController.usuario.value.imagen != null
               ? NetworkImage(adminProfileController.usuario.value.imagen!)
-              : AssetImage('assets/img/editar.png') ,
+              : const AssetImage('assets/img/editar.png') as ImageProvider,
           radius: 60,
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).colorScheme.surface,
         ),
       ),
     );
   }
 
-
-  Widget _boxForm(BuildContext context){
+  Widget _boxForm(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
-      height: MediaQuery.of(context).size.height *1,
+      height: MediaQuery.of(context).size.height * 1,
       margin: EdgeInsets.only(top: MediaQuery.of(context).size.height * 0.27),
       decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: <BoxShadow>[ //sombras
+        color: colorScheme.surface,
+        boxShadow: <BoxShadow>[
           BoxShadow(
-              color: Colors.black54,
-              blurRadius: 20,
-              offset: Offset(0, -20),
+            color: colorScheme.shadow.withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, -20),
             spreadRadius: -7,
-
-
           )
         ],
-        borderRadius: BorderRadius.only(
+        borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(20), // Radio superior izquierdo
           topRight: Radius.circular(20), // Radio superior derecho
         ),
       ),
       child: SingleChildScrollView(
-
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-
-            _textName(),
-            _textUsuario(),
-            _textphone(),
-            _textRol(),
-            _textPeaje(),
-           // _bottomUpdate(context),
+            _textName(context),
+            _textUsuario(context),
+            _textphone(context),
+            _textRol(context),
+            _textPeaje(context),
           ],
-
-
         ),
-
-
       ),
     );
   }
 
-  Widget _buttonBack(){
+  Widget _buttonBack() {
     return SafeArea(
       child: Container(
-        margin: EdgeInsets.only(left: 20),
+        margin: const EdgeInsets.only(left: 20),
         child: IconButton(
             onPressed: () => Get.back(),
-            icon: Icon(Icons.arrow_back_ios), color: Colors.white),
+            icon: const Icon(Icons.arrow_back_ios),
+            color: Colors.white),
       ),
     );
   }
 
-  Widget _bottomUpdate(BuildContext context){
+  Widget _bottomUpdate(BuildContext context) {
     return Container(
       width: double.infinity,
-      margin: EdgeInsets.symmetric(horizontal: 40, vertical: 40),
-
+      margin: const EdgeInsets.symmetric(horizontal: 40, vertical: 40),
       child: ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: Color(0xFF368983),
-            padding: EdgeInsets.symmetric(vertical: 15),
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            foregroundColor: Theme.of(context).colorScheme.onPrimary,
+            padding: const EdgeInsets.symmetric(vertical: 15),
             elevation: 10, // Controla la intensidad de la sombra
-            shadowColor: Colors.black, // Color de la sombra
+            shadowColor:
+                Theme.of(context).colorScheme.shadow, // Color de la sombra
           ),
-
           onPressed: () => adminProfileController.gotoUpdate(),
-          child: Text('ACTUALIZAR DATOS',
-            style: TextStyle(
-                color: Colors.white
-            ),
+          child: const Text(
+            'ACTUALIZAR DATOS',
           )),
     );
   }
 
-
-
-
-  Widget _textName(){
+  Widget _textName(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
-        margin: EdgeInsets.symmetric(horizontal: 20),
+        margin: const EdgeInsets.symmetric(horizontal: 20),
         child: ListTile(
-          leading: Icon(Icons.perm_contact_cal_sharp),
-          title: Text('${adminProfileController.usuario.value.nombre??''} ${adminProfileController.usuario.value.apellido??''}',
-            style: TextStyle(color: Colors.black)),
-          subtitle:  Text('Nombres'),
-
-        )
-    );
+          leading:
+              Icon(Icons.perm_contact_cal_sharp, color: colorScheme.primary),
+          title: Text(
+              '${adminProfileController.usuario.value.nombre ?? ''} ${adminProfileController.usuario.value.apellido ?? ''}',
+              style: TextStyle(color: colorScheme.onSurface)),
+          subtitle: const Text('Nombres'),
+        ));
   }
 
-  Widget _textRol(){
-    Rol? rol = adminProfileController.usuario.value.roles?.isNotEmpty == true ? adminProfileController.usuario.value.roles!.first : null;
+  Widget _textRol(BuildContext context) {
+    Rol? rol = adminProfileController.usuario.value.roles?.isNotEmpty == true
+        ? adminProfileController.usuario.value.roles!.first
+        : null;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
-        margin: EdgeInsets.symmetric(horizontal: 20),
+        margin: const EdgeInsets.symmetric(horizontal: 20),
         child: ListTile(
-          leading: Icon(Icons.work),
-          title: Text('${rol?.nombre ??''}',
-              style: TextStyle(color: Colors.black)),
-          subtitle:  Text('Rol'),
-
-        )
-    );
+          leading: Icon(Icons.work, color: colorScheme.primary),
+          title: Text('${rol?.nombre ?? ''}',
+              style: TextStyle(color: colorScheme.onSurface)),
+          subtitle: const Text('Rol'),
+        ));
   }
 
-
-
-  Widget _textUsuario(){
+  Widget _textUsuario(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
-        margin: EdgeInsets.symmetric(horizontal: 20),
+        margin: const EdgeInsets.symmetric(horizontal: 20),
         child: ListTile(
-        leading: Icon(Icons.person_outlined),
-        title: Text('${adminProfileController.usuario.value.usuario??''}', style: TextStyle(color: Colors.black),),
-        subtitle:  Text('Usuario'),
-
-      )
-    );
-  }
-
-  Widget _textphone(){
-    return Container(
-        margin: EdgeInsets.symmetric(horizontal: 20),
-        child: ListTile(
-          leading: Icon(Icons.phone),
-          title: Text('${adminProfileController.usuario.value.telefono??''}', style: TextStyle(color: Colors.black),),
-          subtitle:  Text('Telefono'),
-
-        )
-    );
-  }
-
-  Widget _textPeaje(){
-    return Container(
-        margin: EdgeInsets.symmetric(horizontal: 20),
-        child: ListTile(
-          leading: Icon(Icons.gps_fixed),
-          title: Text('${adminProfileController.usuario.value.nombrePeaje??''}',
-
-            style: TextStyle(color: Colors.black),
+          leading: Icon(Icons.person_outlined, color: colorScheme.primary),
+          title: Text(
+            '${adminProfileController.usuario.value.usuario ?? ''}',
+            style: TextStyle(color: colorScheme.onSurface),
           ),
-          subtitle:  Text('Peaje'),
-
-        )
-    );
+          subtitle: const Text('Usuario'),
+        ));
   }
 
-  Widget _buttonSignOut(){
+  Widget _textphone(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+        margin: const EdgeInsets.symmetric(horizontal: 20),
+        child: ListTile(
+          leading: Icon(Icons.phone, color: colorScheme.primary),
+          title: Text(
+            '${adminProfileController.usuario.value.telefono ?? ''}',
+            style: TextStyle(color: colorScheme.onSurface),
+          ),
+          subtitle: const Text('Telefono'),
+        ));
+  }
+
+  Widget _textPeaje(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+        margin: const EdgeInsets.symmetric(horizontal: 20),
+        child: ListTile(
+          leading: Icon(Icons.gps_fixed, color: colorScheme.primary),
+          title: Text(
+            '${adminProfileController.usuario.value.nombrePeaje ?? ''}',
+            style: TextStyle(color: colorScheme.onSurface),
+          ),
+          subtitle: const Text('Peaje'),
+        ));
+  }
+
+  Widget _buttonSignOut() {
     return SafeArea(
       child: Container(
-        margin: EdgeInsets.only(right: 20),
+        margin: const EdgeInsets.only(right: 20),
         alignment: Alignment.topRight,
         child: IconButton(
             onPressed: () => adminProfileController.signOut(),
-            icon: Icon(Icons.output_sharp), color: Colors.white),
+            icon: const Icon(Icons.output_sharp),
+            color: Colors.white),
       ),
     );
   }
-
-
 }

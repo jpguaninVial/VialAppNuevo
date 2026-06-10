@@ -1,4 +1,3 @@
-
 import 'package:asistencia_vial_app/src/provider/provider-offline/turno_provider_offline.dart';
 import 'package:get/get_connect/http/src/request/request.dart';
 import 'package:get_storage/get_storage.dart';
@@ -11,55 +10,42 @@ import '../helper/connection_helper.dart';
 import '../models/rol.dart';
 import '../models/turno.dart';
 
-class TurnoProvider extends GetConnect{
+import 'base_provider.dart';
 
-  String url = Environment.API_URL+"api/turnos";
-  Usuario usuario = Usuario.fromJson(GetStorage().read('usuario')??{});
+class TurnoProvider extends BaseProvider {
+  String url = Environment.API_URL + "api/turnos";
+  Usuario usuario = Usuario.fromJson(GetStorage().read('usuario') ?? {});
   TurnoProviderOffline turnoOffline = TurnoProviderOffline();
 
-
-  Future<Response> create(Turno turno) async{
-    Response response = await post(
-        '$url/create',
-        turno.toJson(),
-        headers: {
-          'Content-type': 'application/json',
-          'Authorization': usuario.sessionToken??''
-        }
-
-    );
+  Future<Response> create(Turno turno) async {
+    Response response = await post('$url/create', turno.toJson(), headers: {
+      'Content-type': 'application/json',
+      'Authorization': usuario.sessionToken ?? ''
+    });
     return response;
   }
 
   Future<List<Turno>> getAll(String idTurno) async {
-
-    Response response = await post(
-        '$url/getAll',
-        {
-          'IdTurno': idTurno
-        },
-        headers: {
-          'Content-type': 'application/json',
-          'Authorization': usuario.sessionToken??''
-        }
-    );
+    Response response = await post('$url/getAll', {
+      'IdTurno': idTurno
+    }, headers: {
+      'Content-type': 'application/json',
+      'Authorization': usuario.sessionToken ?? ''
+    });
 
     if (response.statusCode == 401) {
       Get.snackbar('Peticion Denegada', 'No tienes acceso a esta información');
       return [];
     }
 
-    List<Turno> turnos= Turno.fromJsonList(response.body);
+    List<Turno> turnos = Turno.fromJsonList(response.body);
     return turnos;
-
   }
 
   Future<Response> eliminar(String idCajero) async {
     Response response = await post(
       '$url/delete',
-      {
-        'IdCajero': idCajero
-      },
+      {'IdCajero': idCajero},
       headers: {
         'Content-type': 'application/json',
         'Authorization': usuario.sessionToken ?? ''
@@ -67,9 +53,9 @@ class TurnoProvider extends GetConnect{
     );
 
     if (response.statusCode == 401) {
-      Get.snackbar('Petición Denegada', 'No tienes permiso para realizar esta acción');
+      Get.snackbar(
+          'Petición Denegada', 'No tienes permiso para realizar esta acción');
     }
-
 
     return response;
   }
@@ -77,9 +63,7 @@ class TurnoProvider extends GetConnect{
   Future<Response> enviarTurno(String idCajero) async {
     Response response = await post(
       '$url/enviarTurno',
-      {
-        'IdCajero': idCajero
-      },
+      {'IdCajero': idCajero},
       headers: {
         'Content-type': 'application/json',
         'Authorization': usuario.sessionToken ?? ''
@@ -87,20 +71,17 @@ class TurnoProvider extends GetConnect{
     );
 
     if (response.statusCode == 401) {
-      Get.snackbar('Petición Denegada', 'No tienes permiso para realizar esta acción');
+      Get.snackbar(
+          'Petición Denegada', 'No tienes permiso para realizar esta acción');
     }
 
     return response;
   }
 
-  Future<Response> enviarBoveda(String idCajero,String idTurno) async {
+  Future<Response> enviarBoveda(String idCajero, String idTurno) async {
     Response response = await post(
       '$url/enviarBoveda',
-      {
-        'IdCajero': idCajero,
-        'IdTurno': idTurno
-
-      },
+      {'IdCajero': idCajero, 'IdTurno': idTurno},
       headers: {
         'Content-type': 'application/json',
         'Authorization': usuario.sessionToken ?? ''
@@ -108,16 +89,17 @@ class TurnoProvider extends GetConnect{
     );
 
     if (response.statusCode == 401) {
-      Get.snackbar('Petición Denegada', 'No tienes permiso para realizar esta acción');
+      Get.snackbar(
+          'Petición Denegada', 'No tienes permiso para realizar esta acción');
     }
     print(idCajero);
 
     return response;
   }
 
-
   Future<Response> createBatch(List<Turno> turnos) async {
-    List<Map<String, dynamic>> turnosJson = turnos.map((t) => t.toJson()).toList();
+    List<Map<String, dynamic>> turnosJson =
+        turnos.map((t) => t.toJson()).toList();
 
     Response response = await post(
       '$url/createBatch',
@@ -131,13 +113,10 @@ class TurnoProvider extends GetConnect{
     return response;
   }
 
-  Future<Response> updateVia(String via,String idTurno) async {
+  Future<Response> updateVia(String via, String idTurno) async {
     Response response = await post(
       '$url/updateVia',
-      {
-        'Via': via,
-        'IdTurno': idTurno
-      },
+      {'Via': via, 'IdTurno': idTurno},
       headers: {
         'Content-type': 'application/json',
         'Authorization': usuario.sessionToken ?? ''
@@ -145,28 +124,25 @@ class TurnoProvider extends GetConnect{
     );
 
     if (response.statusCode == 401) {
-      Get.snackbar('Petición Denegada', 'No tienes permiso para realizar esta acción');
+      Get.snackbar(
+          'Petición Denegada', 'No tienes permiso para realizar esta acción');
     }
 
     return response;
   }
 
   Future<Response> updateEstado(String idTurno) async {
-
     Response response;
 
-      response = await post(
-        '$url/updateEstado',
-        {
-          'IdTurno': idTurno
-        },
-        headers: {
-          'Content-type': 'application/json',
-          'Authorization': usuario.sessionToken ?? ''
-        },
-      );
+    response = await post(
+      '$url/updateEstado',
+      {'IdTurno': idTurno},
+      headers: {
+        'Content-type': 'application/json',
+        'Authorization': usuario.sessionToken ?? ''
+      },
+    );
     return response;
-
   }
 
   Future<void> sincronizarTurnosPendientes() async {
@@ -192,8 +168,4 @@ class TurnoProvider extends GetConnect{
       }
     }
   }
-
-
-
-
 }

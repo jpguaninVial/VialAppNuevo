@@ -5,14 +5,22 @@ import 'package:get/get.dart';
 import '../../../controllers/loading_controller.dart';
 import '../../../widgets/improved_offline_banner.dart';
 import '../../../models/usuario.dart';
+import '../../../widgets/denomination_card.dart';
 
 class RetiroParcialPage extends StatelessWidget {
   late ImprovedRetiroParcialController retiroParcialController;
   Usuario? usuario;
 
-  RetiroParcialPage({@required this.usuario}) {
+  RetiroParcialPage({@required this.usuario, super.key}) {
     retiroParcialController =
         Get.put(ImprovedRetiroParcialController(usuario!));
+  }
+
+  void _changeValue(TextEditingController controller, int delta) {
+    int value = int.tryParse(controller.text) ?? 0;
+    value += delta;
+    if (value < 0) value = 0;
+    controller.text = value.toString();
   }
 
   @override
@@ -238,71 +246,64 @@ class RetiroParcialPage extends StatelessWidget {
   }
 
   Widget _recibeGrid(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.onPrimary,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: _inputField(
-                  context: context,
-                  label: '\$ 20',
-                  assetIcon: 'assets/img/billete.png',
-                  controller: retiroParcialController.billetes20Controller,
-                  maxLength: 3,
-                ),
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: DenominationCard(
+                label: '\$ 20',
+                assetIcon: 'assets/img/billete.png',
+                controller: retiroParcialController.billetes20Controller,
+                onIncrement: () => _changeValue(
+                    retiroParcialController.billetes20Controller, 1),
+                onDecrement: () => _changeValue(
+                    retiroParcialController.billetes20Controller, -1),
               ),
-              SizedBox(width: 12),
-              Expanded(
-                child: _inputField(
-                  context: context,
-                  label: '\$ 10',
-                  assetIcon: 'assets/img/billete.png',
-                  controller:
-                      retiroParcialController.billetes10RecibeController,
-                  maxLength: 3,
-                ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: DenominationCard(
+                label: '\$ 10',
+                assetIcon: 'assets/img/billete.png',
+                controller: retiroParcialController.billetes10RecibeController,
+                onIncrement: () => _changeValue(
+                    retiroParcialController.billetes10RecibeController, 1),
+                onDecrement: () => _changeValue(
+                    retiroParcialController.billetes10RecibeController, -1),
               ),
-            ],
-          ),
-          Row(
-            children: [
-              Expanded(
-                child: _inputField(
-                  context: context,
-                  label: '\$ 5',
-                  assetIcon: 'assets/img/billete.png',
-                  controller: retiroParcialController.billetes5RecibeController,
-                  maxLength: 3,
-                ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: DenominationCard(
+                label: '\$ 5',
+                assetIcon: 'assets/img/billete.png',
+                controller: retiroParcialController.billetes5RecibeController,
+                onIncrement: () => _changeValue(
+                    retiroParcialController.billetes5RecibeController, 1),
+                onDecrement: () => _changeValue(
+                    retiroParcialController.billetes5RecibeController, -1),
               ),
-              SizedBox(width: 12),
-              Expanded(
-                child: _inputField(
-                  context: context,
-                  label: '\$ 1',
-                  assetIcon: 'assets/img/moneda.png',
-                  controller: retiroParcialController.billetes1RecibeController,
-                  maxLength: 3,
-                ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: DenominationCard(
+                label: '\$ 1',
+                assetIcon: 'assets/img/moneda.png',
+                controller: retiroParcialController.billetes1RecibeController,
+                onIncrement: () => _changeValue(
+                    retiroParcialController.billetes1RecibeController, 1),
+                onDecrement: () => _changeValue(
+                    retiroParcialController.billetes1RecibeController, -1),
               ),
-            ],
-          ),
-        ],
-      ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 

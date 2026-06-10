@@ -194,8 +194,7 @@ class CanjeFortiusPage extends StatelessWidget {
             onPressed: LoadingController.to
                     .isLoading(ImprovedCanjeFortiusController.LOADING_KEY)
                 ? null
-                : () => canjefortiusController.registrarCanjeeFortius(
-                    context, usuario!),
+                : () => _confirmAndSubmit(context),
             style: ElevatedButton.styleFrom(
               backgroundColor: Color(0xFF368983),
               padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),
@@ -223,5 +222,31 @@ class CanjeFortiusPage extends StatelessWidget {
                   ),
           )),
     );
+  }
+
+  Future<void> _confirmAndSubmit(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: const Text('Confirmar canje'),
+            content: const Text(
+                '¿Deseas procesar el canje fortius con los valores ingresados?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancelar'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Confirmar'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+
+    if (!confirmed) return;
+
+    await canjefortiusController.registrarCanjeeFortius(context, usuario!);
   }
 }

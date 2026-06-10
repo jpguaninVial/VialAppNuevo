@@ -4,8 +4,9 @@ import 'package:asistencia_vial_app/src/models/usuario.dart';
 import 'package:get/get.dart';
 
 import '../models/rol.dart';
+import 'base_provider.dart';
 
-class RolProvider extends GetConnect {
+class RolProvider extends BaseProvider {
   String url = Environment.API_URL + "api/roles";
   Usuario get usuario => Usuario.fromJson(GetStorage().read('usuario') ?? {});
 

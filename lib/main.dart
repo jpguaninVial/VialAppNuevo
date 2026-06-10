@@ -92,6 +92,7 @@ class _MyAppState extends State<MyApp> {
       builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
         // Si hay colores dinámicos disponibles, usarlos; sino, usar el esquema personalizado
         ColorScheme lightColorScheme;
+        ColorScheme darkColorScheme;
 
         if (lightDynamic != null) {
           // Usar completamente los colores del sistema (dinámicos)
@@ -99,8 +100,17 @@ class _MyAppState extends State<MyApp> {
         } else {
           // Fallback al esquema de color personalizado
           lightColorScheme = ColorScheme.fromSeed(
-            seedColor: Color(0xFF368983),
+            seedColor: const Color(0xFF368983),
             brightness: Brightness.light,
+          );
+        }
+
+        if (darkDynamic != null) {
+          darkColorScheme = darkDynamic;
+        } else {
+          darkColorScheme = ColorScheme.fromSeed(
+            seedColor: const Color(0xFF368983),
+            brightness: Brightness.dark,
           );
         }
 
@@ -144,6 +154,7 @@ class _MyAppState extends State<MyApp> {
                 name: '/supervisor/canjefortius',
                 page: () => CanjeFortiusPage()),
           ],
+          themeMode: ThemeMode.system,
           theme: ThemeData(
             useMaterial3: true,
             colorScheme: lightColorScheme,
@@ -164,7 +175,8 @@ class _MyAppState extends State<MyApp> {
             elevatedButtonTheme: ElevatedButtonThemeData(
               style: ElevatedButton.styleFrom(
                 elevation: 0,
-                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -177,7 +189,55 @@ class _MyAppState extends State<MyApp> {
                 borderSide: BorderSide.none,
               ),
               contentPadding:
-                  EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            ),
+            chipTheme: ChipThemeData(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+            ),
+            floatingActionButtonTheme: FloatingActionButtonThemeData(
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+          ),
+          darkTheme: ThemeData(
+            useMaterial3: true,
+            colorScheme: darkColorScheme,
+            appBarTheme: AppBarTheme(
+              centerTitle: false,
+              elevation: 0,
+              scrolledUnderElevation: 0,
+              backgroundColor: darkColorScheme.primary,
+              foregroundColor: Colors.white,
+            ),
+            cardTheme: CardThemeData(
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              surfaceTintColor: Colors.transparent,
+            ),
+            elevatedButtonTheme: ElevatedButtonThemeData(
+              style: ElevatedButton.styleFrom(
+                elevation: 0,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+            inputDecorationTheme: InputDecorationTheme(
+              filled: true,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             ),
             chipTheme: ChipThemeData(
               shape: RoundedRectangleBorder(

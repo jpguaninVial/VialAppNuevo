@@ -5,8 +5,9 @@ import 'package:get/get.dart';
 
 import '../models/peaje.dart';
 import '../models/response_api.dart';
+import 'base_provider.dart';
 
-class PeajeProvider extends GetConnect {
+class PeajeProvider extends BaseProvider {
   String url = Environment.API_URL + "api/peaje";
   Usuario get usuario => Usuario.fromJson(GetStorage().read('usuario') ?? {});
 

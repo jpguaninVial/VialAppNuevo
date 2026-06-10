@@ -9,8 +9,9 @@ import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 
 import '../models/response_api.dart';
+import 'base_provider.dart';
 
-class UsuarioProvider extends GetConnect {
+class UsuarioProvider extends BaseProvider {
   String url = Environment.API_URL + "api/usuarios";
   Usuario get usuario => Usuario.fromJson(GetStorage().read('usuario') ?? {});
 

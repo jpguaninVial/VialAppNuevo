@@ -155,24 +155,21 @@ class SyncService extends GetxController {
         final movimiento = box.get(key);
         if (movimiento == null) continue;
 
-        try {
+        final success = await _retryOperation(() async {
           final response =
               await syncFunction(movimiento).timeout(Duration(seconds: 30));
+          return response.statusCode == 201;
+        });
 
-          if (response.statusCode == 201) {
-            await box.delete(key);
-            successCount++;
-            log('$operationType sincronizada exitosamente: $key');
-          } else {
-            failedCount++;
-            log('Error al sincronizar $operationType $key: ${response.statusCode}');
-          }
-        } catch (e) {
+        if (success) {
+          await box.delete(key);
+          successCount++;
+          log('$operationType sincronizada exitosamente: $key');
+        } else {
           failedCount++;
-          log('Excepción al sincronizar $operationType $key: $e');
+          log('Error al sincronizar $operationType $key tras $MAX_RETRIES intentos');
         }
 
-        // Pequeña pausa entre requests para no saturar el servidor
         await Future.delayed(Duration(milliseconds: 500));
       }
 
@@ -181,6 +178,24 @@ class SyncService extends GetxController {
       log('Error general sincronizando $operationType: $e');
       return SyncResult.error(e.toString());
     }
+  }
+
+  /// Executes [operation] up to [MAX_RETRIES] times with exponential backoff.
+  /// Returns true on first success, false if all attempts fail.
+  Future<bool> _retryOperation(Future<bool> Function() operation) async {
+    for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        final success = await operation();
+        if (success) return true;
+      } catch (e) {
+        log('Intento $attempt/$MAX_RETRIES falló: $e');
+      }
+      if (attempt < MAX_RETRIES) {
+        // Backoff: 500ms, 1000ms, 2000ms
+        await Future.delayed(Duration(milliseconds: 500 * attempt));
+      }
+    }
+    return false;
   }
 
   Future<void> _updatePendingCount() async {

@@ -21,7 +21,7 @@ class EditarTransaccionPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Editar de transacción',
+          'Editar transacción',
           style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -73,7 +73,7 @@ class EditarTransaccionPage extends StatelessWidget {
     required TextEditingController controller,
     required BuildContext context,
     bool readOnly = false,
-    int? maxLength,
+    int maxLength = 6,
   }) {
     return Container(
       margin: EdgeInsets.only(bottom: 12),
@@ -97,7 +97,7 @@ class EditarTransaccionPage extends StatelessWidget {
         ),
         readOnly: readOnly,
         controller: controller,
-        maxLength: maxLength ?? 3,
+        maxLength: maxLength,
         keyboardType: TextInputType.number,
         decoration: InputDecoration(
           counterText: '',

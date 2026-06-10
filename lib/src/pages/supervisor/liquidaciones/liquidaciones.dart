@@ -45,13 +45,15 @@ class LiquidacionesPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _sectionTitle2('Recibe de Cajero'),
-                    _recibeGrid(),
+                    _sectionTitle2(context, 'Recibe de Cajero'),
+                    _recibeGrid(context),
                     SizedBox(height: 10),
-                    Divider(thickness: 1, color: Colors.grey[300]),
-                    _sectionTitle('Retiros Parciales'),
+                    Divider(
+                        thickness: 1,
+                        color: Theme.of(context).colorScheme.outlineVariant),
+                    _sectionTitle(context, 'Retiros Parciales'),
                     SizedBox(height: 20),
-                    _retirosParcialesList(),
+                    _retirosParcialesList(context),
                     SizedBox(height: 30),
                     _confirmButton(context),
                   ],
@@ -65,19 +67,20 @@ class LiquidacionesPage extends StatelessWidget {
   }
 
   /// **Widget: Título de Sección**
-  Widget _sectionTitle2(String title) {
+  Widget _sectionTitle2(BuildContext context, String title) {
     return Text(
       title,
       style: TextStyle(
         fontSize: 18,
         fontWeight: FontWeight.bold,
-        color: Color(0xFF368983),
+        color: Theme.of(context).colorScheme.primary,
       ),
     );
   }
 
   /// **Widget: Título de Secciónnnn**
-  Widget _sectionTitle(String title) {
+  Widget _sectionTitle(BuildContext context, String title) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -86,18 +89,18 @@ class LiquidacionesPage extends StatelessWidget {
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF368983),
+            color: colorScheme.primary,
           ),
         ),
         ElevatedButton.icon(
           onPressed: () {
             liquidacionesController.goToRetiroParcial(usuario!);
           },
-          icon: Icon(Icons.add, color: Colors.white),
-          label: Text('Añadir', style: TextStyle(color: Colors.white)),
+          icon: Icon(Icons.add, color: colorScheme.onPrimary),
+          label: Text('Añadir', style: TextStyle(color: colorScheme.onPrimary)),
           style: ElevatedButton.styleFrom(
-            backgroundColor: Color(0xFF368983),
-            padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+            backgroundColor: colorScheme.primary,
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
             ),
@@ -109,21 +112,25 @@ class LiquidacionesPage extends StatelessWidget {
 
   /// **Widget: Campo de Entrada**
   Widget _inputField({
+    required BuildContext context,
     required String label,
     IconData? icon, // Cambiado para admitir null
     String? assetIcon, // Agregado para soportar íconos de assets
     required TextEditingController controller,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TextField(
-        style: TextStyle(color: Colors.black),
+        style: TextStyle(color: colorScheme.onSurface),
         controller: controller,
         keyboardType: TextInputType.number,
         decoration: InputDecoration(
           labelText: label,
           labelStyle: TextStyle(
-              color: controller.text.isEmpty ? Colors.grey : Colors.black),
+              color: controller.text.isEmpty
+                  ? colorScheme.onSurfaceVariant
+                  : colorScheme.onSurface),
           prefixIcon: assetIcon != null
               ? Padding(
                   padding:
@@ -136,22 +143,22 @@ class LiquidacionesPage extends StatelessWidget {
                   ),
                 )
               : Icon(icon,
-                  color:
-                      Color(0xFF368983)), // Ícono estándar si no hay assetIcon
+                  color: colorScheme
+                      .primary), // Ícono estándar si no hay assetIcon
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(color: Color(0xFF368983)),
+            borderSide: BorderSide(color: colorScheme.primary),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(color: Color(0xFF368983), width: 2),
+            borderSide: BorderSide(color: colorScheme.primary, width: 2),
           ),
         ),
       ),
     );
   }
 
-  Widget _recibeGrid() {
+  Widget _recibeGrid(BuildContext context) {
     return Column(
       children: [
         Row(
@@ -159,6 +166,7 @@ class LiquidacionesPage extends StatelessWidget {
           children: [
             Expanded(
               child: _inputField(
+                context: context,
                 label: '\$20',
                 assetIcon: 'assets/img/billete.png',
                 controller: liquidacionesController.billetes20Controller,
@@ -167,6 +175,7 @@ class LiquidacionesPage extends StatelessWidget {
             SizedBox(width: 2), // Espaciado horizontal entre columnas
             Expanded(
               child: _inputField(
+                context: context,
                 label: '\$10',
                 assetIcon: 'assets/img/billete.png',
                 controller: liquidacionesController.billetes10Controller,
@@ -175,6 +184,7 @@ class LiquidacionesPage extends StatelessWidget {
             SizedBox(width: 2),
             Expanded(
               child: _inputField(
+                context: context,
                 label: '\$5',
                 assetIcon: 'assets/img/billete.png',
                 controller: liquidacionesController.billetes5Controller,
@@ -188,6 +198,7 @@ class LiquidacionesPage extends StatelessWidget {
           children: [
             Expanded(
               child: _inputField(
+                context: context,
                 label: '\$1',
                 assetIcon: 'assets/img/moneda.png',
                 controller: liquidacionesController.moneda1dController,
@@ -196,6 +207,7 @@ class LiquidacionesPage extends StatelessWidget {
             SizedBox(width: 2),
             Expanded(
               child: _inputField(
+                context: context,
                 label: ' 50C',
                 assetIcon: 'assets/img/moneda.png',
                 controller: liquidacionesController.Moneda50Controller,
@@ -204,6 +216,7 @@ class LiquidacionesPage extends StatelessWidget {
             SizedBox(width: 2),
             Expanded(
               child: _inputField(
+                context: context,
                 label: ' 25C',
                 assetIcon: 'assets/img/moneda.png',
                 controller: liquidacionesController.Moneda25Controller,
@@ -217,6 +230,7 @@ class LiquidacionesPage extends StatelessWidget {
           children: [
             Expanded(
               child: _inputField(
+                context: context,
                 label: ' 10C',
                 assetIcon: 'assets/img/moneda.png',
                 controller: liquidacionesController.Moneda10Controller,
@@ -226,6 +240,7 @@ class LiquidacionesPage extends StatelessWidget {
 
             Expanded(
               child: _inputField(
+                context: context,
                 label: ' 5 C',
                 assetIcon: 'assets/img/moneda.png',
                 controller: liquidacionesController.Moneda5Controller,
@@ -234,6 +249,7 @@ class LiquidacionesPage extends StatelessWidget {
             SizedBox(width: 2), // Espaciado horizontal entre columnas
             Expanded(
               child: _inputField(
+                context: context,
                 label: ' 1 C',
                 assetIcon: 'assets/img/moneda.png',
                 controller: liquidacionesController.Moneda1Controller,
@@ -247,22 +263,23 @@ class LiquidacionesPage extends StatelessWidget {
 
   /// **Widget: Botón de Confirmación**
   Widget _confirmButton(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: ElevatedButton(
         onPressed: () {
           _confirmLiquidacion(context);
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: Color(0xFF368983),
-          padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),
+          backgroundColor: colorScheme.primary,
+          foregroundColor: colorScheme.onPrimary,
+          padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 30),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
         ),
-        child: Text(
+        child: const Text(
           'Liquidar Turno',
           style: TextStyle(
-            color: Colors.white,
             fontSize: 16,
             fontWeight: FontWeight.bold,
           ),
@@ -341,6 +358,8 @@ class LiquidacionesPage extends StatelessWidget {
     // Calcular el total general (denominaciones + retiros parciales)
     final totalGeneral = totalDenominaciones + totalRetirosParciales;
 
+    final colorScheme = Theme.of(context).colorScheme;
+
     // Mostrar el diálogo de confirmación
     showDialog(
       context: context,
@@ -348,9 +367,9 @@ class LiquidacionesPage extends StatelessWidget {
         return AlertDialog(
           title: Row(
             children: [
-              Icon(Icons.monetization_on, color: Color(0xFF368983)),
-              SizedBox(width: 10),
-              Text("Confirmación",
+              Icon(Icons.monetization_on, color: colorScheme.primary),
+              const SizedBox(width: 10),
+              const Text("Confirmación",
                   style: TextStyle(fontWeight: FontWeight.bold)),
             ],
           ),
@@ -358,12 +377,12 @@ class LiquidacionesPage extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text("¿Estás seguro de realizar esta liquidación?",
+              const Text("¿Estás seguro de realizar esta liquidación?",
                   style: TextStyle(fontSize: 16)),
-              SizedBox(height: 10),
-              Divider(color: Colors.grey[300]),
-              SizedBox(height: 10),
-              Text("Denominaciones:",
+              const SizedBox(height: 10),
+              Divider(color: colorScheme.outlineVariant),
+              const SizedBox(height: 10),
+              const Text("Denominaciones:",
                   style: TextStyle(fontWeight: FontWeight.bold)),
               Text("- $billetes20 billetes de \$20"),
               Text("- $billetes10 billetes de \$10"),
@@ -376,24 +395,24 @@ class LiquidacionesPage extends StatelessWidget {
               Text("- $moneda10 monedas de 10¢"),
               Text("- $moneda5 monedas de 5¢"),
               Text("- $moneda1 monedas de 1¢"),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               Text(
                   "Total Denominaciones: \$${totalDenominaciones.toStringAsFixed(2)}",
                   style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black)),
+                      color: colorScheme.onSurface)),
               Text(
                   "Total Retiros Parciales: \$${totalRetirosParciales.toStringAsFixed(2)}",
                   style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black)),
+                      color: colorScheme.onSurface)),
               Text("Total General: \$${totalGeneral.toStringAsFixed(2)}",
                   style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF368983))),
+                      color: colorScheme.primary)),
             ],
           ),
           actions: [
@@ -401,7 +420,8 @@ class LiquidacionesPage extends StatelessWidget {
               onPressed: () {
                 Navigator.of(context).pop(); // Cierra el diálogo
               },
-              child: Text("Cancelar", style: TextStyle(color: Colors.grey)),
+              child: Text("Cancelar",
+                  style: TextStyle(color: colorScheme.onSurfaceVariant)),
             ),
             ElevatedButton(
               onPressed: () {
@@ -418,16 +438,16 @@ class LiquidacionesPage extends StatelessWidget {
                         height: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                              colorScheme.onPrimary),
                         ),
                       )
-                    : Text('Confirmar');
+                    : const Text('Confirmar');
               }),
               style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.symmetric(vertical: 16),
-                backgroundColor: Color(0xFF368983),
-                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
               ),
             ),
           ],
@@ -436,13 +456,14 @@ class LiquidacionesPage extends StatelessWidget {
     );
   }
 
-  Widget _retirosParcialesList() {
+  Widget _retirosParcialesList(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     if (movimientos == null ||
         movimientos!.where((m) => m.idTipoMovimiento == '2').isEmpty) {
       return Center(
         child: Text(
           'No hay retiros parciales registrados.',
-          style: TextStyle(fontSize: 16, color: Colors.grey),
+          style: TextStyle(fontSize: 16, color: colorScheme.onSurfaceVariant),
         ),
       );
     }
@@ -451,7 +472,7 @@ class LiquidacionesPage extends StatelessWidget {
 
     return ListView.builder(
       shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
+      physics: const NeverScrollableScrollPhysics(),
       itemCount: retirosparciales!.length,
       itemBuilder: (context, index) {
         final movimiento = retirosparciales![index];
@@ -464,7 +485,7 @@ class LiquidacionesPage extends StatelessWidget {
 
         return Card(
           elevation: 2,
-          margin: EdgeInsets.symmetric(vertical: 5.0),
+          margin: const EdgeInsets.symmetric(vertical: 5.0),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10.0),
           ),
@@ -477,32 +498,33 @@ class LiquidacionesPage extends StatelessWidget {
                 Row(
                   children: [
                     Icon(Icons.directions_car,
-                        color: Color(0xFF368983), size: 24),
-                    SizedBox(width: 8),
+                        color: colorScheme.primary, size: 24),
+                    const SizedBox(width: 8),
                     Text(
                       'Vía: ${movimiento.via ?? "No registrada"}',
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Row(
                       children: [
                         Icon(Icons.calendar_today,
-                            color: Colors.grey, size: 20),
-                        SizedBox(width: 8),
+                            color: colorScheme.onSurfaceVariant, size: 20),
+                        const SizedBox(width: 8),
                         Text(
                           movimiento.fecha ?? 'Sin fecha',
-                          style:
-                              TextStyle(fontSize: 14, color: Colors.grey[600]),
+                          style: TextStyle(
+                              fontSize: 14,
+                              color: colorScheme.onSurfaceVariant),
                         ),
                       ],
                     ),
-                    SizedBox(width: 7),
+                    const SizedBox(width: 7),
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -511,11 +533,12 @@ class LiquidacionesPage extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF368983),
+                            color: colorScheme.primary,
                           ),
                         ),
                         PopupMenuButton<String>(
-                          icon: Icon(Icons.more_vert, color: Color(0xFF368983)),
+                          icon:
+                              Icon(Icons.more_vert, color: colorScheme.primary),
                           itemBuilder: (BuildContext context) =>
                               <PopupMenuEntry<String>>[
                             PopupMenuItem<String>(
@@ -523,9 +546,9 @@ class LiquidacionesPage extends StatelessWidget {
                                   .goToEditTransaccion(movimiento),
                               child: Row(
                                 children: [
-                                  Icon(Icons.edit, color: Color(0xFF368983)),
-                                  SizedBox(width: 8),
-                                  Text('Editar transacción'),
+                                  Icon(Icons.edit, color: colorScheme.primary),
+                                  const SizedBox(width: 8),
+                                  const Text('Editar transacción'),
                                 ],
                               ),
                             ),

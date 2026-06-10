@@ -47,8 +47,15 @@ class DetalleTransaccionController extends GetxController {
     movimientos = result;
     liquidacion = movimientos.firstWhere((m) => m.idTipoMovimiento == '4');
     final bool hayFaltante = movimientos.any((m) => m.idTipoMovimiento == '6');
-    final int banderaFaltante =
-        (liquidacion.estado != '0' || hayFaltante) ? 2 : 1;
+
+    // Si la vista de detalle se abrió desde la pestaña "Liquidados" (bandera == 2),
+    // forzamos banderaFaltante en 2 aunque el estado aún siga en 0, para que
+    // al guardar se marque la liquidación como liquidada.
+    final int banderaFaltante = bandera == 2
+        ? 2
+        : (liquidacion.estado != '0' || hayFaltante)
+            ? 2
+            : 1;
     if (usuarioSession.roles?.first.id == '6' && liquidacion.estado == '0') {
       liquidacion.idSupervisor = usuarioSession.id;
       liquidacion.estado = '1';

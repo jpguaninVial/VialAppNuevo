@@ -10,8 +10,9 @@ import '../helper/connection_helper.dart';
 import '../models/boveda.dart';
 import '../models/response_api.dart';
 import '../models/usuario.dart';
+import 'base_provider.dart';
 
-class MovimientoProvider extends GetConnect {
+class MovimientoProvider extends BaseProvider {
   String url = Environment.API_URL + "api/movimientos";
   Usuario get usuario => Usuario.fromJson(GetStorage().read('usuario') ?? {});
   MovimientoProviderOffline movimientoOffline = MovimientoProviderOffline();

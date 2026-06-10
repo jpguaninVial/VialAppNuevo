@@ -26,13 +26,11 @@ class AperturaPage extends StatelessWidget {
               appBar: AppBar(
                 title: Text(
                   'Apertura - ${usuario!.nombre} ${usuario!.apellido}',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onPrimary,
                   ),
                 ),
-                backgroundColor: Color(0xFF1B5E5A),
                 elevation: 0,
               ),
               body: Column(
@@ -48,10 +46,12 @@ class AperturaPage extends StatelessWidget {
                           children: [
                             _sectionTitle(context, 'Recibe de Cajero'),
                             _recibeGrid(context),
-                            SizedBox(height: 10),
+                            const SizedBox(height: 16),
+                            _buildLiveTotalCard(context),
+                            const SizedBox(height: 16),
                             if (usuario!.idRol != '4') ...[
                               _confirmVia(context, usuario!.idTurno ?? ''),
-                              SizedBox(height: 10),
+                              const SizedBox(height: 10),
                             ],
                             Center(
                               child: Text(
@@ -99,6 +99,56 @@ class AperturaPage extends StatelessWidget {
     );
   }
 
+  Widget _buildLiveTotalCard(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Obx(() {
+      final total = aperturaController.totalCalculado.value;
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: colorScheme.primaryContainer.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: colorScheme.primary.withOpacity(0.3),
+            width: 1.5,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.calculate_outlined,
+                  color: colorScheme.primary,
+                  size: 24,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'Total en Vivo:',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+              ],
+            ),
+            Text(
+              '\$${total.toStringAsFixed(2)}',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: colorScheme.primary,
+              ),
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
   /// **Widget: Campo de Entrada**
   Widget _inputField({
     required BuildContext context,
@@ -110,43 +160,53 @@ class AperturaPage extends StatelessWidget {
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: TextField(
-        style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-        controller: controller,
-        keyboardType: TextInputType.number,
-        inputFormatters: [
-          FilteringTextInputFormatter.digitsOnly,
-        ],
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: TextStyle(
-              color: controller.text.isEmpty
-                  ? Theme.of(context).colorScheme.onSurfaceVariant
-                  : Theme.of(context).colorScheme.onSurface),
-          prefixIcon: assetIcon != null
-              ? Padding(
-                  padding:
-                      const EdgeInsets.all(10.0), // Ajuste del tamaño del ícono
-                  child: Image.asset(
-                    assetIcon,
-                    width: 24,
-                    height: 24,
-                    fit: BoxFit.contain,
-                  ),
-                )
-              : Icon(icon,
-                  color: Theme.of(context)
-                      .colorScheme
-                      .primary), // Ícono estándar si no hay assetIcon
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide:
-                BorderSide(color: Theme.of(context).colorScheme.primary),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(
-                color: Theme.of(context).colorScheme.primary, width: 2),
+      child: Focus(
+        onFocusChange: (hasFocus) {
+          if (hasFocus && controller.text.isNotEmpty) {
+            controller.selection = TextSelection(
+              baseOffset: 0,
+              extentOffset: controller.text.length,
+            );
+          }
+        },
+        child: TextField(
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+          controller: controller,
+          keyboardType: TextInputType.number,
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+          ],
+          decoration: InputDecoration(
+            labelText: label,
+            labelStyle: TextStyle(
+                color: controller.text.isEmpty
+                    ? Theme.of(context).colorScheme.onSurfaceVariant
+                    : Theme.of(context).colorScheme.onSurface),
+            prefixIcon: assetIcon != null
+                ? Padding(
+                    padding: const EdgeInsets.all(
+                        10.0), // Ajuste del tamaño del ícono
+                    child: Image.asset(
+                      assetIcon,
+                      width: 24,
+                      height: 24,
+                      fit: BoxFit.contain,
+                    ),
+                  )
+                : Icon(icon,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .primary), // Ícono estándar si no hay assetIcon
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide:
+                  BorderSide(color: Theme.of(context).colorScheme.primary),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(
+                  color: Theme.of(context).colorScheme.primary, width: 2),
+            ),
           ),
         ),
       ),

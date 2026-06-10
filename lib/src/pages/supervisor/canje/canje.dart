@@ -7,14 +7,22 @@ import '../../../models/movimiento.dart';
 import '../../../models/usuario.dart';
 import '../../../controllers/loading_controller.dart';
 import '../../../widgets/improved_offline_banner.dart';
+import '../../../widgets/denomination_card.dart';
 
 class CanjePage extends StatelessWidget {
   late ImprovedCanjeController canjeController;
   Usuario? usuario;
   List<Movimiento>? movimientos;
 
-  CanjePage({@required this.usuario}) {
+  CanjePage({@required this.usuario, super.key}) {
     canjeController = Get.put(ImprovedCanjeController(usuario!));
+  }
+
+  void _changeValue(TextEditingController controller, int delta) {
+    int value = int.tryParse(controller.text) ?? 0;
+    value += delta;
+    if (value < 0) value = 0;
+    controller.text = value.toString();
   }
 
   @override
@@ -248,153 +256,144 @@ class CanjePage extends StatelessWidget {
   }
 
   Widget _recibeGrid(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: _inputField(
-                  context: context,
-                  label: '\$ 20',
-                  assetIcon: 'assets/img/billete.png',
-                  controller: canjeController.billetes20Controller,
-                  maxLength: 3,
-                ),
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: DenominationCard(
+                label: '\$ 20',
+                assetIcon: 'assets/img/billete.png',
+                controller: canjeController.billetes20Controller,
+                onIncrement: () =>
+                    _changeValue(canjeController.billetes20Controller, 1),
+                onDecrement: () =>
+                    _changeValue(canjeController.billetes20Controller, -1),
               ),
-              SizedBox(width: 12),
-              Expanded(
-                child: _inputField(
-                  context: context,
-                  label: '\$ 10',
-                  assetIcon: 'assets/img/billete.png',
-                  controller: canjeController.billetes10RecibeController,
-                  maxLength: 3,
-                ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: DenominationCard(
+                label: '\$ 10',
+                assetIcon: 'assets/img/billete.png',
+                controller: canjeController.billetes10RecibeController,
+                onIncrement: () =>
+                    _changeValue(canjeController.billetes10RecibeController, 1),
+                onDecrement: () => _changeValue(
+                    canjeController.billetes10RecibeController, -1),
               ),
-            ],
-          ),
-          Row(
-            children: [
-              Expanded(
-                child: _inputField(
-                  context: context,
-                  label: '\$ 5',
-                  assetIcon: 'assets/img/billete.png',
-                  controller: canjeController.billetes5RecibeController,
-                  maxLength: 3,
-                ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: DenominationCard(
+                label: '\$ 5',
+                assetIcon: 'assets/img/billete.png',
+                controller: canjeController.billetes5RecibeController,
+                onIncrement: () =>
+                    _changeValue(canjeController.billetes5RecibeController, 1),
+                onDecrement: () =>
+                    _changeValue(canjeController.billetes5RecibeController, -1),
               ),
-              SizedBox(width: 12),
-              Expanded(
-                child: _inputField(
-                  context: context,
-                  label: '\$ 1',
-                  assetIcon: 'assets/img/moneda.png',
-                  controller: canjeController.billetes1RecibeController,
-                  maxLength: 3,
-                ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: DenominationCard(
+                label: '\$ 1',
+                assetIcon: 'assets/img/moneda.png',
+                controller: canjeController.billetes1RecibeController,
+                onIncrement: () =>
+                    _changeValue(canjeController.billetes1RecibeController, 1),
+                onDecrement: () =>
+                    _changeValue(canjeController.billetes1RecibeController, -1),
               ),
-            ],
-          ),
-        ],
-      ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
   Widget _entregaGrid(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: _inputField(
-                  context: context,
-                  label: '\$ 10',
-                  assetIcon: 'assets/img/billete.png',
-                  controller: canjeController.billetes10EntregaController,
-                  maxLength: 3,
-                ),
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: DenominationCard(
+                label: '\$ 10',
+                assetIcon: 'assets/img/billete.png',
+                controller: canjeController.billetes10EntregaController,
+                onIncrement: () => _changeValue(
+                    canjeController.billetes10EntregaController, 1),
+                onDecrement: () => _changeValue(
+                    canjeController.billetes10EntregaController, -1),
               ),
-              SizedBox(width: 12),
-              Expanded(
-                child: _inputField(
-                  context: context,
-                  label: '\$ 5',
-                  assetIcon: 'assets/img/billete.png',
-                  controller: canjeController.billetes5EntregaController,
-                  maxLength: 3,
-                ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: DenominationCard(
+                label: '\$ 5',
+                assetIcon: 'assets/img/billete.png',
+                controller: canjeController.billetes5EntregaController,
+                onIncrement: () =>
+                    _changeValue(canjeController.billetes5EntregaController, 1),
+                onDecrement: () => _changeValue(
+                    canjeController.billetes5EntregaController, -1),
               ),
-            ],
-          ),
-          Row(
-            children: [
-              Expanded(
-                child: _inputField(
-                  context: context,
-                  label: '\$ 1',
-                  assetIcon: 'assets/img/moneda.png',
-                  controller: canjeController.billetes1EntregaController,
-                  maxLength: 3,
-                ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: DenominationCard(
+                label: '\$ 1',
+                assetIcon: 'assets/img/moneda.png',
+                controller: canjeController.billetes1EntregaController,
+                onIncrement: () =>
+                    _changeValue(canjeController.billetes1EntregaController, 1),
+                onDecrement: () => _changeValue(
+                    canjeController.billetes1EntregaController, -1),
               ),
-              SizedBox(width: 12),
-              Expanded(
-                child: _inputField(
-                  context: context,
-                  label: '50¢',
-                  assetIcon: 'assets/img/moneda.png',
-                  controller: canjeController.moneda50EntregaController,
-                  maxLength: 3,
-                ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: DenominationCard(
+                label: '50¢',
+                assetIcon: 'assets/img/moneda.png',
+                controller: canjeController.moneda50EntregaController,
+                onIncrement: () =>
+                    _changeValue(canjeController.moneda50EntregaController, 1),
+                onDecrement: () =>
+                    _changeValue(canjeController.moneda50EntregaController, -1),
               ),
-            ],
-          ),
-          Row(
-            children: [
-              Expanded(
-                child: _inputField(
-                  context: context,
-                  label: '25¢',
-                  assetIcon: 'assets/img/moneda.png',
-                  controller: canjeController.moneda25EntregaController,
-                  maxLength: 3,
-                ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: DenominationCard(
+                label: '25¢',
+                assetIcon: 'assets/img/moneda.png',
+                controller: canjeController.moneda25EntregaController,
+                onIncrement: () =>
+                    _changeValue(canjeController.moneda25EntregaController, 1),
+                onDecrement: () =>
+                    _changeValue(canjeController.moneda25EntregaController, -1),
               ),
-              SizedBox(width: 12),
-              Expanded(child: Container()),
-            ],
-          ),
-        ],
-      ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(child: Container()),
+          ],
+        ),
+      ],
     );
   }
 

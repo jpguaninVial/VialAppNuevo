@@ -8,8 +8,9 @@ import '../environment/environment.dart';
 import '../models/boveda.dart';
 import '../models/response_api.dart';
 import '../models/usuario.dart';
+import 'base_provider.dart';
 
-class ArchivoProvider extends GetConnect {
+class ArchivoProvider extends BaseProvider {
   String url = Environment.API_URL + "api/archivos";
   Usuario usuario = Usuario.fromJson(GetStorage().read('usuario') ?? {});
 

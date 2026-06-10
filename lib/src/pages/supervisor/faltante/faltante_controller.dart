@@ -365,6 +365,9 @@ class FaltanteController extends GetxController {
     }
 
     if (responseApi.success == true && response.statusCode == 201) {
+      if (liquidacion.estado != '1') {
+        await _marcarLiquidacionComoLiquidada(liquidacion);
+      }
       operacionExitosa.value = true;
       await _refreshMovimientos();
       _navigateToReporte();
@@ -416,6 +419,9 @@ class FaltanteController extends GetxController {
           'Respuesta backend liquidacion: success=${responseApi.success}, message=${responseApi.message}');
 
       if (responseApi.success == true) {
+        if (liquidacion.estado != '1') {
+          await _marcarLiquidacionComoLiquidada(liquidacion);
+        }
         _showSuccessSnackbar('Datos de liquidación actualizados correctamente');
         await _refreshMovimientos();
         _navigateToReporte();
@@ -423,6 +429,18 @@ class FaltanteController extends GetxController {
         _showErrorSnackbar(
             responseApi.message ?? 'Error al actualizar la liquidación');
       }
+    }
+  }
+
+  Future<void> _marcarLiquidacionComoLiquidada(Movimiento liquidacion) async {
+    try {
+      liquidacion.idSupervisor = _usuarioSession.id;
+      liquidacion.estado = '1';
+      await _movimientoProvider.updateEstadoMovimiento(liquidacion);
+      await _turnoProvider.updateEstado(usuario.idTurno ?? '');
+      print('Estado de liquidación actualizado a liquidado (1)');
+    } catch (e) {
+      print('Error actualizando estado de liquidación: $e');
     }
   }
 
